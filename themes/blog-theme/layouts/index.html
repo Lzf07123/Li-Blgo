@@ -8,11 +8,6 @@
 {{ $timeline := where .Site.RegularPages "Section" "timeline" }}
 
 <header class="hero">
-  <div class="ambient" aria-hidden="true">
-    <span class="tech-dot dot-1"></span>
-    <span class="tech-dot dot-2"></span>
-    <span class="tech-dot dot-3"></span>
-  </div>
   <p class="hero-kicker">{{ $strings.home.hero_title }}</p>
   <h1 class="hero-title">{{ $profile.name }}</h1>
   <p class="hero-tagline">{{ $brand.tagline }}</p>
