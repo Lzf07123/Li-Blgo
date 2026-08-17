@@ -69,7 +69,7 @@
 
 **P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP/Hugo 全源加速变量 + checksum 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
 
-**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；Hugo 二进制按 `TARGETARCH` 自动下载（URL 变量留空即自动拼装）。
+**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；Hugo 二进制按 `TARGETARCH` 自动下载（URL 变量留空即自动拼装）；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）。
 
 ### 构建编排（Hugo 分段）
 

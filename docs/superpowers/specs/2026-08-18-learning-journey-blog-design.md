@@ -58,7 +58,7 @@ flowchart LR
 | --- | --- | --- |
 | 0 校验 | 构建前快速静态校验：frontmatter 完整性、内部链接、图片存在性 | <10MB |
 | 1 渲染 | `GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到临时目录 `.build-tmp/` | ≤256MB（Go 运行时软上限） |
-| 2 发布 | 产物完整性抽检通过后原子切换/增量同步到 `output/` | <20MB |
+| 2 发布 | 产物完整性抽检通过后**目录内逐文件原子同步**到 `output/`（保持目录 inode 稳定，兼容 Docker bind 挂载） | <20MB |
 | 3 清理 | 删除旧临时目录，Hugo 缓存 `--gc` | <10MB |
 
 要点：

@@ -44,17 +44,33 @@ def run_build(root, dst, hugo_cmd="hugo", memory_limit="256MiB", extra=()):
 
 
 def publish(src, dst):
-    """原子发布：目录交换 + 旧目录清理。"""
+    """逐文件原子同步到既有目录。
+
+    保持 dst 目录 inode 稳定，兼容 Docker bind 挂载（整目录交换会令挂载失效）。
+    """
     src = pathlib.Path(src)
     dst = pathlib.Path(dst)
-    backup = dst.parent / (dst.name + ".old")
-    if backup.exists():
-        shutil.rmtree(backup)
-    if dst.exists():
-        os.replace(dst, backup)
-    os.replace(src, dst)
-    if backup.exists():
-        shutil.rmtree(backup)
+    dst.mkdir(parents=True, exist_ok=True)
+    for p in src.rglob("*"):
+        if not p.is_file():
+            continue
+        rel = p.relative_to(src)
+        target = dst / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp = target.with_name(target.name + ".tmp")
+        shutil.copy2(p, tmp)
+        os.replace(tmp, target)
+    for p in dst.rglob("*"):
+        if p.is_file():
+            rel = p.relative_to(dst)
+            if not (src / rel).exists():
+                p.unlink()
+    for p in sorted(dst.rglob("*"), key=lambda x: len(x.parts), reverse=True):
+        if p.is_dir() and not any(p.iterdir()):
+            try:
+                p.rmdir()
+            except OSError:
+                pass
 
 
 def main():
@@ -81,8 +97,8 @@ def main():
 
     run_build(ROOT, tmp, hugo_cmd=hugo_cmd, memory_limit=memory_limit, extra=extra)
     publish(tmp, dst)
-    if args.keep_tmp:
-        print(f"tmp kept: {tmp}")
+    if not args.keep_tmp:
+        shutil.rmtree(tmp)
     print(f"build OK -> {dst}")
 
 

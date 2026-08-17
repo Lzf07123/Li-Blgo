@@ -15,21 +15,7 @@
 .auth-card h1 { margin-top: 0; }
 .auth-card h2 { font-size: 1rem; margin: 20px 0 8px; color: var(--liblog-muted); }
 label { display: block; margin: 12px 0; font-weight: 600; }
-input, select, textarea {
-  display: block; width: 100%; margin-top: 4px; padding: 8px 12px;
-  background: var(--liblog-bg); color: var(--liblog-fg);
-  border: 1px solid var(--liblog-border); border-radius: 8px; font-size: 0.95rem;
-}
-input:focus, select:focus, textarea:focus { outline: 2px solid var(--liblog-ring); outline-offset: 2px; }
 textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.85rem; }
-.btn {
-  display: inline-block; padding: 8px 18px; border-radius: 8px; cursor: pointer;
-  background: var(--liblog-btn-primary-bg); border: 1px solid var(--liblog-btn-primary-border);
-  color: var(--liblog-brand-fg); font-weight: 600; text-decoration: none;
-}
-.btn:hover { background: var(--liblog-btn-primary-bg-hover); text-decoration: none; }
-.btn-ghost { background: transparent; border-color: var(--liblog-border); }
-.btn-link { background: none; border: none; color: var(--liblog-primary); cursor: pointer; padding: 0; font-size: 0.9rem; }
 .btn-link.danger { color: var(--liblog-destructive); }
 .flash { background: var(--liblog-primary-soft); color: var(--liblog-brand-fg); border-radius: 8px; padding: 10px 14px; }
 .auth-divider { text-align: center; color: var(--liblog-muted); margin: 16px 0 8px; }
