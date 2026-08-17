@@ -11,3 +11,4 @@ output/
 .build-tmp/
 .preview-out/
 bin/
+.hugo_build.lock
