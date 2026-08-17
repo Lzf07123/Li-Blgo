@@ -61,6 +61,18 @@
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
 
+### 构建引擎（分段增量）
+
+| 组件 | 说明 |
+| --- | --- |
+| scanner | 阶段 0：frontmatter 扫描 + manifest 比对（mtime + sha256） |
+| chunk-renderer | 阶段 1：按批渲染 Markdown/Pygments/Jinja2，原子写输出 |
+| aggregator | 阶段 2：首页/分页/标签/归档/搜索 JSON/RSS/sitemap |
+| publisher | 阶段 3：清理失效输出 + manifest 更新 + 完整性抽检 |
+| build-manifest | SQLite 表：path / mtime / sha256 / 状态 |
+
+约束：峰值内存 ≤ `BUILD_MEMORY_LIMIT`（默认 128MB）；批大小自适应（32→16→8）；每文件 `os.replace` 原子写；高亮按 (lexer, code sha256) 缓存复用。
+
 ## 3. 页面模式
 
 | 页面类型 | 氛围浓度 | 关键约束 |
@@ -104,6 +116,8 @@
 - [ ] 备案号上线前留空；无假占位号
 - [ ] Nginx 常规访问日志关闭；匿名打点仅路径+时间戳
 - [ ] 后台安全：秘密路径/密码/限速/IP 白名单/非 root/无 Docker socket
+- [ ] 全量构建峰值内存 ≤ 128MB（实测数据记录到 MASTER.md）
+- [ ] 保存单篇为增量构建（秒级），中断后输出目录完整可用
 
 ## 6. 文件映射（模板 → 本博客）
 
@@ -111,7 +125,7 @@
 | --- | --- |
 | frontend/src/index.css | themes/blog-theme/static/css/tokens.css |
 | frontend/src/lib/brand.ts | config/brand.yaml |
-| frontend/index.html | Pelican 基础模板 head 区 |
+| frontend/index.html | 站点基础模板 head 区（构建引擎渲染） |
 | frontend/public/ | themes/blog-theme/static/img/ |
 | design-system/<project>/BRAND.md | design-system/blog/BRAND.md |
 | design-system/<project>/MASTER.md | design-system/blog/MASTER.md（本文件） |
