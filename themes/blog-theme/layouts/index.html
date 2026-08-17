@@ -8,15 +8,17 @@
 {{ $timeline := where .Site.RegularPages "Section" "timeline" }}
 
 <header class="hero">
-  <p class="hero-kicker">{{ $strings.home.hero_title }}</p>
-  <h1 class="hero-title" data-blur>{{ $profile.name }}</h1>
-  <p class="hero-tagline" data-blur>{{ $brand.tagline }}</p>
-  <p class="hero-meta">{{ $profile.identity }} · {{ $profile.direction }}</p>
-  <p class="hero-goal">{{ $strings.home.goal_title }}：{{ $profile.goal }}</p>
-  <div class="badge-row">
-    {{ range where $projects "Params.show_on_home" true }}
-      {{ with .Params.badge }}{{ partial "badge.html" . }}{{ end }}
-    {{ end }}
+  <div class="hero-inner">
+    <p class="hero-kicker">{{ $strings.home.hero_title }}</p>
+    <h1 class="hero-title" data-blur>{{ $profile.name }}</h1>
+    <p class="hero-tagline" data-blur>{{ $brand.tagline }}</p>
+    <p class="hero-meta">{{ $profile.identity }} · {{ $profile.direction }}</p>
+    <p class="hero-goal">{{ $strings.home.goal_title }}：{{ $profile.goal }}</p>
+    <div class="badge-row">
+      {{ range where $projects "Params.show_on_home" true }}
+        {{ with .Params.badge }}{{ partial "badge.html" . }}{{ end }}
+      {{ end }}
+    </div>
   </div>
 </header>
 

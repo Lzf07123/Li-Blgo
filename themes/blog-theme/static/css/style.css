@@ -314,19 +314,33 @@ input:focus, select:focus, textarea:focus {
 .journey-body p { margin: 6px 0 0; color: var(--liblog-muted); font-size: 0.9rem; }
 
 /* ---------- Hero ---------- */
-.hero { position: relative; padding: 48px 0 24px; }
-.hero { text-align: center; }
+.hero {
+  position: relative;
+  min-height: min(78vh, 640px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+  text-align: center;
+}
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  will-change: transform, opacity;
+}
 .hero .badge-row { justify-content: center; }
 .hero-kicker { color: var(--liblog-muted); margin: 0 0 8px; }
 .hero-title { margin: 0 0 8px; font-size: 2rem; line-height: 1.25; }
 .hero-tagline { font-size: 1.05rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 12px; }
 .hero-meta, .hero-goal { color: var(--liblog-muted); margin: 4px 0; font-size: 0.9rem; }
-.hero > * { position: relative; z-index: 1; animation: liblog-fade-up 0.6s var(--liblog-ease-out) both; }
-.hero > *:nth-child(2) { animation-delay: 0.06s; }
-.hero > *:nth-child(3) { animation-delay: 0.12s; }
-.hero > *:nth-child(4) { animation-delay: 0.18s; }
-.hero > *:nth-child(5) { animation-delay: 0.24s; }
-.hero > *:nth-child(6) { animation-delay: 0.3s; }
+.hero-inner > * { animation: liblog-fade-up 0.6s var(--liblog-ease-out) both; }
+.hero-inner > *:nth-child(2) { animation-delay: 0.06s; }
+.hero-inner > *:nth-child(3) { animation-delay: 0.12s; }
+.hero-inner > *:nth-child(4) { animation-delay: 0.18s; }
+.hero-inner > *:nth-child(5) { animation-delay: 0.24s; }
+.hero-inner > *:nth-child(6) { animation-delay: 0.3s; }
 @keyframes liblog-fade-up {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
@@ -535,6 +549,7 @@ input:focus, select:focus, textarea:focus {
   .site-nav a { padding: 6px 2px; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
+  .hero { min-height: 62vh; }
   .hero-title { font-size: 1.6rem; }
   .hero-tagline { font-size: 1rem; }
   .hero-meta, .hero-goal { font-size: 0.85rem; }
