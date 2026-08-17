@@ -30,12 +30,20 @@
       {% endfor %}
       <label>正文 Markdown
         <div class="editor-toolbar">
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="bold" title="加粗">B</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="italic" title="斜体"><em>I</em></button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="h2" title="标题">H2</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="link" title="链接">链接</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="code" title="行内代码">&lt;/&gt;</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="quote" title="引用">引用</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="list" title="列表">列表</button>
           <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
           <span id="body-count" class="editor-count"></span>
         </div>
+        <small class="field-help">支持把图片直接拖进正文，会自动上传并插入。</small>
         <textarea id="body" name="body" rows="24" class="mono">{{ body or "" }}</textarea>
       </label>
-      <div class="form-actions">
+      <div class="form-actions editor-actions">
         <button type="submit" name="action" value="save_stay" class="btn">保存（留在本页）</button>
         <button type="submit" name="action" value="save" class="btn btn-secondary">保存并返回列表</button>
         <button type="submit" name="action" value="preview_raw" class="btn btn-ghost" id="preview-btn">生成预览</button>
@@ -87,11 +95,13 @@
     var body = document.getElementById("body");
     var count = document.getElementById("body-count");
     var dialog = document.getElementById("image-dialog");
+    var CSRF = "{{ csrf }}";
 
     function updateCount() {
       var text = body.value;
       var words = text.trim() ? text.trim().split(/\s+/).length : 0;
-      count.textContent = text.length + " 字符 / " + words + " 词";
+      var minutes = Math.max(1, Math.round(text.length / 400));
+      count.textContent = text.length + " 字符 / " + words + " 词 / 约 " + minutes + " 分钟";
     }
     body.addEventListener("input", updateCount);
     updateCount();
@@ -103,6 +113,69 @@
       body.selectionStart = body.selectionEnd = start + text.length;
       body.focus();
     }
+
+    function wrapSelection(before, after, placeholder) {
+      var start = body.selectionStart;
+      var end = body.selectionEnd;
+      var selected = body.value.slice(start, end) || placeholder;
+      body.value = body.value.slice(0, start) + before + selected + after + body.value.slice(end);
+      body.selectionStart = start + before.length;
+      body.selectionEnd = start + before.length + selected.length;
+      body.focus();
+    }
+
+    document.querySelectorAll(".md-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mode = btn.dataset.md;
+        if (mode === "bold") wrapSelection("**", "**", "加粗文字");
+        if (mode === "italic") wrapSelection("*", "*", "斜体文字");
+        if (mode === "h2") wrapSelection("\n## ", "\n", "小标题");
+        if (mode === "link") wrapSelection("[", "](https://)", "链接文字");
+        if (mode === "code") wrapSelection("`", "`", "code");
+        if (mode === "quote") wrapSelection("\n> ", "\n", "引用文字");
+        if (mode === "list") wrapSelection("\n- ", "\n", "列表项");
+      });
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        var save = form.querySelector('button[value="save_stay"]');
+        if (save) save.click();
+      }
+    });
+
+    ["dragover", "dragenter"].forEach(function (name) {
+      body.addEventListener(name, function (e) {
+        e.preventDefault();
+        body.classList.add("is-dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (name) {
+      body.addEventListener(name, function (e) {
+        e.preventDefault();
+        body.classList.remove("is-dragover");
+      });
+    });
+    body.addEventListener("drop", function (e) {
+      var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (!file) return;
+      var data = new FormData();
+      data.append("_csrf", CSRF);
+      data.append("file", file);
+      count.textContent = "正在上传图片…";
+      fetch("/{{ admin_path }}/media/upload-json", { method: "POST", body: data })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          if (res.url) {
+            insertAtCursor("![](" + res.url + ")\n");
+            count.textContent = "图片已插入";
+          } else {
+            count.textContent = res.error || "上传失败";
+          }
+        })
+        .catch(function () { count.textContent = "上传失败"; });
+    });
 
     document.getElementById("insert-image").addEventListener("click", function () {
       dialog.showModal();

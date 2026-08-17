@@ -6,5 +6,6 @@
   <div class="badge-row">
     {{ range .Params.tech }}{{ partial "badge.html" (dict "label" . "href" "" "color" (index $tech_colors . | default "")) }}{{ end }}
   </div>
+  {{ with .Params.repo }}<p class="project-repo"><a class="btn btn-secondary btn-sm" href="{{ . }}" target="_blank" rel="noopener">{{ $strings.common.repo }}</a></p>{{ end }}
   <p class="meta">{{ $strings.common.status_label }}：{{ .Params.status }}</p>
 </article>

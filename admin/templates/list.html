@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">{{ label }}</span>
+</nav>
 <div class="list-head">
   <h1>{{ label }}（{{ total }}）</h1>
   {% if section in ["posts", "projects", "timeline"] %}
   <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
   {% endif %}
+  <a class="btn btn-sm btn-ghost" href="/{{ section }}/" target="_blank" rel="noopener">查看公开页</a>
 </div>
 <form class="list-filters" method="get" action="/{{ admin_path }}/{{ section }}">
   <label class="visually-hidden" for="q">搜索标题、标识或标签</label>
@@ -29,4 +35,15 @@
   {% endif %}
 </form>
 {% include "partials/table.html" %}
+<script>
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
+      var q = document.getElementById("q");
+      if (q) {
+        e.preventDefault();
+        q.focus();
+      }
+    }
+  });
+</script>
 {% endblock %}

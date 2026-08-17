@@ -25,6 +25,7 @@
         {% if col.type == 'link' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
           <a href="{{ row[col.key ~ '_href'] }}"{% if row.get(col.key ~ '_external') %} target="_blank" rel="noopener"{% endif %}>{{ row[col.key] }}</a>
+          {% if row.get(col.key ~ '_meta') %}<small class="table-title-meta">{{ row[col.key ~ '_meta'] }}</small>{% endif %}
         </td>
         {% elif col.type == 'badge' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
@@ -36,10 +37,11 @@
             {% if act.method %}
             <form method="post" action="{{ act.href }}"{% if act.confirm %} onsubmit="return confirm('{{ act.confirm }}')"{% endif %}>
               <input type="hidden" name="_csrf" value="{{ csrf }}">
+              {% if act.name %}<input type="hidden" name="{{ act.name }}" value="{{ act.value }}">{% endif %}
               <button type="submit" class="btn-link{{ ' danger' if act.danger else '' }}">{{ act.label }}</button>
             </form>
             {% else %}
-            <a class="btn-link{{ ' danger' if act.danger else '' }}" href="{{ act.href }}"{% if act.external %} target="_blank" rel="noopener"{% endif %}>{{ act.label }}</a>
+            <a class="btn-link{{ ' danger' if act.danger else '' }}" href="{{ act.href }}"{% if act.external %} target="_blank" rel="noopener"{% endif %} title="{{ act.label }}">{{ act.label }}</a>
             {% endif %}
           {% endfor %}
         </td>

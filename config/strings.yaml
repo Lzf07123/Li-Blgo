@@ -20,8 +20,10 @@ home:
   view_all: 查看全部
   result_count: 条结果
   no_results: 没有找到匹配内容，换个关键词试试
+  browse_posts: 浏览全部文章
   search_hint: 按标题、摘要与标签本地搜索，不上传任何内容
   search_placeholder: 输入关键词…
+  related_title: 相关文章
 
 common:
   reading_time: 分钟阅读
@@ -36,8 +38,14 @@ common:
   search_label: 输入关键词
   not_found_title: 页面未找到
   not_found_body: 你访问的页面不存在或已被移动，回到首页继续浏览吧。
+  top: 返回顶部
+  tag: 标签
+  repo: 仓库
+  no_related: 暂无相关文章
+  links_title: 更多链接
 
 footer:
   rights: 保留所有权利
   icp_label: 备案号
   police_label: 公网安备
+  rss_label: RSS 订阅

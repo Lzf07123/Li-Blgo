@@ -13,6 +13,7 @@
 </div>
 <div class="quick-actions">
   <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/posts">文章管理</a>
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/posts?status=draft">草稿（{{ drafts|length }}）</a>
   <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/media">媒体库</a>
   <a class="btn btn-secondary btn-sm" href="/" target="_blank" rel="noopener">查看公开站</a>
   <form method="post" action="/{{ admin_path }}/rebuild" data-busy>
@@ -20,6 +21,30 @@
     <button type="submit" class="btn btn-secondary btn-sm">全部重建</button>
   </form>
 </div>
+<p class="build-info">最近构建：{{ last_build }}</p>
+{% if drafts %}
+<h2>草稿</h2>
+<ul class="draft-list">
+  {% for d in drafts[:5] %}
+  <li>
+    <a href="/{{ admin_path }}/posts/{{ d.slug }}/edit">{{ d.title }}</a>
+    <time>{{ d.date }}</time>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+{% if top_rows %}
+<h2>访问 TOP5</h2>
+<div class="stat-bars">
+  {% for r in top_rows %}
+  <div class="stat-bar-row">
+    <span class="stat-bar-label" title="{{ r.path }}">{{ r.path }}</span>
+    <span class="stat-bar"><i style="width: {{ r.pct }}%"></i></span>
+    <span class="stat-bar-value">{{ r.views }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
 {% if recent_posts %}
 <h2>最近文章</h2>
 {% with table = recent_table %}{% include "partials/table.html" %}{% endwith %}

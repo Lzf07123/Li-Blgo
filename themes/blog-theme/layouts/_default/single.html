@@ -1,6 +1,7 @@
 {{ define "main" }}
 {{ $strings := hugo.Data.strings }}
 <article class="article">
+  <div class="reading-progress" aria-hidden="true"></div>
   <nav class="breadcrumb" aria-label="面包屑">
     <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
     {{ with .CurrentSection }}
@@ -23,13 +24,19 @@
     {{ end }}
     {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
-  {{ if .TableOfContents }}<nav class="toc" aria-label="目录">{{ .TableOfContents }}</nav>{{ end }}
+  {{ if and .TableOfContents (ge .WordCount 300) }}<nav class="toc" aria-label="目录">{{ .TableOfContents }}</nav>{{ end }}
   <div class="article-body">{{ .Content }}</div>
   {{ if .Params.show_skills }}
     <h2 class="section-title">{{ hugo.Data.strings.home.skills_title }}</h2>
     <div class="badge-row">
       {{ range hugo.Data.profile.skills }}{{ partial "badge.html" (merge . (dict "readme" true)) }}{{ end }}
     </div>
+  {{ end }}
+  {{ with hugo.Data.profile.links }}
+  <h2 class="section-title">{{ $strings.common.links_title }}</h2>
+  <div class="badge-row">
+    {{ range . }}<a class="badge badge-primary" href="{{ .href }}" target="_blank" rel="noopener">{{ .label }}</a>{{ end }}
+  </div>
   {{ end }}
   {{ if or .PrevInSection .NextInSection }}
   <nav class="post-nav" aria-label="文章导航">
@@ -47,6 +54,20 @@
     {{ end }}
   </nav>
   {{ end }}
+  {{ $related := where (.Site.RegularPages.Related .) "Section" "posts" | first 3 }}
+  {{ if $related }}
+  <nav class="related-posts" aria-label="{{ $strings.home.related_title }}">
+    <h2 class="section-title">{{ $strings.home.related_title }}</h2>
+    <div class="post-list">
+      {{ range $related }}{{ partial "post-card.html" . }}{{ end }}
+    </div>
+  </nav>
+  {{ end }}
+  {{ if ge .WordCount 300 }}<p class="back-top"><a href="#main">{{ $strings.common.top }}</a></p>{{ end }}
 </article>
 
+{{ end }}
+
+{{ define "scripts" }}
+<script defer src="{{ "js/reading-progress.js" | relURL }}"></script>
 {{ end }}

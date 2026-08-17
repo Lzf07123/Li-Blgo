@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Li&Blog 后台{% endblock %}</title>
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=25">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=25">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=25">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=26">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=26">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=26">
   <script>
     (function () {
       var saved = localStorage.getItem("liblog-admin-theme");
@@ -47,6 +47,7 @@
     {% if flash %}<p class="flash" role="status">{{ flash }}</p>{% endif %}
     {% block content %}{% endblock %}
   </main>
+  <button id="to-top" class="to-top" type="button" aria-label="返回顶部">↑</button>
   <script>
     (function () {
       var btn = document.getElementById("theme-toggle");
@@ -68,6 +69,15 @@
           }
         });
       });
+      var toTop = document.getElementById("to-top");
+      if (toTop) {
+        window.addEventListener("scroll", function () {
+          toTop.classList.toggle("is-visible", window.scrollY > 400);
+        }, { passive: true });
+        toTop.addEventListener("click", function () {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      }
     })();
   </script>
 </body>

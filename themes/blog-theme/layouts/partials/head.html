@@ -4,10 +4,31 @@
 {{ $brand := hugo.Data.brand }}
 <title>{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }} · {{ $brand.name }}{{ end }}</title>
 <meta name="description" content="{{ $brand.tagline }}">
+<link rel="canonical" href="{{ .Permalink }}">
+<meta property="og:type" content="{{ if .IsHome }}website{{ else }}article{{ end }}">
+<meta property="og:site_name" content="{{ $brand.name }}">
+<meta property="og:title" content="{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }}{{ end }}">
+<meta property="og:description" content="{{ if .IsHome }}{{ $brand.tagline }}{{ else }}{{ .Summary | plainify }}{{ end }}">
+<meta property="og:url" content="{{ .Permalink }}">
+{{ with $brand.logo }}<meta property="og:image" content="{{ . | absURL }}">{{ end }}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }}{{ end }}">
+<meta name="twitter:description" content="{{ if .IsHome }}{{ $brand.tagline }}{{ else }}{{ .Summary | plainify }}{{ end }}">
+{{ with $brand.logo }}<meta name="twitter:image" content="{{ . | absURL }}">{{ end }}
+<link rel="alternate" type="application/rss+xml" title="RSS" href="{{ "index.xml" | absURL }}">
 <meta name="theme-color" content="#f6fbf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=25">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=25">
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=26">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=26">
+{{ if .IsHome }}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":{{ $brand.name | jsonify }},"url":{{ .Site.Home.Permalink | jsonify }}}
+</script>
+{{ else if eq .Kind "page" }}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ .Title | jsonify }},"description":{{ .Summary | plainify | jsonify }},"datePublished":{{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},"dateModified":{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" | jsonify }},"url":{{ .Permalink | jsonify }},"author":{"@type":"Person","name":{{ hugo.Data.profile.name | jsonify }}}}
+</script>
+{{ end }}
 {{ $density := partial "density.html" . }}
 {{ if ne $density "none" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}

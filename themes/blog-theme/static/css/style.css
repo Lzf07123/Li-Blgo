@@ -634,6 +634,40 @@ input:focus, select:focus, textarea:focus {
 .not-found { max-width: 640px; margin: 80px auto; text-align: center; }
 .not-found-body { color: var(--liblog-muted); }
 
+/* ---------- 阅读进度 / 相关文章 / 排版细节 ---------- */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  height: 3px;
+  width: 0;
+  background: var(--liblog-primary);
+}
+.article-body {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.article-body p { margin: 0 0 1em; }
+.article-body a { overflow-wrap: anywhere; }
+.related-posts { margin-top: 40px; }
+.back-top { margin-top: 32px; text-align: center; }
+.project-repo { margin: 12px 0 0; }
+.footer-rss { margin: 0; }
+.footer-rss a { color: var(--liblog-muted); }
+.footer-rss a:hover { color: var(--liblog-primary); }
+.hero-skills {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--liblog-border);
+}
+mark {
+  background: var(--liblog-primary-soft);
+  color: var(--liblog-brand-fg);
+  padding: 0 2px;
+  border-radius: 3px;
+}
+
 /* ---------- 分页 ---------- */
 .pagination { display: flex; gap: 12px; margin-top: 24px; align-items: center; }
 
@@ -666,6 +700,7 @@ input:focus, select:focus, textarea:focus {
   .post-nav { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
+  .article-body { font-size: 0.95rem; }
   .page-shell { width: calc(100% - 24px); }
   .card-grid { grid-template-columns: 1fr; }
   .hero-title { font-size: 1.45rem; }

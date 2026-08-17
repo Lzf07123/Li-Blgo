@@ -75,6 +75,8 @@
 
 **易用性迭代（2026-08-18）：** 后台编辑器分栏 Hugo 预览（保存后原地生成，不离开编辑页）、媒体库上传/插入图片、列表搜索与分页、首页/资料配置改为结构化表单、保存可选择留在本页、后台深浅色与分组导航；公开站补面包屑、阅读时间、上一篇/下一篇、搜索页结果计数与摘要、404 页、跳转到正文；25 项单元测试 + TestClient 端到端流程验证。
 
+**开源实践 50 轮优化（2026-08-18）：** 后台补 Markdown 工具栏、Ctrl+S、拖拽上传、快捷发布/转草稿、CSV 导出、构建时间、TOP5 看板、媒体按月分组、面包屑、返回顶部与安全响应头；前端补 OG/Twitter/JSON-LD/canonical/RSS、图片懒加载、外链安全、阅读进度、相关文章、标签页、搜索高亮、返回顶部；逐条记录见 `OPTIMIZATION-50.md`。
+
 **P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP/Hugo 全源加速变量 + checksum 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
 
 **React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。

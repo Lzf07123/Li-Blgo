@@ -3,6 +3,12 @@
 <div class="not-found">
   <h1 class="page-title">{{ $strings.common.not_found_title }}</h1>
   <p class="not-found-body">{{ $strings.common.not_found_body }}</p>
-  <p><a class="more-link" href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a></p>
+  <p>
+    <a class="more-link" href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
+    <span class="meta-sep">·</span>
+    <a class="more-link" href="{{ "posts/" | relURL }}">{{ $strings.nav.posts }}</a>
+    <span class="meta-sep">·</span>
+    <a class="more-link" href="{{ "search-ui/" | relURL }}">{{ $strings.nav.search }}</a>
+  </p>
 </div>
 {{ end }}

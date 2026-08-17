@@ -8,7 +8,7 @@ from urllib.parse import urlencode
 
 import yaml
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
@@ -38,6 +38,15 @@ app.add_middleware(
     same_site="lax",
     https_only=settings.cookie_secure,
 )
+
+
+@app.middleware("http")
+async def admin_headers(request: Request, call_next):
+    response = await call_next(request)
+    if request.url.path.startswith(f"/{settings.admin_path}/"):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Robots-Tag"] = "noindex"
+    return response
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
 STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
@@ -364,6 +373,14 @@ def dashboard(request: Request):
     conn = connect()
     stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
     conn.close()
+    last_build = "尚未构建"
+    index_file = settings.output_root / "index.html"
+    if index_file.exists():
+        last_build = datetime.datetime.fromtimestamp(index_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+    top_rows = [dict(r) for r in stats[:5]]
+    top_max = max((r["views"] for r in top_rows), default=0)
+    for r in top_rows:
+        r["pct"] = round(r["views"] * 100 / top_max) if top_max else 0
     recent_columns = [
         {"key": "title", "label": "标题", "type": "link"},
         {"key": "date", "label": "日期", "type": "text"},
@@ -397,6 +414,8 @@ def dashboard(request: Request):
             "recent_posts": recent_posts,
             "stats": stats,
             "media_count": len(media_store.list_media()),
+            "last_build": last_build,
+            "top_rows": top_rows,
             "recent_table": {
                 "caption": "最近文章",
                 "columns": recent_columns,
@@ -455,7 +474,12 @@ def media_page(request: Request, q: str = ""):
     if q:
         ql = q.lower()
         items = [it for it in items if ql in it["rel"].lower()]
-    return render(request, "media.html", {"items": items, "q": q})
+    groups = {}
+    for it in items:
+        month = "/".join(it["rel"].split("/")[:2]) if "/" in it["rel"] else "未分类"
+        groups.setdefault(month, []).append(it)
+    grouped = [{"month": m, "items": groups[m]} for m in sorted(groups, reverse=True)]
+    return render(request, "media.html", {"items": items, "groups": grouped, "q": q})
 
 
 @app.post(ap("/media/upload"))
@@ -491,6 +515,63 @@ def media_delete(request: Request, path: str = Form(""), csrf_token: str = Form(
     if result.returncode != 0:
         return RedirectResponse(ap("/media?error=已删除但构建失败"), status_code=303)
     return RedirectResponse(ap(f"/media?ok=已删除并重建（{elapsed}s）"), status_code=303)
+
+
+@app.post(ap("/media/upload-json"))
+async def media_upload_json(
+    request: Request,
+    file: UploadFile = File(...),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return JSONResponse({"error": "会话失效"}, status_code=403)
+    data = await file.read()
+    try:
+        p = media_store.save_upload(file.filename or "", data)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    rel = p.relative_to(media_store.MEDIA_ROOT).as_posix()
+    return JSONResponse({"url": f"/img/{rel}", "rel": rel})
+
+
+@app.post(ap("/posts/{slug}/status"))
+def post_status(
+    request: Request,
+    slug: str,
+    status: str = Form(""),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/posts?error=会话失效"), status_code=303)
+    if status not in ("published", "draft"):
+        return RedirectResponse(ap("/posts?error=状态不合法"), status_code=303)
+    try:
+        old, body = store.read_markdown("posts", slug)
+        old["status"] = status
+        store.write_markdown("posts", slug, old, body)
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/posts?error=状态更新后构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/posts?ok=已{('发布' if status == 'published' else '转为草稿')}并重建（{elapsed}s）"), status_code=303)
+
+
+@app.get(ap("/stats/export"))
+def stats_export(request: Request):
+    require_login(request)
+    conn = connect()
+    rows = conn.execute("SELECT path, day, views FROM stats ORDER BY day DESC, views DESC").fetchall()
+    conn.close()
+    lines = ["path,day,views"]
+    lines += [f'"{r["path"]}",{r["day"]},{r["views"]}' for r in rows]
+    return Response(
+        content="\n".join(lines) + "\n",
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="liblog-stats.csv"'},
+    )
 
 
 # ---------- 栏目：列表 / 编辑 / 保存 / 删除 ----------
@@ -582,6 +663,16 @@ def section_list(
             {"label": "编辑", "href": ap(f"/{section}/{item['slug']}/edit")},
             {"label": "查看", "href": f"/{section}/{item['slug']}/", "external": True},
         ]
+        if section == "posts":
+            actions.append(
+                {
+                    "label": "转草稿" if item["status"] == "published" else "发布",
+                    "href": ap(f"/posts/{item['slug']}/status"),
+                    "method": "post",
+                    "name": "status",
+                    "value": "draft" if item["status"] == "published" else "published",
+                }
+            )
         if section != "timeline":
             actions.append(
                 {
@@ -596,6 +687,7 @@ def section_list(
             {
                 "title": item["title"],
                 "title_href": ap(f"/{section}/{item['slug']}/edit"),
+                "title_meta": ", ".join(item.get("tags", [])[:3]) if item.get("tags") else "",
                 "date": item["date"],
                 "status": item["status"],
                 "status_label": STATUS_LABELS.get(item["status"], item["status"]),

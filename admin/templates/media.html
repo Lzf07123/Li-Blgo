@@ -9,15 +9,16 @@
   <button type="submit" class="btn btn-secondary btn-sm">搜索</button>
   {% if q %}<a class="btn-link" href="/{{ admin_path }}/media">清除</a>{% endif %}
 </form>
-<form method="post" action="/{{ admin_path }}/media/upload" enctype="multipart/form-data" class="upload-box" data-busy>
+<form id="upload-form" class="upload-box" data-busy>
   <input type="hidden" name="_csrf" value="{{ csrf }}">
-  <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" required>
-  <button type="submit" class="btn btn-sm">上传并重建</button>
-  <small>支持 png / jpg / webp / gif / avif，最大 5MB；上传后自动出现在公开站 /img/ 路径</small>
+  <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" multiple required>
+  <button type="submit" class="btn btn-sm">上传</button>
+  <small>支持多选；png / jpg / webp / gif / avif，单张 ≤ 5MB。上传后需保存文章或手动重建才会出现在公开站。</small>
 </form>
-{% if items %}
+{% for group in groups %}
+<h2 class="media-month">{{ group.month }}</h2>
 <div class="media-grid">
-  {% for m in items %}
+  {% for m in group.items %}
   <figure class="media-item">
     <img src="/{{ admin_path }}/static/img/{{ m.rel }}" alt="{{ m.rel }}" loading="lazy">
     <figcaption>
@@ -25,7 +26,8 @@
       <small>{{ m.size }} 字节</small>
       <div class="row-actions">
         <a class="btn-link" href="/{{ admin_path }}/static/img/{{ m.rel }}" target="_blank" rel="noopener">查看</a>
-        <form method="post" action="/{{ admin_path }}/media/delete" onsubmit="return confirm('确定删除？删除后会重建公开站。')">
+        <button type="button" class="btn-link media-copy" data-url="{{ m.url }}">复制路径</button>
+        <form method="post" action="/{{ admin_path }}/media/delete" onsubmit="return confirm('确定删除 {{ m.rel }}？删除后会重建公开站。')">
           <input type="hidden" name="_csrf" value="{{ csrf }}">
           <input type="hidden" name="path" value="{{ m.rel }}">
           <button type="submit" class="btn-link danger">删除</button>
@@ -36,6 +38,53 @@
   {% endfor %}
 </div>
 {% else %}
-<p class="flash">还没有图片。上传后会立即出现在公开站 /img/ 路径。</p>
-{% endif %}
+<p class="flash">还没有图片。上传后会出现在公开站 /img/ 路径。</p>
+{% endfor %}
+<script>
+  (function () {
+    var form = document.getElementById("upload-form");
+    var csrf = form.querySelector('input[name="_csrf"]').value;
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var files = form.querySelector('input[type="file"]').files;
+      if (!files.length) return;
+      var pending = Array.prototype.slice.call(files);
+      var done = 0;
+      var failed = 0;
+      pending.forEach(function (file) {
+        var data = new FormData();
+        data.append("_csrf", csrf);
+        data.append("file", file);
+        fetch("/{{ admin_path }}/media/upload-json", { method: "POST", body: data })
+          .then(function (r) { return r.json(); })
+          .then(function (res) {
+            done += 1;
+            if (res.error) failed += 1;
+            if (done === pending.length) {
+              alert(failed ? "部分上传失败" : "上传完成");
+              location.reload();
+            }
+          })
+          .catch(function () {
+            done += 1;
+            failed += 1;
+            if (done === pending.length) {
+              alert("部分上传失败");
+              location.reload();
+            }
+          });
+      });
+    });
+    document.querySelectorAll(".media-copy").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var url = btn.dataset.url;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(function () { btn.textContent = "已复制"; });
+        } else {
+          window.prompt("复制图片路径", url);
+        }
+      });
+    });
+  })();
+</script>
 {% endblock %}

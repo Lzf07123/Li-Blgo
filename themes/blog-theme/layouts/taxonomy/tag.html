@@ -1,0 +1,7 @@
+{{ define "main" }}
+{{ $strings := hugo.Data.strings }}
+<h1 class="page-title">{{ $strings.common.tag }}：{{ .Title }}（{{ len .Pages }}）</h1>
+<div class="post-list">
+  {{ range .Pages }}{{ partial "post-card.html" . }}{{ end }}
+</div>
+{{ end }}

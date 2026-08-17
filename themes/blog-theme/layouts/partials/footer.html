@@ -7,6 +7,7 @@
       {{ with $brand.icp }}<a href="{{ $brand.icp_url }}" rel="nofollow">{{ . }}</a>{{ end }}
       {{ with $brand.police }}<a href="{{ $brand.police_url }}" rel="nofollow">{{ $footer.police_label }} {{ . }}</a>{{ end }}
     </div>
+    <p class="footer-rss"><a href="{{ "index.xml" | relURL }}">{{ $footer.rss_label }}</a></p>
   </div>
   <img src="/api/beacon?p={{ .RelPermalink }}" width="1" height="1" alt="" aria-hidden="true">
 </footer>

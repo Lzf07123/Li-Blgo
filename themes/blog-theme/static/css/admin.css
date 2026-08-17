@@ -648,3 +648,113 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   .auth-panel { padding: 28px 24px; }
   .auth-form-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- 50 轮优化补充样式 ---------- */
+.admin-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+}
+.admin-breadcrumb a { color: var(--liblog-muted); }
+.admin-breadcrumb a:hover { color: var(--liblog-primary); }
+.admin-breadcrumb-sep { color: var(--liblog-border); }
+.admin-breadcrumb [aria-current="page"] { color: var(--liblog-fg); font-weight: 600; }
+
+.editor-toolbar { flex-wrap: wrap; }
+.editor-toolbar .btn { min-height: 36px; padding: 6px 10px; }
+.editor-toolbar .btn em { font-style: italic; }
+.editor-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  padding: 12px 0;
+  background: var(--liblog-bg);
+  border-top: 1px solid var(--liblog-border);
+}
+textarea.is-dragover {
+  border-color: var(--liblog-primary);
+  box-shadow: 0 0 0 3px var(--liblog-primary-soft);
+}
+.table-title-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+.to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+  background: var(--liblog-surface);
+  color: var(--liblog-primary);
+  font-size: 1.1rem;
+  box-shadow: var(--liblog-shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity var(--liblog-motion-base) var(--liblog-ease-out),
+    transform var(--liblog-motion-base) var(--liblog-ease-out);
+}
+.to-top.is-visible { opacity: 1; pointer-events: auto; transform: none; }
+.build-info {
+  margin: 12px 0 4px;
+  color: var(--liblog-muted);
+  font-size: 0.82rem;
+}
+.draft-list {
+  list-style: none;
+  margin: 8px 0 20px;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.draft-list a { font-weight: 600; }
+.draft-list time { color: var(--liblog-muted); font-size: 0.8rem; margin-left: 8px; }
+.stat-bars { display: grid; gap: 8px; margin: 12px 0 24px; }
+.stat-bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 2fr) 48px;
+  gap: 10px;
+  align-items: center;
+}
+.stat-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+}
+.stat-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--liblog-surface-2);
+  overflow: hidden;
+}
+.stat-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--liblog-primary);
+}
+.stat-bar-value { text-align: right; color: var(--liblog-fg); font-weight: 600; font-size: 0.85rem; }
+.media-month { font-size: 1rem; margin: 20px 0 8px; color: var(--liblog-muted); }
+.auth-theme-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.auth-logo-img {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+@media (max-width: 768px) {
+  .stat-bar-row { grid-template-columns: 1fr 1fr 40px; }
+  .editor-actions { padding: 10px 0; }
+}

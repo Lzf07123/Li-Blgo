@@ -4,15 +4,23 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>登录 · {{ brand.name }}</title>
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=25">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=25">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=25">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=26">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=26">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=26">
+  <script>
+    (function () {
+      var saved = localStorage.getItem("liblog-admin-theme");
+      if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+  </script>
 </head>
 <body class="admin-body auth-page">
   <main class="auth-shell">
     <aside class="auth-aside">
       <div class="auth-brand">
-        <span class="auth-logo" aria-hidden="true">{{ brand.name[:1] }}</span>
+        {% if brand.logo %}<img class="auth-logo-img" src="{{ brand.logo }}" alt="{{ brand.name }}">{% else %}<span class="auth-logo" aria-hidden="true">{{ brand.name[:1] }}</span>{% endif %}
         <span class="auth-brand-name">{{ brand.name }}</span>
       </div>
       <div class="auth-aside-body">
@@ -30,6 +38,9 @@
       <p class="auth-aside-note">仅管理员可访问</p>
     </aside>
     <section class="auth-panel">
+      <div class="auth-theme-row">
+        <button id="auth-theme-toggle" class="btn btn-sm btn-ghost" type="button">深浅色</button>
+      </div>
       <p class="auth-step">登录</p>
       <h2 class="auth-heading">欢迎回来</h2>
       <p class="auth-sub">使用管理员账号继续</p>
@@ -46,5 +57,19 @@
       {% endif %}
     </section>
   </main>
+  <script>
+    (function () {
+      var btn = document.getElementById("auth-theme-toggle");
+      if (btn) {
+        btn.setAttribute("aria-pressed", document.documentElement.classList.contains("dark") ? "true" : "false");
+        btn.addEventListener("click", function () {
+          var root = document.documentElement;
+          var dark = root.classList.toggle("dark");
+          localStorage.setItem("liblog-admin-theme", dark ? "dark" : "light");
+          btn.setAttribute("aria-pressed", dark ? "true" : "false");
+        });
+      }
+    })();
+  </script>
 </body>
 </html>
