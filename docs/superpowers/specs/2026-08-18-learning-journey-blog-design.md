@@ -138,7 +138,7 @@ config/
 
 - 触发：SQLite 无管理员记录时，访问后台任意路径 302 到 `/admin-xxxx/setup`
 - 步骤 1 基础信息：站点名称/定位/承诺（brand.yaml）+ 姓名/身份/方向/目标（profile.yaml）
-- 步骤 2 管理员创建：用户名 + 强密码（Argon2），创建后 setup 永久失效
+- 步骤 2 管理员创建：用户名 + 强密码（PBKDF2-HMAC-SHA256，600k 迭代），创建后 setup 永久失效
 - 步骤 3 OIDC 绑定（可跳过）：展示需登记的精确回调地址；配置缺失则隐藏；成功后写入 `oidc_sub`
 - 中断恢复：每步落盘标记，重进 setup 从断点继续
 
@@ -265,7 +265,7 @@ services:
 
 ## 14. 决策记录
 
-已闭合决策：Hugo 分段构建（Go 生成器 + Python 编排壳）+ FastAPI 后台 + SQLite、Docker Compose profiles、双登录（本地 + OIDC）、单管理员、Setup 向导、八栏目后台、首页聚合、兄弟项目纳入、全 Markdown、本地徽章、海玻璃家族令牌、氛围浓度分层、本地搜索、匿名统计、回程登出、分页 20 篇/页、索引瘦身、图片上传。
+已闭合决策：Hugo 分段构建（Go 生成器 + Python 编排壳）+ FastAPI 后台 + SQLite、Docker Compose profiles、双登录（本地 + OIDC）、单管理员、Setup 向导、八栏目后台、首页聚合、兄弟项目纳入、全 Markdown、本地徽章、海玻璃家族令牌、氛围浓度分层、本地搜索、匿名统计、回程登出、分页 20 篇/页、索引瘦身、图片上传、密码哈希 PBKDF2-HMAC-SHA256（600k，零原生依赖）。
 
 有意留空：`logo` / `favicon`（后期上传）；`icp` / `police`（备案通过后填写，禁止假占位号）。
 

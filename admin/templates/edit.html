@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ label }}{% if slug %}: {{ slug }}{% endif %}</h1>
+{% if error %}<p class="flash">{{ error }}</p>{% endif %}
+<form method="post" action="/{{ admin_path }}/{{ section }}/save">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <input type="hidden" name="slug" value="{{ slug }}">
+  {% if not slug and section in ["posts", "projects", "timeline"] %}
+  <label>标识（slug，新建时必填，小写字母数字与连字符）
+    <input type="text" name="new_slug" required pattern="[a-z0-9][a-z0-9-]{0,63}">
+  </label>
+  {% endif %}
+  {% for field in fields %}
+    {% set name, label, ftype, value = field[0], field[1], field[2], field[3] %}
+    <label>{{ label }}
+      {% if ftype == "select" %}
+        <select name="{{ name }}">
+          {% for option in field[4] %}
+          <option value="{{ option }}" {% if option == value %}selected{% endif %}>{{ option }}</option>
+          {% endfor %}
+        </select>
+      {% elif ftype == "textarea" %}
+        <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
+      {% else %}
+        <input type="text" name="{{ name }}" value="{{ value }}">
+      {% endif %}
+    </label>
+  {% endfor %}
+  <label>正文 Markdown
+    <textarea name="body" rows="24" class="mono">{{ body or "" }}</textarea>
+  </label>
+  <div class="form-actions">
+    <button type="submit" name="action" value="save" class="btn">保存并重建</button>
+    <button type="submit" name="action" value="preview" class="btn btn-ghost">保存并预览</button>
+  </div>
+</form>
+{% endblock %}

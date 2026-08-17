@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>第三步：绑定 OIDC 账号（可跳过）</h1>
+{% if bound %}
+  <p class="flash">已绑定 Li&Pass 账号，后台双登录入口生效。</p>
+  <p><a class="btn" href="/{{ admin_path }}/">进入后台</a></p>
+{% elif oidc_enabled %}
+  <p>在 Li&Pass 后台登记回调地址：<code>{{ callback_uri }}</code></p>
+  <form method="post" action="/{{ admin_path }}/setup/oidc/bind">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <button type="submit" class="btn">使用 Li&Pass 登录绑定</button>
+  </form>
+  <p><a class="btn btn-ghost" href="/{{ admin_path }}/">跳过，稍后在设置中绑定</a></p>
+{% else %}
+  <p class="flash">OIDC 未配置（缺少 LIPASS_ISSUER / LIPASS_CLIENT_ID 等环境变量），可稍后在后台绑定。</p>
+  <p><a class="btn" href="/{{ admin_path }}/">跳过并进入后台</a></p>
+{% endif %}
+{% endblock %}

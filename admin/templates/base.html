@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Li&Blog 后台{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <a class="admin-brand" href="/{{ admin_path }}/">Li&Blog 后台</a>
+    <nav class="admin-nav">
+      <a href="/{{ admin_path }}/posts">文章</a>
+      <a href="/{{ admin_path }}/projects">项目</a>
+      <a href="/{{ admin_path }}/timeline">时间线</a>
+      <a href="/{{ admin_path }}/about">关于我</a>
+      <a href="/{{ admin_path }}/resources">资源</a>
+      <a href="/{{ admin_path }}/config/brand">品牌</a>
+      <a href="/{{ admin_path }}/config/strings">文案</a>
+      <a href="/{{ admin_path }}/config/homepage">首页</a>
+      <a href="/{{ admin_path }}/stats">统计</a>
+      <a href="/{{ admin_path }}/logout">登出</a>
+    </nav>
+  </header>
+  <main class="admin-main">
+    {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

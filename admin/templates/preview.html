@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>预览</h1>
+{% if exists %}
+  <p><a class="btn btn-ghost" href="/{{ admin_path }}/{{ section }}/{{ slug }}/edit">返回编辑</a></p>
+  <iframe class="preview-frame" src="{{ src }}"></iframe>
+{% else %}
+  <p class="flash">预览文件不存在，请先在编辑页点击"保存并预览"。</p>
+  <p><a class="btn" href="/{{ admin_path }}/{{ section }}/{{ slug }}/edit">返回编辑</a></p>
+{% endif %}
+{% endblock %}

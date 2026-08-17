@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>基础信息 · Li&Blog 设置</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body admin-center">
+  <main class="auth-card">
+    <h1>第一步：基础信息</h1>
+    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
+    <form method="post" action="/{{ admin_path }}/setup/basic">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <h2>站点</h2>
+      <label>站点名称<input type="text" name="site_name" value="{{ brand.name }}" required></label>
+      <label>一句话定位<input type="text" name="tagline" value="{{ brand.tagline }}"></label>
+      <label>品牌承诺<input type="text" name="promise" value="{{ brand.promise }}"></label>
+      <label>人格比喻<input type="text" name="persona" value="{{ brand.persona }}"></label>
+      <h2>个人</h2>
+      <label>姓名<input type="text" name="name" value="{{ profile.name }}"></label>
+      <label>身份<input type="text" name="identity" value="{{ profile.identity }}"></label>
+      <label>方向<input type="text" name="direction" value="{{ profile.direction }}"></label>
+      <label>当前目标<input type="text" name="goal" value="{{ profile.goal }}"></label>
+      <button type="submit" class="btn">下一步：创建管理员</button>
+    </form>
+  </main>
+</body>
+</html>

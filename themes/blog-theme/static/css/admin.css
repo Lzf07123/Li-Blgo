@@ -1,0 +1,54 @@
+/* 后台样式：只使用 --liblog-* 令牌 */
+.admin-body { background: var(--liblog-bg); color: var(--liblog-fg); min-height: 100vh; }
+.admin-center { display: flex; align-items: center; justify-content: center; padding: 48px 16px; }
+.admin-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  padding: 12px 24px; background: var(--liblog-surface); border-bottom: 1px solid var(--liblog-border);
+}
+.admin-brand { font-weight: 800; color: var(--liblog-primary); }
+.admin-nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 0.9rem; }
+.admin-main { max-width: 1080px; margin: 0 auto; padding: 24px; }
+.auth-card {
+  width: 100%; max-width: 420px; background: var(--liblog-surface);
+  border: 1px solid var(--liblog-border); border-radius: 16px; padding: 32px; box-shadow: var(--liblog-shadow-md);
+}
+.auth-card h1 { margin-top: 0; }
+.auth-card h2 { font-size: 1rem; margin: 20px 0 8px; color: var(--liblog-muted); }
+label { display: block; margin: 12px 0; font-weight: 600; }
+input, select, textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 8px 12px;
+  background: var(--liblog-bg); color: var(--liblog-fg);
+  border: 1px solid var(--liblog-border); border-radius: 8px; font-size: 0.95rem;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--liblog-ring); outline-offset: 2px; }
+textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.85rem; }
+.btn {
+  display: inline-block; padding: 8px 18px; border-radius: 8px; cursor: pointer;
+  background: var(--liblog-btn-primary-bg); border: 1px solid var(--liblog-btn-primary-border);
+  color: var(--liblog-brand-fg); font-weight: 600; text-decoration: none;
+}
+.btn:hover { background: var(--liblog-btn-primary-bg-hover); text-decoration: none; }
+.btn-ghost { background: transparent; border-color: var(--liblog-border); }
+.btn-link { background: none; border: none; color: var(--liblog-primary); cursor: pointer; padding: 0; font-size: 0.9rem; }
+.btn-link.danger { color: var(--liblog-destructive); }
+.flash { background: var(--liblog-primary-soft); color: var(--liblog-brand-fg); border-radius: 8px; padding: 10px 14px; }
+.auth-divider { text-align: center; color: var(--liblog-muted); margin: 16px 0 8px; }
+.stat-cards { display: flex; gap: 16px; margin: 16px 0; }
+.stat-card {
+  flex: 1; background: var(--liblog-surface); border: 1px solid var(--liblog-border);
+  border-radius: 16px; padding: 20px; text-align: center;
+}
+.stat-card strong { font-size: 1.6rem; color: var(--liblog-primary); }
+.table-shell {
+  width: 100%; border-collapse: collapse; background: var(--liblog-surface);
+  border: 1px solid var(--liblog-border); border-radius: 12px; overflow: hidden;
+}
+.table-shell th, .table-shell td { border-bottom: 1px solid var(--liblog-border); padding: 10px 14px; text-align: left; }
+.table-shell th { background: var(--liblog-surface-2); font-size: 0.875rem; }
+.row-actions { display: flex; gap: 12px; align-items: center; }
+.list-head { display: flex; justify-content: space-between; align-items: center; }
+.form-actions { margin-top: 20px; display: flex; gap: 12px; }
+.preview-frame { width: 100%; height: 80vh; border: 1px solid var(--liblog-border); border-radius: 12px; background: var(--liblog-surface); }
+@media (max-width: 768px) {
+  .admin-header { flex-direction: column; align-items: flex-start; }
+}

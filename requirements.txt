@@ -1,3 +1,8 @@
 fastapi
 uvicorn
 PyYAML
+Jinja2
+python-multipart
+httpx
+authlib
+itsdangerous

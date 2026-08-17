@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ label }}</h1>
+{% if error %}<p class="flash">{{ error }}</p>{% endif %}
+<form method="post" action="/{{ admin_path }}/config/{{ name }}">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  {% for field in fields %}
+  <label>{{ field.label }}
+    {% if field.type == "textarea" %}
+      <textarea name="{{ field.name }}" rows="8" class="mono">{{ field.value }}</textarea>
+    {% else %}
+      <input type="text" name="{{ field.name }}" value="{{ field.value }}">
+    {% endif %}
+  </label>
+  {% endfor %}
+  <div class="form-actions">
+    <button type="submit" class="btn">保存并重建</button>
+  </div>
+</form>
+{% endblock %}

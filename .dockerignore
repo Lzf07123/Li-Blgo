@@ -1,4 +1,5 @@
 .git
+.venv
 output
 data
 .build-tmp

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>仪表盘</h1>
+<div class="stat-cards">
+  <div class="stat-card">文章<br><strong>{{ counts.posts }}</strong></div>
+  <div class="stat-card">项目<br><strong>{{ counts.projects }}</strong></div>
+  <div class="stat-card">时间线<br><strong>{{ counts.timeline }}</strong></div>
+</div>
+<form method="post" action="/{{ admin_path }}/rebuild">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <button type="submit" class="btn">全部重建</button>
+</form>
+<h2>访问统计（最近）</h2>
+<table class="table-shell">
+  <thead><tr><th>路径</th><th>日期</th><th>次数</th></tr></thead>
+  <tbody>
+  {% for row in stats %}
+    <tr><td>{{ row.path }}</td><td>{{ row.day }}</td><td>{{ row.views }}</td></tr>
+  {% else %}
+    <tr><td colspan="3">暂无数据（统计上线后展示）</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

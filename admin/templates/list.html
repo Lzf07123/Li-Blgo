@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="list-head">
+  <h1>{{ label }}</h1>
+  {% if section in ["posts", "projects", "timeline"] %}
+  <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
+  {% endif %}
+</div>
+<table class="table-shell">
+  <thead><tr><th>标题</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
+  <tbody>
+  {% for item in items %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.date }}</td>
+      <td>{{ item.status }}</td>
+      <td class="row-actions">
+        <a href="/{{ admin_path }}/{{ section }}/{{ item.slug }}/edit">编辑</a>
+        {% if section != "timeline" %}
+        <form method="post" action="/{{ admin_path }}/{{ section }}/{{ item.slug }}/delete"
+              onsubmit="return confirm('确定删除？')">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <button type="submit" class="btn-link danger">删除</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}
+    <tr><td colspan="4">暂无内容</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

@@ -21,6 +21,7 @@
 6. **Markdown 为内容源**：文章/项目/时间线/关于/资源一律 Markdown/YAML，构建期渲染，禁止在公开页引入运行时 Markdown 解析器。
 7. **性能底线**：公开站保持纯静态；新增前端依赖须说明体积与必要性；动效尊重 prefers-reduced-motion。
 8. **构建约束**：构建必须走 Hugo 分段编排（校验 → `GOMEMLIMIT` 限内存渲染到临时目录 → 原子发布 → 清理）；峰值内存不得超过 `GOMEMLIMIT`（默认 256MiB）；渲染器只用 Hugo（Goldmark + Chroma + shortcodes），后台预览与线上构建共用；禁止引入 Python-Markdown/Pygments 渲染链路。Hugo 使用固定版本二进制（v0.165.0，admin 镜像 Dockerfile 下载并校验 checksum），禁止第三方 Hugo 镜像；构建在容器内执行，不依赖宿主机工具链。
+9. **后台安全**：密码哈希用 stdlib PBKDF2-HMAC-SHA256（600k 迭代，零原生依赖，替代 Argon2/scrypt 以兼容 macOS 自带 Python 与容器）；会话存 SQLite、Cookie 只存随机 id（HttpOnly/SameSite=Lax）；所有 POST 校验 CSRF；登录限速 5 次/60 秒；OIDC 按对接文档契约实现（PKCE、state/nonce、id_token 验签、回程登出 jti 防重放、`sub` 精确匹配单管理员）；OIDC secret 只走环境变量。
 
 ## 协作规范
 

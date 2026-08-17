@@ -54,12 +54,16 @@
 | --- | --- |
 | setup-wizard | 首启三步向导 |
 | login | 本地 + OIDC 双入口 |
+| password-hash | PBKDF2-HMAC-SHA256（600k 迭代，stdlib） |
+| session | SQLite 服务端会话 + HttpOnly Cookie + CSRF |
 | form / input | 内容编辑表单（令牌样式） |
 | tabs | 八栏目顶部标签页 |
 | table-shell | 列表（文章/项目/时间线/资源） |
 | markdown-editor | 文本区 + 服务端预览 |
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
+
+**P2 已实现（2026-08-18）：** Setup 三步向导、本地登录（限速+CSRF）、Li&Pass OIDC 登录/绑定/回程登出、八栏目（文章/项目/时间线/关于/资源/品牌/文案/首页/资料）、Hugo 预览与保存重建；16 项单元测试通过 + 端到端 curl 流程验证。
 
 ### 构建编排（Hugo 分段）
 
