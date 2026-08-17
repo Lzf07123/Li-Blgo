@@ -36,12 +36,15 @@
 
 <section class="section">
   <h2 class="section-title">{{ $strings.home.journey_title }}</h2>
-  <div class="timeline timeline-preview">
+  <div class="journey-panel card">
     {{ range first (int $home.journey.preview_count) $timeline.ByDate.Reverse }}
-      <div class="timeline-node">
-        <time class="timeline-date">{{ .Date.Format "2006-01" }}</time>
-        <div class="timeline-body">
-          <h3>{{ .Title }}</h3>
+      <div class="journey-row">
+        <time class="journey-date">{{ .Date.Format "2006-01" }}</time>
+        <div class="journey-body">
+          <div class="journey-head">
+            <h3>{{ .Title }}</h3>
+            {{ with .Params.kind }}<span class="badge badge-primary">{{ . }}</span>{{ end }}
+          </div>
           {{ with .Summary }}<p>{{ . }}</p>{{ end }}
         </div>
       </div>

@@ -268,6 +268,29 @@ input:focus, select:focus, textarea:focus {
 .timeline-preview .timeline-node { padding-bottom: 12px; }
 .more-link { font-weight: 600; }
 
+/* 首页历程速览：卡片式行列表（避免竖线时间线的突兀感） */
+.journey-panel { max-width: 720px; margin: 16px auto 0; padding: 8px 24px; overflow: hidden; }
+.journey-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--liblog-border);
+}
+.journey-row:last-child { border-bottom: none; }
+.journey-date {
+  flex: none;
+  min-width: 74px;
+  padding-top: 2px;
+  color: var(--liblog-primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.journey-body { flex: 1; min-width: 0; }
+.journey-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.journey-head h3 { margin: 0; font-size: 1rem; }
+.journey-body p { margin: 6px 0 0; color: var(--liblog-muted); font-size: 0.9rem; }
+
 /* ---------- Hero 与首页氛围层 ---------- */
 .hero { position: relative; padding: 48px 0 24px; overflow: hidden; }
 .hero { text-align: center; }
