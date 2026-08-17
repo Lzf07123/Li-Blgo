@@ -1,0 +1,5 @@
+{{ $d := "none" }}
+{{ if .IsHome }}{{ $d = "full" }}
+{{ else if eq .Kind "section" }}{{ $d = "soft" }}
+{{ else if eq .Kind "page" }}{{ if eq .Section "posts" }}{{ $d = "none" }}{{ else }}{{ $d = "soft" }}{{ end }}{{ end }}
+{{ return $d }}
