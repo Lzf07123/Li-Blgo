@@ -39,7 +39,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | brand-logo | Logo 占位/图片，品牌色文字兜底 |
-| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字，模拟 README shields 标准，零外链） |
+| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字 + `static/img/badges/*.svg` 本地图标，模拟 README shields 标准，零外链） |
 | card | 项目卡/文章卡 |
 | timeline-node | 时间线节点 |
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |
@@ -114,6 +114,7 @@
 | 导航/区块标题/通用标签 | strings.yaml | 页面文案 |
 | Hero 姓名/身份/方向/目标 | profile.yaml | 关于我 |
 | 技能徽章 | profile.yaml | 关于我 |
+| 技能徽章图标 | profile.yaml（`icon` slug）+ themes/blog-theme/static/img/badges/*.svg | 关于我资料（图标 slug） |
 | 兄弟项目徽章 | projects frontmatter | 项目 |
 | 首页精选/数量/开关 | homepage.yaml | 首页设置 |
 | 文章全字段 | posts Markdown | 文章 |

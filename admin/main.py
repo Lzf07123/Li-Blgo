@@ -744,6 +744,7 @@ CONFIG_PAGES = {
                 "columns": [
                     {"key": "name", "label": "名称", "input": "text"},
                     {"key": "color", "label": "颜色", "input": "color"},
+                    {"key": "icon", "label": "图标 slug", "input": "text"},
                     {"key": "href", "label": "链接", "input": "text"},
                 ],
             },

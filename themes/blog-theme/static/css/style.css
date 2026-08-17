@@ -262,6 +262,14 @@ main:focus { outline: none; }
 }
 .badge-readme a { color: inherit; }
 .badge-readme a:hover { color: inherit; opacity: 0.9; }
+.badge-readme-icon {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: var(--badge-icon) center / contain no-repeat;
+  mask: var(--badge-icon) center / contain no-repeat;
+}
 .badge-success { background: var(--liblog-success-soft-solid, var(--liblog-success-soft)); color: var(--liblog-success-soft-fg, var(--liblog-success)); border-color: var(--liblog-success); }
 .badge-warning { background: var(--liblog-warning-soft-solid, var(--liblog-warning-soft)); color: var(--liblog-warning-soft-fg, var(--liblog-warning)); border-color: var(--liblog-warning); }
 .badge-danger { background: var(--liblog-destructive-soft-solid, var(--liblog-destructive-soft)); color: var(--liblog-destructive-soft-fg, var(--liblog-destructive)); border-color: var(--liblog-destructive); }

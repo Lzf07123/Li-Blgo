@@ -6,33 +6,43 @@ goal: 省赛拿奖 + 求职就业
 skills:
 - name: Linux
   color: '#FCC624'
+  icon: linux
   href: https://www.linux.org/
 - name: Docker
   color: '#2496ED'
+  icon: docker
   href: https://www.docker.com/
 - name: Kubernetes
   color: '#326CE5'
+  icon: kubernetes
   href: https://kubernetes.io/
 - name: Shell
   color: '#4EAA25'
+  icon: gnubash
   href: https://www.gnu.org/software/bash/
 - name: Python
   color: '#3776AB'
+  icon: python
   href: https://www.python.org/
 - name: FastAPI
   color: '#009688'
+  icon: fastapi
   href: https://fastapi.tiangolo.com/
 - name: Git
   color: '#F05032'
+  icon: git
   href: https://git-scm.com/
 - name: Markdown
   color: '#000000'
+  icon: markdown
   href: https://daringfireball.net/projects/markdown/
 - name: Ansible
   color: '#EE0000'
+  icon: ansible
   href: https://www.ansible.com/
 - name: Dify
   color: '#0D7CFF'
+  icon: dify
   href: https://dify.ai/
 links:
 - label: GitHub
