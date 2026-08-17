@@ -315,13 +315,11 @@ input:focus, select:focus, textarea:focus {
 .journey-body p { margin: 6px 0 0; color: var(--liblog-muted); font-size: 0.9rem; }
 
 /* ---------- Hero ---------- */
+:root { --header-h: 53px; }
 .hero {
   position: relative;
-  position: sticky;
-  top: 0;
-  z-index: 0;
-  min-height: 100vh;
-  min-height: 100svh;
+  min-height: calc(100vh - var(--header-h));
+  min-height: calc(100svh - var(--header-h));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -330,11 +328,7 @@ input:focus, select:focus, textarea:focus {
   text-align: center;
   margin-top: 0 !important;
 }
-.page-shell > *:not(.hero) {
-  position: relative;
-  z-index: 1;
-  background: var(--liblog-bg);
-}
+.hero > div { width: 100%; }
 .hero-inner {
   position: relative;
   z-index: 1;
@@ -550,6 +544,7 @@ input:focus, select:focus, textarea:focus {
 
 /* ---------- 响应式（1024 / 768 / 640 断点，覆盖 375–1440） ---------- */
 @media (max-width: 1024px) {
+  :root { --header-h: 95px; }
   .page-shell { width: min(880px, calc(100% - 28px)); }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
@@ -560,7 +555,7 @@ input:focus, select:focus, textarea:focus {
   .site-nav a { padding: 6px 2px; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
-  .hero { min-height: 100vh; min-height: 100svh; padding: 24px 0; }
+  .hero { padding: 24px 0; }
   .hero-title { font-size: 1.8rem; }
   .hero-tagline { font-size: 1.08rem; }
   .hero-meta, .hero-goal { font-size: 0.9rem; }
