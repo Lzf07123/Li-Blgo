@@ -346,52 +346,54 @@ input:focus, select:focus, textarea:focus {
 .tech-ambience {
   position: absolute;
   inset: 0;
+  overflow: hidden;
   pointer-events: none;
 }
-.tech-ambience--soft { opacity: 0.6; }
 .tech-grid {
   position: absolute;
-  inset: -56px;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px),
-    repeating-linear-gradient(90deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px);
-  animation: liblog-grid-move 18s linear infinite;
-  opacity: 0.28;
-  will-change: transform;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, var(--liblog-tech-grid-accent) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--liblog-tech-grid-accent-2) 1px, transparent 1px),
+    linear-gradient(to right, var(--liblog-tech-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--liblog-tech-grid-line) 1px, transparent 1px);
+  background-size: 336px 336px, 336px 336px, 56px 56px, 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse 88% 76% at 50% 42%, #000 22%, transparent 80%);
+  mask-image: radial-gradient(ellipse 88% 76% at 50% 42%, #000 22%, transparent 80%);
+  animation: tech-grid-pan 12s linear infinite;
+  will-change: background-position;
+  pointer-events: none;
 }
-@keyframes liblog-grid-move {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(56px, 56px, 0); }
+@keyframes tech-grid-pan {
+  from { background-position: 0 0, 0 0, 0 0, 0 0; }
+  to { background-position: 336px 336px, 336px 336px, 336px 336px, 336px 336px; }
 }
 .tech-beam {
   position: absolute;
-  top: -20%;
-  bottom: -20%;
-  width: 150px;
+  top: -15%;
+  bottom: -15%;
+  left: 0;
+  width: 36%;
+  background: linear-gradient(90deg, transparent 0%, var(--liblog-tech-beam) 45%, var(--liblog-tech-beam) 55%, transparent 100%);
+  transform: translateX(-150%) skewX(-16deg);
   opacity: 0;
-  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam) 45%, var(--liblog-tech-beam-2) 55%, transparent);
-  animation: liblog-beam 14s ease-in-out infinite;
-  will-change: transform;
+  animation: tech-beam-sweep 10s var(--liblog-ease-out) 0.8s infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
 }
 .tech-beam--violet {
-  left: 45%;
-  animation-delay: 3.4s;
-  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam-2) 45%, var(--liblog-tech-beam-3) 55%, transparent);
+  background: linear-gradient(90deg, transparent 0%, var(--liblog-tech-beam-2) 45%, var(--liblog-tech-beam-2) 55%, transparent 100%);
+  animation-delay: 4.2s;
 }
 .tech-beam--sage {
-  left: 78%;
-  animation-delay: 6.8s;
-  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam-3) 45%, var(--liblog-tech-beam) 55%, transparent);
+  background: linear-gradient(90deg, transparent 0%, var(--liblog-tech-beam-3) 45%, var(--liblog-tech-beam-3) 55%, transparent 100%);
+  animation-delay: 7.5s;
 }
-.tech-beam {
-  left: 8%;
-}
-@keyframes liblog-beam {
-  0% { transform: rotate(16deg) translateX(-320px); opacity: 0; }
-  5% { opacity: 0.35; animation-timing-function: ease-out; }
-  38% { opacity: 0.35; animation-timing-function: ease-in; }
-  50% { transform: rotate(16deg) translateX(1100px); opacity: 0; animation-timing-function: ease-out; }
-  100% { transform: rotate(16deg) translateX(1100px); opacity: 0; }
+@keyframes tech-beam-sweep {
+  0% { transform: translateX(-150%) skewX(-16deg); opacity: 0; }
+  8% { opacity: 1; }
+  42% { transform: translateX(560%) skewX(-16deg); opacity: 0.7; }
+  50%, 100% { transform: translateX(560%) skewX(-16deg); opacity: 0; }
 }
 .aurora {
   position: absolute;
@@ -414,16 +416,21 @@ input:focus, select:focus, textarea:focus {
   position: absolute;
   width: 7px;
   height: 7px;
-  border-radius: 50%;
-  background: var(--tech-dot-color, var(--liblog-tech-dot-glow));
-  box-shadow: 0 0 12px var(--tech-dot-color, var(--liblog-tech-dot-glow));
-  animation: liblog-dot-float 9s ease-in-out infinite;
-  will-change: transform;
+  border-radius: 9999px;
+  background: var(--tech-dot-color, var(--liblog-secondary));
+  box-shadow: 0 0 14px 3px var(--liblog-tech-dot-glow);
+  opacity: 0.55;
+  animation: tech-dot-pulse 6s ease-in-out infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
 }
-@keyframes liblog-dot-float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.55; }
-  50% { transform: translateY(-10px) scale(1.15); opacity: 0.9; }
+@keyframes tech-dot-pulse {
+  0%, 100% { opacity: 0.45; transform: translateY(0) scale(1); }
+  50% { opacity: 1; transform: translateY(-7px) scale(1.45); }
 }
+.tech-ambience--soft .tech-grid { opacity: 0.45; }
+.tech-ambience--soft .tech-beam,
+.tech-ambience--soft .tech-dot { opacity: 0.35; }
 .ambient-layer {
   position: absolute;
   inset: 0;

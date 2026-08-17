@@ -13,13 +13,9 @@ export default function TechAmbience({ soft = false }) {
   return (
     <div className={`tech-ambience${soft ? " tech-ambience--soft" : ""}`} aria-hidden="true">
       <div className="tech-grid" />
-      {!soft && (
-        <>
-          <div className="tech-beam" />
-          <div className="tech-beam tech-beam--violet" />
-          <div className="tech-beam tech-beam--sage" />
-        </>
-      )}
+      <div className="tech-beam" />
+      <div className="tech-beam tech-beam--violet" />
+      <div className="tech-beam tech-beam--sage" />
       {DOTS.map((dot, index) => (
         <span
           key={index}
