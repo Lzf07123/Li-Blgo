@@ -24,7 +24,7 @@
 
 | 层 | 选型 | 说明 |
 | --- | --- | --- |
-| 静态生成 | 自研分段增量构建引擎（Python） | Python-Markdown + Pygments + Jinja2；批处理 + SQLite manifest，峰值内存可配 |
+| 静态生成 | Hugo（Go 单二进制）+ Python 分段编排壳 | Goldmark + Chroma；临时目录构建、GOMEMLIMIT 限内存、原子发布 |
 | 后台 | FastAPI + SQLite + Jinja2 | 单 worker；内容管理 + 统计 + 登录 |
 | 内容源 | Markdown / YAML 文件 | 单一事实来源，无独立内容数据库 |
 | 公开托管 | Nginx + CDN（可选） | 静态文件直出 |
@@ -42,30 +42,35 @@ flowchart LR
     F --> G[content 卷 Markdown]
     F --> D
     F --> H[data 卷 SQLite]
-    F --> J[构建引擎：扫描→分块渲染→聚合→发布]
+    F --> J[构建编排：校验→Hugo 渲染→原子发布]
     J --> G
     J --> D
     I[beacon 匿名日志卷] -. nginx 打点 -> F
 ```
 
-### 3.1 分段构建引擎（小内存适配）
+### 3.1 Hugo 分段构建（小内存适配）
 
-目标：200–1000 篇 Markdown 文档在 512MB 主机上构建，峰值内存可控、增量保存秒级、任何时刻输出目录完整可用。
+生成器：**Hugo**（Go 单二进制）。1000 篇文档全量构建约 1–3 秒；通过分段编排 + Go 内存上限适配 512MB 主机。
 
-**四阶段流水线：**
+**分段编排流水线（Python 薄壳）：**
 
 | 阶段 | 做什么 | 内存量级 |
 | --- | --- | --- |
-| 0 扫描 | 遍历 content/config/themes，只读 frontmatter，与 manifest 比对（mtime + sha256），产出变更清单 | <5MB |
-| 1 分块渲染 | 只处理变更文章，按 `BUILD_BATCH_SIZE`（默认 32）分批渲染 Markdown + Pygments + Jinja2；每批原子写输出后释放引用；高亮结果按 (lexer, code sha256) 缓存复用 | ≤ `BUILD_MEMORY_LIMIT`（默认 128MB） |
-| 2 聚合页 | 只读 frontmatter/摘要，生成首页、分页列表、标签、归档、搜索 JSON、RSS、sitemap | ≈2MB |
-| 3 清理发布 | 删除已失效输出，更新 manifest，输出完整性抽检 | <10MB |
+| 0 校验 | 构建前快速静态校验：frontmatter 完整性、内部链接、图片存在性 | <10MB |
+| 1 渲染 | `GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到临时目录 `.build-tmp/` | ≤256MB（Go 运行时软上限） |
+| 2 发布 | 产物完整性抽检通过后原子切换/增量同步到 `output/` | <20MB |
+| 3 清理 | 删除旧临时目录，Hugo 缓存 `--gc` | <10MB |
 
-**内存自适应：** `BUILD_MEMORY_LIMIT` 为软上限，超限自动缩批（32→16→8）；每批结束后释放引用并 `gc.collect()`。
+要点：
 
-**增量与全量：** 保存单篇 → 同步跑阶段 0–2（秒级）；"全部重建"与首次上线 → 后台任务跑全量分块（1000 篇约 5–15 分钟，一次性，可接受），带进度。
+- `GOMEMLIMIT` 显式限制 Hugo 进程内存；`HUGO_NUMWORKERMULTIPLIER` 降低并行度进一步压低峰值
+- Hugo 原生产出分页列表、标签/归档、RSS、sitemap、搜索 JSON（模板生成），无需自研聚合器
+- **保存单篇 = 全量 Hugo 构建（1–3 秒）**，无需自研增量；"全部重建"同样秒级
+- 可选 `--renderSegments`（home/list/page/taxonomy 分开渲染）供极端小内存场景进一步分段
+- 中断安全：构建只写临时目录，校验通过才发布；发布原子切换
+- **后台预览走 Hugo 自身渲染**（`--buildDrafts` + 临时输出），后台所见即线上成品
 
-**中断安全：** 每个文件先写临时文件再 `os.replace` 原子替换；manifest 每批更新；构建中断时输出目录始终完整。
+内容渲染单一出处：Hugo Goldmark + shortcodes；后台不再使用 Python-Markdown/Pygments 渲染链路。
 
 ## 4. 内容模型
 
@@ -85,16 +90,16 @@ config/
 └── strings.yaml    # 站点级文案：导航/区块标题/通用标签
 ```
 
-### Markdown 能力清单（构建期全部渲染，访客零解析器）
+### Markdown 能力清单（Hugo Goldmark，构建期全部渲染，访客零解析器）
 
 - GFM：表格、任务列表、删除线、自动链接
-- 围栏代码块 + Pygments 语法高亮（配色映射 `--liblog-*` 令牌）
+- 围栏代码块 + Chroma 语法高亮（Hugo 内置，Go 实现；配色映射 `--liblog-*` 令牌）
 - 脚注、TOC、标题锚点、内部链接
-- Admonition 提示块（`!!! note` 等，纯 CSS）
+- Admonition 提示块：Hugo shortcode（`{{< note >}}` 等，纯 CSS）
 - 数学公式：KaTeX 本地文件，仅 `math: true` 文章加载
 - Mermaid 图表：本地文件，仅 `mermaid: true` 文章加载
-- 受限 HTML（内容仅作者本人），可选用 bleach 白名单清理
-- 渲染配置单一出处（`markdown_config.py`），构建引擎与后台预览共用
+- 受限 HTML（内容仅作者本人）
+- 渲染单一出处：Hugo（Goldmark + shortcodes），后台预览调用同一 Hugo 渲染
 
 ## 5. 公开站设计
 
@@ -244,23 +249,22 @@ services:
 | 常态（后台离线） | nginx 约 5–10MB |
 | 管理时段 | nginx + admin 约 70–90MB |
 | 首页传输量 | HTML+CSS+JS < 100KB（不含图片） |
-| 构建峰值 | ≤128MB（`BUILD_MEMORY_LIMIT` 可配，分块处理） |
-| 保存单篇 | 秒级（增量阶段 0–2） |
-| 全量首次/重建 | 1000 篇约 5–15 分钟（后台任务，一次性） |
+| 构建峰值 | ≤256MB（`GOMEMLIMIT` 可配） |
+| 保存单篇/全量重建 | 1–3 秒（1000 篇规模） |
 | 服务器 | 512MB 轻量 VPS 足够 |
 
 ## 13. 实施路线
 
 - **P0 设计实例化（本阶段）**：设计文档 + design-system/blog + 令牌 + 配置骨架 + AGENTS.md
-- **P1 公开站**：分段构建引擎（扫描/分块渲染/聚合/发布）+ 主题 + 内容结构 + strings.yaml + 3 篇示例 + 兄弟项目 Markdown 初稿
-- **P2 后台**：Setup 向导 + 双登录（本地 + OIDC）+ 八栏目 + 预览 + 增量重建（对接分段引擎）
+- **P1 公开站**：Hugo 主题骨架（Goldmark/shortcodes/Chroma）+ 分段编排壳 + 内容结构 + strings.yaml + 3 篇示例 + 兄弟项目 Markdown 初稿
+- **P2 后台**：Setup 向导 + 双登录（本地 + OIDC）+ 八栏目 + 预览（走 Hugo）+ 保存触发编排构建
 - **P3 容器化**：Dockerfile + compose.yaml（profiles）+ 匿名打点导入
-- **P4 搜索统计**：Fuse.js 索引（聚合阶段生成）+ empty_gif 打点
+- **P4 搜索统计**：Fuse.js 索引（Hugo 模板生成 JSON）+ empty_gif 打点
 - **P5 备案上线**：域名、服务器、备案、HTTPS、Li&Pass 客户端登记、正式部署
 
 ## 14. 决策记录
 
-已闭合决策：Python 栈（自研分段构建引擎 + FastAPI + SQLite）、Docker Compose profiles、双登录（本地 + OIDC）、单管理员、Setup 向导、八栏目后台、首页聚合、兄弟项目纳入、全 Markdown、本地徽章、海玻璃家族令牌、氛围浓度分层、本地搜索、匿名统计、回程登出、分段构建（分页 20 篇/页、索引瘦身、图片上传）。
+已闭合决策：Hugo 分段构建（Go 生成器 + Python 编排壳）+ FastAPI 后台 + SQLite、Docker Compose profiles、双登录（本地 + OIDC）、单管理员、Setup 向导、八栏目后台、首页聚合、兄弟项目纳入、全 Markdown、本地徽章、海玻璃家族令牌、氛围浓度分层、本地搜索、匿名统计、回程登出、分页 20 篇/页、索引瘦身、图片上传。
 
 有意留空：`logo` / `favicon`（后期上传）；`icp` / `police`（备案通过后填写，禁止假占位号）。
 

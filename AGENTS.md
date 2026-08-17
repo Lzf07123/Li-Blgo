@@ -20,7 +20,7 @@
 5. **秘密与安全**：OIDC client_secret、密码等只走环境变量/.env/secret 文件，禁止提交 git；后台路径保持秘密；不挂载 Docker socket；容器非 root。
 6. **Markdown 为内容源**：文章/项目/时间线/关于/资源一律 Markdown/YAML，构建期渲染，禁止在公开页引入运行时 Markdown 解析器。
 7. **性能底线**：公开站保持纯静态；新增前端依赖须说明体积与必要性；动效尊重 prefers-reduced-motion。
-8. **构建引擎约束**：构建必须走分段增量流水线（扫描→分块渲染→聚合→发布）；峰值内存不得超过 `BUILD_MEMORY_LIMIT`；每文件原子写、manifest 每批更新；禁止一次性把全部文档加载进内存。
+8. **构建约束**：构建必须走 Hugo 分段编排（校验 → `GOMEMLIMIT` 限内存渲染到临时目录 → 原子发布 → 清理）；峰值内存不得超过 `GOMEMLIMIT`（默认 256MiB）；渲染器只用 Hugo（Goldmark + Chroma + shortcodes），后台预览与线上构建共用；禁止引入 Python-Markdown/Pygments 渲染链路。
 
 ## 协作规范
 

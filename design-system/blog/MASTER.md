@@ -42,7 +42,7 @@
 | badge | 本地徽章胶囊（技术栈/项目） |
 | card | 项目卡/文章卡 |
 | timeline-node | 时间线节点 |
-| code-block | Pygments 高亮（令牌配色） |
+| code-block | Chroma 高亮（Hugo 内置，令牌配色） |
 | admonition | 提示块（纯 CSS） |
 | toc | 文章目录 |
 | site-footer | 版权 + 备案号 |
@@ -61,17 +61,17 @@
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
 
-### 构建引擎（分段增量）
+### 构建编排（Hugo 分段）
 
 | 组件 | 说明 |
 | --- | --- |
-| scanner | 阶段 0：frontmatter 扫描 + manifest 比对（mtime + sha256） |
-| chunk-renderer | 阶段 1：按批渲染 Markdown/Pygments/Jinja2，原子写输出 |
-| aggregator | 阶段 2：首页/分页/标签/归档/搜索 JSON/RSS/sitemap |
-| publisher | 阶段 3：清理失效输出 + manifest 更新 + 完整性抽检 |
-| build-manifest | SQLite 表：path / mtime / sha256 / 状态 |
+| validator | 阶段 0：frontmatter/内部链接/图片存在性静态校验 |
+| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到 `.build-tmp/` |
+| publisher | 阶段 2：产物抽检通过后原子切换/增量同步到 `output/` |
+| cleaner | 阶段 3：清理临时目录与 Hugo 缓存 |
+| preview | 后台预览：`hugo --buildDrafts` 临时输出，与线上同一渲染器 |
 
-约束：峰值内存 ≤ `BUILD_MEMORY_LIMIT`（默认 128MB）；批大小自适应（32→16→8）；每文件 `os.replace` 原子写；高亮按 (lexer, code sha256) 缓存复用。
+约束：峰值内存 ≤ `GOMEMLIMIT`（默认 256MiB）；构建只写临时目录、校验通过才发布；渲染器为 Hugo Goldmark + Chroma + shortcodes，后台不引入 Python-Markdown/Pygments。
 
 ## 3. 页面模式
 
@@ -116,8 +116,9 @@
 - [ ] 备案号上线前留空；无假占位号
 - [ ] Nginx 常规访问日志关闭；匿名打点仅路径+时间戳
 - [ ] 后台安全：秘密路径/密码/限速/IP 白名单/非 root/无 Docker socket
-- [ ] 全量构建峰值内存 ≤ 128MB（实测数据记录到 MASTER.md）
-- [ ] 保存单篇为增量构建（秒级），中断后输出目录完整可用
+- [ ] 全量构建峰值内存 ≤ 256MB（GOMEMLIMIT 实测记录到 MASTER.md）
+- [ ] 保存单篇/全量重建 1–3 秒（1000 篇规模实测），中断后输出目录完整可用
+- [ ] 后台预览与线上构建共用 Hugo 渲染器
 
 ## 6. 文件映射（模板 → 本博客）
 
