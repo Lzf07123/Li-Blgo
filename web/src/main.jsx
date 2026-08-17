@@ -14,5 +14,8 @@ if (density !== "none") {
 document.querySelectorAll("[data-blur]").forEach((el) => {
   const text = el.textContent || "";
   const tag = el.tagName.toLowerCase();
-  createRoot(el).render(<BlurText as={tag} text={text} />);
+  const className = el.className || "";
+  const host = document.createElement("div");
+  el.replaceWith(host);
+  createRoot(host).render(<BlurText as={tag} text={text} className={className} />);
 });

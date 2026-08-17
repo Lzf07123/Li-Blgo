@@ -33,7 +33,7 @@ export default function BlurText({
   if (reduced) return <Tag className={className}>{text}</Tag>;
 
   return (
-    <Tag ref={ref} className={className} style={{ display: "flex", flexWrap: "wrap" }}>
+    <Tag ref={ref} className={className} style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
       {words.map((word, index) => (
         <motion.span
           key={index}

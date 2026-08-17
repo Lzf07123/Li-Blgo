@@ -363,6 +363,36 @@ input:focus, select:focus, textarea:focus {
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(56px, 56px, 0); }
 }
+.tech-beam {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 150px;
+  opacity: 0;
+  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam) 45%, var(--liblog-tech-beam-2) 55%, transparent);
+  animation: liblog-beam 14s ease-in-out infinite;
+  will-change: transform;
+}
+.tech-beam--violet {
+  left: 45%;
+  animation-delay: 3.4s;
+  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam-2) 45%, var(--liblog-tech-beam-3) 55%, transparent);
+}
+.tech-beam--sage {
+  left: 78%;
+  animation-delay: 6.8s;
+  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam-3) 45%, var(--liblog-tech-beam) 55%, transparent);
+}
+.tech-beam {
+  left: 8%;
+}
+@keyframes liblog-beam {
+  0% { transform: rotate(16deg) translateX(-320px); opacity: 0; }
+  5% { opacity: 0.35; animation-timing-function: ease-out; }
+  38% { opacity: 0.35; animation-timing-function: ease-in; }
+  50% { transform: rotate(16deg) translateX(1100px); opacity: 0; animation-timing-function: ease-out; }
+  100% { transform: rotate(16deg) translateX(1100px); opacity: 0; }
+}
 .aurora {
   position: absolute;
   border-radius: 50%;
