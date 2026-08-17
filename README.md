@@ -49,3 +49,4 @@ web/        # React 效果层源码（esbuild 打包）
 
 - 公开站：徽章本地生成（README 风格技能徽章使用官方品牌色 + 本地 SVG 图标），禁止 shields.io 外链
 - 本 README：按 Li&About 规范使用 shields.io 官方色整块徽章
+- 站点图标：Simple Icons（CC0），已本地化至 `themes/blog-theme/static/img/badges/`
