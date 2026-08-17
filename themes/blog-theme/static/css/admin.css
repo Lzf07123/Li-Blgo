@@ -53,4 +53,6 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .preview-frame { width: 100%; height: 80vh; border: 1px solid var(--liblog-border); border-radius: 12px; background: var(--liblog-surface); }
 @media (max-width: 768px) {
   .admin-header { flex-direction: column; align-items: flex-start; }
+  .admin-main { padding: 16px; }
+  .table-shell { display: block; overflow-x: auto; }
 }
