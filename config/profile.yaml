@@ -1,0 +1,41 @@
+# 个人信息唯一出处（内容种子参考 Li&About/profile.md，只写真实信息）
+name: 黎智锋
+identity: 计算机专业学生
+direction: 容器云 / 私有云 / Shell / Python 脚本
+goal: 省赛拿奖 + 求职就业
+
+skills:
+  - name: Linux
+    color: "#FCC624"
+    href: https://www.linux.org/
+  - name: Docker
+    color: "#2496ED"
+    href: https://www.docker.com/
+  - name: Kubernetes
+    color: "#326CE5"
+    href: https://kubernetes.io/
+  - name: Shell
+    color: "#4EAA25"
+    href: https://www.gnu.org/software/bash/
+  - name: Python
+    color: "#3776AB"
+    href: https://www.python.org/
+  - name: FastAPI
+    color: "#009688"
+    href: https://fastapi.tiangolo.com/
+  - name: Git
+    color: "#F05032"
+    href: https://git-scm.com/
+  - name: Markdown
+    color: "#000000"
+    href: https://daringfireball.net/projects/markdown/
+  - name: Ansible
+    color: "#EE0000"
+    href: https://www.ansible.com/
+  - name: Dify
+    color: "#0D7CFF"
+    href: https://dify.ai/
+
+links:
+  - label: GitHub
+    href: https://github.com/Lzf07123

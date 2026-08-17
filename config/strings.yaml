@@ -1,0 +1,30 @@
+# 站点级文案唯一出处：导航 / 区块标题 / 通用标签
+# 规则：模板禁止硬编码任何可见文案，全部从这里读取（后台"页面文案"栏目可改）
+nav:
+  home: 首页
+  posts: 文章
+  projects: 项目
+  timeline: 历程
+  about: 关于
+  resources: 资源
+
+home:
+  hero_title: 你好，我是
+  journey_title: 学习历程
+  skills_title: 技能栈
+  projects_title: 项目集
+  latest_title: 最新文章
+  view_full: 查看完整历程
+  view_all: 查看全部
+
+common:
+  reading_time: 分钟阅读
+  updated_at: 更新于
+  published_at: 发布于
+  back: 返回
+  draft: 草稿
+
+footer:
+  rights: 保留所有权利
+  icp_label: 备案号
+  police_label: 公网安备

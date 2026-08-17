@@ -1,0 +1,19 @@
+# Li&Blog 品牌单点：名称 / slogan / Logo / 备案的唯一出处
+name: Li&Blog
+slug: liblog
+tagline: 一次记录，见证每一步成长
+promise: 每一篇都是真实足迹，每次回顾都有迹可循
+persona: 安静的同行者
+
+# Logo / favicon：留空变量，后期上传后写入（如 /img/logo.webp、/img/favicon.webp）
+logo: ""
+favicon: ""
+
+# 版权与备案：备案通过前留空，禁止假占位号
+copyright: "© {year} 黎智锋"
+icp: ""
+icp_url: https://beian.miit.gov.cn/
+police: ""
+police_url: https://www.beian.gov.cn/
+
+theme_key: liblog-theme
