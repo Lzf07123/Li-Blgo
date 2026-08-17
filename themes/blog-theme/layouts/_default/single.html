@@ -1,10 +1,26 @@
 {{ define "main" }}
 {{ $strings := hugo.Data.strings }}
 <article class="article">
-  <p class="meta"><a href="{{ .Site.Home.RelPermalink }}">{{ $strings.common.back }}</a></p>
+  <nav class="breadcrumb" aria-label="面包屑">
+    <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
+    {{ with .CurrentSection }}
+    <span aria-hidden="true">/</span>
+    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+    {{ end }}
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{{ .Title }}</span>
+  </nav>
   <h1 class="page-title">{{ .Title }}</h1>
   <p class="meta">
     <time datetime="{{ .Date.Format "2006-01-02" }}">{{ $strings.common.published_at }} {{ .Date.Format "2006-01-02" }}</time>
+    {{ if ne (.Date.Format "2006-01-02") (.Lastmod.Format "2006-01-02") }}
+    <span class="meta-sep">·</span>
+    <time datetime="{{ .Lastmod.Format "2006-01-02" }}">{{ $strings.common.updated_at }} {{ .Lastmod.Format "2006-01-02" }}</time>
+    {{ end }}
+    {{ if .ReadingTime }}
+    <span class="meta-sep">·</span>
+    <span>{{ .ReadingTime }} {{ $strings.common.reading_time }}</span>
+    {{ end }}
     {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
   {{ if .TableOfContents }}<nav class="toc" aria-label="目录">{{ .TableOfContents }}</nav>{{ end }}
@@ -14,6 +30,22 @@
     <div class="badge-row">
       {{ range hugo.Data.profile.skills }}{{ partial "badge.html" . }}{{ end }}
     </div>
+  {{ end }}
+  {{ if or .PrevInSection .NextInSection }}
+  <nav class="post-nav" aria-label="文章导航">
+    {{ with .PrevInSection }}
+    <a class="post-nav-item" href="{{ .RelPermalink }}">
+      <span>{{ $strings.common.prev }}</span>
+      {{ .Title }}
+    </a>
+    {{ end }}
+    {{ with .NextInSection }}
+    <a class="post-nav-item post-nav-next" href="{{ .RelPermalink }}">
+      <span>{{ $strings.common.next }}</span>
+      {{ .Title }}
+    </a>
+    {{ end }}
+  </nav>
   {{ end }}
 </article>
 

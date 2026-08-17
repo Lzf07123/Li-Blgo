@@ -31,7 +31,22 @@ a:hover { color: var(--liblog-primary-hover); }
   outline-offset: 2px;
   border-radius: 4px;
 }
+main:focus { outline: none; }
 ::selection { background: var(--liblog-primary); color: var(--liblog-primary-fg); }
+
+/* ---------- 跳转链接 ---------- */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -80px;
+  z-index: 100;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--liblog-primary);
+  color: var(--liblog-primary-fg);
+  transition: top var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.skip-link:focus { top: 12px; }
 
 /* ---------- 页头（sticky + 品牌流动线） ---------- */
 .site-header {
@@ -75,10 +90,19 @@ a:hover { color: var(--liblog-primary-hover); }
   margin-left: auto;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 10px;
   flex-wrap: wrap;
   font-size: 0.9rem;
 }
+.site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+.site-nav a:hover { background: var(--liblog-surface-2); text-decoration: none; }
+.site-nav a[aria-current="page"] { color: var(--liblog-primary); font-weight: 600; }
 .flow-line {
   position: absolute;
   left: 0;
@@ -279,7 +303,20 @@ input:focus, select:focus, textarea:focus {
 
 /* ---------- 元信息 / 标签 / 时间线 ---------- */
 .meta { color: var(--liblog-muted); font-size: 0.875rem; }
+.meta-sep { margin: 0 6px; color: var(--liblog-border); }
 .tag { margin-left: 8px; color: var(--liblog-secondary); font-size: 0.8rem; }
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 12px;
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+}
+.breadcrumb a { color: var(--liblog-muted); }
+.breadcrumb a:hover { color: var(--liblog-primary); }
+.breadcrumb [aria-current="page"] { color: var(--liblog-fg); font-weight: 600; }
 .timeline { position: relative; margin-top: 16px; padding-left: 20px; border-left: 2px solid var(--liblog-border); }
 .timeline-node { position: relative; padding: 0 0 20px 16px; }
 .timeline-node::before {
@@ -538,9 +575,39 @@ input:focus, select:focus, textarea:focus {
 .admonition-danger { border-color: var(--liblog-destructive); background: var(--liblog-destructive-soft); }
 
 /* ---------- 搜索 ---------- */
+.search-label { display: block; margin-top: 12px; font-weight: 600; }
 .search-input { width: 100%; max-width: 480px; margin-top: 8px; }
 .search-results { list-style: none; padding: 0; margin-top: 16px; }
 .search-results li { padding: 10px 0; border-bottom: 1px solid var(--liblog-border); }
+.search-info { color: var(--liblog-muted); font-size: 0.85rem; margin-top: 12px; }
+.search-snippet { margin: 4px 0 0; color: var(--liblog-muted); font-size: 0.85rem; }
+.search-empty { color: var(--liblog-muted); }
+
+/* ---------- 文章导航与 404 ---------- */
+.post-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--liblog-border);
+}
+.post-nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+  background: var(--liblog-surface);
+  color: var(--liblog-fg);
+  font-weight: 600;
+}
+.post-nav-item span { color: var(--liblog-muted); font-size: 0.75rem; font-weight: 500; }
+.post-nav-item:hover { border-color: var(--liblog-primary); text-decoration: none; }
+.post-nav-next { text-align: right; }
+.not-found { max-width: 640px; margin: 80px auto; text-align: center; }
+.not-found-body { color: var(--liblog-muted); }
 
 /* ---------- 分页 ---------- */
 .pagination { display: flex; gap: 12px; margin-top: 24px; align-items: center; }
@@ -555,7 +622,7 @@ input:focus, select:focus, textarea:focus {
   .site-header { padding-top: 8px; }
   .nav-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
   .site-nav { margin-left: 0; gap: 14px; font-size: 0.85rem; }
-  .site-nav a { padding: 6px 2px; }
+  .site-nav a { padding: 4px 6px; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
   .hero { padding: 24px 0; }
@@ -571,6 +638,7 @@ input:focus, select:focus, textarea:focus {
   .project-card, .post-card { padding: 16px 18px; }
   .card-grid { gap: 12px; }
   .footer-inner { gap: 10px; }
+  .post-nav { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .page-shell { width: calc(100% - 24px); }

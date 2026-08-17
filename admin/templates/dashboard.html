@@ -1,15 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>仪表盘</h1>
-<div class="stat-cards">
-  <div class="stat-card">文章<br><strong>{{ counts.posts }}</strong></div>
-  <div class="stat-card">项目<br><strong>{{ counts.projects }}</strong></div>
-  <div class="stat-card">时间线<br><strong>{{ counts.timeline }}</strong></div>
+<div class="dashboard-head">
+  <h1>仪表盘</h1>
+  <a class="btn" href="/{{ admin_path }}/posts/new">新建文章</a>
 </div>
-<form method="post" action="/{{ admin_path }}/rebuild">
-  <input type="hidden" name="_csrf" value="{{ csrf }}">
-  <button type="submit" class="btn">全部重建</button>
-</form>
+<div class="stat-cards">
+  <div class="stat-card"><span>文章</span><strong>{{ counts.posts }}</strong></div>
+  <div class="stat-card"><span>草稿</span><strong>{{ drafts|length }}</strong></div>
+  <div class="stat-card"><span>项目</span><strong>{{ counts.projects }}</strong></div>
+  <div class="stat-card"><span>时间线</span><strong>{{ counts.timeline }}</strong></div>
+  <div class="stat-card"><span>媒体</span><strong>{{ media_count }}</strong></div>
+</div>
+<div class="quick-actions">
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/posts">文章管理</a>
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/media">媒体库</a>
+  <a class="btn btn-secondary btn-sm" href="/" target="_blank" rel="noopener">查看公开站</a>
+  <form method="post" action="/{{ admin_path }}/rebuild" data-busy>
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <button type="submit" class="btn btn-secondary btn-sm">全部重建</button>
+  </form>
+</div>
+{% if recent_posts %}
+<h2>最近文章</h2>
+<table class="table-shell">
+  <thead><tr><th>标题</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
+  <tbody>
+  {% for item in recent_posts %}
+    <tr>
+      <td>{{ item.title }}</td>
+      <td>{{ item.date }}</td>
+      <td><span class="badge {{ 'badge-warning' if item.status == 'draft' else 'badge-success' }}">{{ status_labels.get(item.status, item.status) }}</span></td>
+      <td class="row-actions"><a href="/{{ admin_path }}/posts/{{ item.slug }}/edit">编辑</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endif %}
 <h2>访问统计（最近）</h2>
 <table class="table-shell">
   <thead><tr><th>路径</th><th>日期</th><th>次数</th></tr></thead>

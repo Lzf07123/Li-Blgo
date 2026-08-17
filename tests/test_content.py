@@ -41,6 +41,23 @@ class TestContent(unittest.TestCase):
         content.save_yaml("brand", {"name": "Li&Blog", "icp": ""})
         self.assertEqual(content.load_yaml("brand")["name"], "Li&Blog")
 
+    def test_list_markdown_filter(self):
+        content.write_markdown(
+            "posts",
+            "hello",
+            {"title": "Hello Hugo", "date": "2026-08-18", "status": "published", "tags": ["hugo"]},
+            "正文",
+        )
+        content.write_markdown(
+            "posts",
+            "draft-note",
+            {"title": "未完成草稿", "date": "2026-08-18", "status": "draft", "tags": []},
+            "正文",
+        )
+        self.assertEqual(len(content.list_markdown("posts", q="hugo")), 1)
+        self.assertEqual(len(content.list_markdown("posts", status="draft")), 1)
+        self.assertEqual(len(content.list_markdown("posts", q="不存在")), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

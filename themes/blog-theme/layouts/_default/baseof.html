@@ -3,8 +3,9 @@
 <head>{{ partial "head.html" . }}</head>
 {{ $density := partial "density.html" . }}
 <body data-ambient="{{ $density }}">
+  <a class="skip-link" href="#main">{{ hugo.Data.strings.common.skip_to_content }}</a>
   {{ partial "header.html" . }}
-  <main class="page-shell">{{ block "main" . }}{{ end }}</main>
+  <main id="main" class="page-shell" tabindex="-1">{{ block "main" . }}{{ end }}</main>
   {{ partial "footer.html" . }}
   {{ block "scripts" . }}{{ end }}
 </body>

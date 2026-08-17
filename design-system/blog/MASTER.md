@@ -60,19 +60,28 @@
 | tabs | 八栏目顶部标签页 |
 | table-shell | 列表（文章/项目/时间线/资源） |
 | markdown-editor | 文本区 + 服务端预览 |
+| editor-preview | 编辑器右侧 Hugo 实时预览（分栏 iframe，保存后由 Hugo 渲染） |
+| media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越，上传即重建 |
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
+| admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |
 | search-page | Fuse.js 7 本地文件 + 构建期 JSON 索引，零服务端、零外链 |
+| list-filters | 列表页搜索/状态筛选/分页（50 条/页）与空状态引导 |
+| structured-config | 品牌/文案/首页/资料结构化表单：数字、勾选、技能/链接行编辑，不再手写 YAML |
 | beacon-ingest | nginx empty_gif 匿名日志 → admin 启动导入 stats 表 |
 | react-effects | React + motion 效果运行时（web/ 工程，esbuild 打包为 effects-react.js，约 90KB gzip）：FloatingBackground Canvas、Aurora、TechAmbience（网格+光点）、BlurText、CountUp；仅 full/soft 页面加载，文章页零 React |
 
 **P2 已实现（2026-08-18）：** Setup 三步向导、本地登录（限速+CSRF）、Li&Pass OIDC 登录/绑定/回程登出、八栏目（文章/项目/时间线/关于/资源/品牌/文案/首页/资料）、Hugo 预览与保存重建；16 项单元测试通过 + 端到端 curl 流程验证。
+
+**易用性迭代（2026-08-18）：** 后台编辑器分栏 Hugo 预览（保存后原地生成，不离开编辑页）、媒体库上传/插入图片、列表搜索与分页、首页/资料配置改为结构化表单、保存可选择留在本页、后台深浅色与分组导航；公开站补面包屑、阅读时间、上一篇/下一篇、搜索页结果计数与摘要、404 页、跳转到正文；25 项单元测试 + TestClient 端到端流程验证。
 
 **P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP/Hugo 全源加速变量 + checksum 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
 
 **React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。
 
 **容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；Hugo 二进制按 `TARGETARCH` 自动下载（URL 变量留空即自动拼装）；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）。
+
+**后台预览 iframe：** nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN`（覆盖全站 DENY），允许后台页面在后台内嵌预览；`client_max_body_size 8m` 支持媒体上传。
 
 ### 构建编排（Hugo 分段）
 
@@ -112,6 +121,8 @@
 | 时间线节点 | timeline Markdown | 时间线 |
 | 关于我长文 | about.md | 关于我 |
 | 资源条目 | resources.md | 资源 |
+| 媒体图片（Logo/正文插图） | themes/blog-theme/static/img/ | 媒体库（上传后重建公开站） |
+| 文章正文预览 | 编辑器正文 | 编辑页"生成预览"（Hugo 渲染） |
 
 验收：逐页对照本表，任何可见内容必须能在后台找到编辑入口；模板零硬编码可见文案。
 

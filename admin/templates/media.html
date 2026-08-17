@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="list-head">
+  <h1>媒体库（{{ items|length }}）</h1>
+</div>
+<form class="list-filters" method="get" action="/{{ admin_path }}/media">
+  <label class="visually-hidden" for="q">按文件名搜索</label>
+  <input id="q" type="search" name="q" value="{{ q }}" placeholder="按文件名搜索">
+  <button type="submit" class="btn btn-secondary btn-sm">搜索</button>
+  {% if q %}<a class="btn-link" href="/{{ admin_path }}/media">清除</a>{% endif %}
+</form>
+<form method="post" action="/{{ admin_path }}/media/upload" enctype="multipart/form-data" class="upload-box" data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" required>
+  <button type="submit" class="btn btn-sm">上传并重建</button>
+  <small>支持 png / jpg / webp / gif / avif，最大 5MB；上传后自动出现在公开站 /img/ 路径</small>
+</form>
+{% if items %}
+<div class="media-grid">
+  {% for m in items %}
+  <figure class="media-item">
+    <img src="/{{ admin_path }}/static/img/{{ m.rel }}" alt="{{ m.rel }}" loading="lazy">
+    <figcaption>
+      <code>{{ m.rel }}</code>
+      <small>{{ m.size }} 字节</small>
+      <div class="row-actions">
+        <a class="btn-link" href="/{{ admin_path }}/static/img/{{ m.rel }}" target="_blank" rel="noopener">查看</a>
+        <form method="post" action="/{{ admin_path }}/media/delete" onsubmit="return confirm('确定删除？删除后会重建公开站。')">
+          <input type="hidden" name="_csrf" value="{{ csrf }}">
+          <input type="hidden" name="path" value="{{ m.rel }}">
+          <button type="submit" class="btn-link danger">删除</button>
+        </form>
+      </div>
+    </figcaption>
+  </figure>
+  {% endfor %}
+</div>
+{% else %}
+<p class="flash">还没有图片。上传后会立即出现在公开站 /img/ 路径。</p>
+{% endif %}
+{% endblock %}

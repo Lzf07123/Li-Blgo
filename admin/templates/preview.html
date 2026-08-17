@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
+{% set edit_url = '/' + admin_path + '/' + section + '/edit' if not slug else '/' + admin_path + '/' + section + '/' + slug + '/edit' %}
 <h1>预览</h1>
 {% if exists %}
-  <p><a class="btn btn-ghost" href="/{{ admin_path }}/{{ section }}/{{ slug }}/edit">返回编辑</a></p>
+  <div class="form-actions">
+    <a class="btn btn-ghost" href="{{ edit_url }}">返回编辑</a>
+    <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}{{ '/preview/' + section + '/' + slug if slug else '/preview/' + section }}?raw=1" target="_blank" rel="noopener">新窗口打开</a>
+  </div>
   <iframe class="preview-frame" src="{{ src }}"></iframe>
 {% else %}
-  <p class="flash">预览文件不存在，请先在编辑页点击"保存并预览"。</p>
-  <p><a class="btn" href="/{{ admin_path }}/{{ section }}/{{ slug }}/edit">返回编辑</a></p>
+  <p class="flash">预览文件不存在，请先在编辑页点击"生成预览"。</p>
+  <p><a class="btn" href="{{ edit_url }}">返回编辑</a></p>
 {% endif %}
 {% endblock %}

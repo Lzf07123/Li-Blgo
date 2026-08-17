@@ -2,16 +2,17 @@
 
 import datetime
 from contextlib import asynccontextmanager
+from math import ceil
 from typing import Optional
 
 import yaml
-from fastapi import FastAPI, Form, HTTPException, Request
+from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from admin import build, content as store, oidc, security
+from admin import build, content as store, forms, media as media_store, oidc, security
 from admin.ingest import import_beacon_log
 from admin.config import ROOT, settings
 from admin.db import connect, create_admin, get_admin, init_db
@@ -38,6 +39,7 @@ app.add_middleware(
 )
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
+STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
 
 settings.preview_root.mkdir(parents=True, exist_ok=True)
 app.mount(
@@ -104,6 +106,7 @@ def render(request: Request, name: str, context: dict) -> HTMLResponse:
         sess = getattr(request.state, "anon_session", None)
     context.setdefault("admin_path", settings.admin_path)
     context.setdefault("csrf", sess["csrf"] if sess else "")
+    context.setdefault("status_labels", STATUS_LABELS)
     flash = request.query_params.get("ok") or request.query_params.get("error")
     context.setdefault("flash", flash)
     return templates.TemplateResponse(request, name, context)
@@ -117,13 +120,6 @@ def require_login(request: Request) -> None:
         raise HTTPException(status_code=302, headers={"Location": ap("/setup")})
     if current_session(request) is None:
         raise HTTPException(status_code=302, headers={"Location": ap("/login")})
-
-
-def parse_yaml_block(text: str, label: str):
-    try:
-        return yaml.safe_load(text or "{}"), None
-    except yaml.YAMLError as exc:
-        return None, f"{label} 解析失败：{exc}"
 
 
 def after_build_redirect(base: str) -> RedirectResponse:
@@ -355,10 +351,23 @@ def setup_oidc_bind(request: Request, csrf_token: str = Form("", alias="_csrf"))
 def dashboard(request: Request):
     require_login(request)
     counts = {s: len(store.list_markdown(s)) for s in ("posts", "projects", "timeline")}
+    posts = store.list_markdown("posts")
+    drafts = [p for p in posts if p.get("status") == "draft"]
+    recent_posts = posts[:5]
     conn = connect()
     stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
     conn.close()
-    return render(request, "dashboard.html", {"counts": counts, "stats": stats})
+    return render(
+        request,
+        "dashboard.html",
+        {
+            "counts": counts,
+            "drafts": drafts,
+            "recent_posts": recent_posts,
+            "stats": stats,
+            "media_count": len(media_store.list_media()),
+        },
+    )
 
 
 @app.get(ap("/stats"), response_class=HTMLResponse)
@@ -379,6 +388,53 @@ def rebuild(request: Request, csrf_token: str = Form("", alias="_csrf")):
     if result.returncode != 0:
         return RedirectResponse(ap(f"/?error=构建失败:{result.stderr[-200:]}"), status_code=303)
     return RedirectResponse(ap(f"/?ok=构建成功({elapsed}s)"), status_code=303)
+
+
+# ---------- 媒体库 ----------
+
+@app.get(ap("/media"), response_class=HTMLResponse)
+def media_page(request: Request, q: str = ""):
+    require_login(request)
+    items = media_store.list_media()
+    if q:
+        ql = q.lower()
+        items = [it for it in items if ql in it["rel"].lower()]
+    return render(request, "media.html", {"items": items, "q": q})
+
+
+@app.post(ap("/media/upload"))
+async def media_upload(
+    request: Request,
+    file: UploadFile = File(...),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/media?error=会话失效"), status_code=303)
+    data = await file.read()
+    try:
+        p = media_store.save_upload(file.filename or "", data)
+    except ValueError as exc:
+        return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/media?error=已上传但构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/media?ok=已上传 {p.relative_to(media_store.MEDIA_ROOT).as_posix()} 并重建（{elapsed}s）"), status_code=303)
+
+
+@app.post(ap("/media/delete"))
+def media_delete(request: Request, path: str = Form(""), csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/media?error=会话失效"), status_code=303)
+    try:
+        media_store.delete_media(path)
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/media?error=已删除但构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/media?ok=已删除并重建（{elapsed}s）"), status_code=303)
 
 
 # ---------- 栏目：列表 / 编辑 / 保存 / 删除 ----------
@@ -423,14 +479,36 @@ def _edit_fields(section: str, fm: dict) -> list:
 
 
 @app.get(ap("/{section}"), response_class=HTMLResponse)
-def section_list(request: Request, section: str):
+def section_list(request: Request, section: str, q: str = "", status: str = "", page: int = 1):
     require_login(request)
     if section not in SECTIONS:
         raise HTTPException(404)
     if SECTIONS[section]["single"]:
         return RedirectResponse(ap(f"/{section}/edit"), status_code=302)
-    items = store.list_markdown(section)
-    return render(request, "list.html", {"section": section, "label": SECTIONS[section]["label"], "items": items})
+    items = store.list_markdown(section, q=q, status=status)
+    total = len(items)
+    page = max(1, page)
+    page_size = 50
+    pages = max(1, ceil(total / page_size))
+    if page > pages:
+        page = pages
+    start = (page - 1) * page_size
+    page_items = items[start : start + page_size]
+    return render(
+        request,
+        "list.html",
+        {
+            "section": section,
+            "label": SECTIONS[section]["label"],
+            "items": page_items,
+            "q": q,
+            "status": status,
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "page_size": page_size,
+        },
+    )
 
 
 @app.get(ap("/{section}/new"), response_class=HTMLResponse)
@@ -441,7 +519,14 @@ def section_new(request: Request, section: str):
     return render(
         request,
         "edit.html",
-        {"section": section, "slug": "", "label": SECTIONS[section]["label"], "fields": _edit_fields(section, {})},
+        {
+            "section": section,
+            "slug": "",
+            "label": SECTIONS[section]["label"],
+            "fields": _edit_fields(section, {}),
+            "media_items": media_store.list_media()[:20],
+            "preview_path": "",
+        },
     )
 
 
@@ -458,7 +543,15 @@ def section_edit(request: Request, section: str):
     return render(
         request,
         "edit.html",
-        {"section": section, "slug": slug, "label": SECTIONS[section]["label"], "fields": _edit_fields(section, fm), "body": body},
+        {
+            "section": section,
+            "slug": slug,
+            "label": SECTIONS[section]["label"],
+            "fields": _edit_fields(section, fm),
+            "body": body,
+            "media_items": media_store.list_media()[:20],
+            "preview_path": f"/preview/{section}" if SECTIONS[section]["single"] else "",
+        },
     )
 
 
@@ -471,7 +564,15 @@ def section_slug_edit(request: Request, section: str, slug: str):
     return render(
         request,
         "edit.html",
-        {"section": section, "slug": slug, "label": SECTIONS[section]["label"], "fields": _edit_fields(section, fm), "body": body},
+        {
+            "section": section,
+            "slug": slug,
+            "label": SECTIONS[section]["label"],
+            "fields": _edit_fields(section, fm),
+            "body": body,
+            "media_items": media_store.list_media()[:20],
+            "preview_path": f"/preview/{section}/{slug}",
+        },
     )
 
 
@@ -528,11 +629,27 @@ def section_save(
             store.write_markdown(section, slug, fm, body)
     except ValueError as exc:
         return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
+    if action == "preview_raw":
+        result, elapsed = build.run_preview()
+        if result.returncode != 0:
+            edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
+            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败"), status_code=303)
+        preview_path = f"/{section}" if SECTIONS[section]["single"] else f"/{section}/{slug}"
+        return RedirectResponse(ap(f"/preview{preview_path}?raw=1"), status_code=303)
     if action == "preview":
         result, elapsed = build.run_preview()
         if result.returncode != 0:
-            return RedirectResponse(ap(f"/{section}?error=预览构建失败"), status_code=303)
-        return RedirectResponse(ap(f"/preview/{section}/{slug}"), status_code=303)
+            edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
+            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败"), status_code=303)
+        preview_path = f"/{section}" if SECTIONS[section]["single"] else f"/{section}/{slug}"
+        return RedirectResponse(ap(f"/preview{preview_path}"), status_code=303)
+    if action == "save_stay":
+        result, elapsed = build.run_full()
+        if result.returncode != 0:
+            edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
+            return RedirectResponse(ap(f"{edit_path}?error=构建失败"), status_code=303)
+        edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
+        return RedirectResponse(ap(f"{edit_path}?ok=已保存并重建（{elapsed}s）"), status_code=303)
     return after_build_redirect(f"/{section}")
 
 
@@ -548,26 +665,99 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
     return RedirectResponse(ap(f"/{section}?ok=已删除并重建({elapsed}s)"), status_code=303)
 
 
+@app.get(ap("/preview/{section}"), response_class=HTMLResponse)
+def preview_single(request: Request, section: str, raw: int = 0):
+    return preview_page(request, section, "", raw)
+
+
 @app.get(ap("/preview/{section}/{slug}"), response_class=HTMLResponse)
-def preview_page(request: Request, section: str, slug: str):
+def preview_page(request: Request, section: str, slug: str, raw: int = 0):
     require_login(request)
     target = settings.preview_root / section / slug / "index.html"
     exists = target.exists()
+    if raw and exists:
+        html = target.read_text(encoding="utf-8")
+        html = html.replace('href="/css/', f'href="/{settings.admin_path}/static/css/')
+        html = html.replace('src="/js/', f'src="/{settings.admin_path}/static/js/')
+        return HTMLResponse(html)
     return render(
         request,
         "preview.html",
         {"section": section, "slug": slug, "exists": exists,
-         "src": f"/{settings.admin_path}/preview-out/{section}/{slug}/index.html"},
+         "src": (f"/{settings.admin_path}/preview-out/{section}/{slug}/index.html" if slug
+                 else f"/{settings.admin_path}/preview-out/{section}/index.html")},
     )
 
 
 # ---------- 配置表单 ----------
 
 CONFIG_PAGES = {
-    "brand": ("品牌", ["name", "tagline", "promise", "persona", "copyright", "icp", "police", "logo", "favicon"]),
-    "strings": ("页面文案", ["nav", "home", "common", "footer"]),
-    "homepage": ("首页设置", ["hero", "journey", "posts", "projects"]),
-    "profile": ("关于我资料", ["name", "identity", "direction", "goal", "skills", "links"]),
+    "brand": (
+        "品牌",
+        [
+            {"name": "name", "label": "站点名称", "type": "text"},
+            {"name": "tagline", "label": "一句话定位", "type": "text"},
+            {"name": "promise", "label": "品牌承诺", "type": "text"},
+            {"name": "persona", "label": "人格比喻", "type": "text"},
+            {"name": "copyright", "label": "版权文案（{year} 会被替换为当前年份）", "type": "text"},
+            {"name": "icp", "label": "ICP 备案号（未备案留空）", "type": "text"},
+            {"name": "icp_url", "label": "ICP 备案链接", "type": "text"},
+            {"name": "police", "label": "公网安备号（未备案留空）", "type": "text"},
+            {"name": "police_url", "label": "公安备案链接", "type": "text"},
+            {"name": "logo", "label": "Logo 图片路径", "type": "text", "help": "先把图片传到媒体库，再填 /img/… 路径"},
+            {"name": "favicon", "label": "Favicon 路径", "type": "text", "help": "先传到媒体库，再填 /img/… 路径"},
+        ],
+    ),
+    "strings": (
+        "页面文案",
+        [
+            {"name": "nav", "label": "导航", "type": "yaml", "help": "每行一个 key: 值"},
+            {"name": "home", "label": "首页区块标题", "type": "yaml", "help": "每行一个 key: 值"},
+            {"name": "common", "label": "通用标签", "type": "yaml", "help": "每行一个 key: 值"},
+            {"name": "footer", "label": "页脚文案", "type": "yaml", "help": "每行一个 key: 值"},
+        ],
+    ),
+    "homepage": (
+        "首页设置",
+        [
+            {"name": "hero.show_skills", "label": "Hero 显示技能徽章", "type": "checkbox"},
+            {"name": "hero.skills_limit", "label": "技能徽章数量", "type": "number"},
+            {"name": "journey.preview_count", "label": "历程速览条数", "type": "number"},
+            {"name": "posts.featured", "label": "精选文章（slug 逗号分隔，留空自动取最新）", "type": "csv"},
+            {"name": "posts.latest_count", "label": "最新文章条数", "type": "number"},
+            {"name": "projects.show_on_home", "label": "首页显示项目集", "type": "checkbox"},
+            {"name": "projects.max_cards", "label": "首页项目卡数量", "type": "number"},
+        ],
+    ),
+    "profile": (
+        "关于我资料",
+        [
+            {"name": "name", "label": "姓名", "type": "text"},
+            {"name": "identity", "label": "身份", "type": "text"},
+            {"name": "direction", "label": "方向", "type": "text"},
+            {"name": "goal", "label": "当前目标", "type": "text"},
+            {
+                "name": "skills",
+                "label": "技能徽章",
+                "type": "list",
+                "help": "每一行是一个徽章；颜色选色或填十六进制",
+                "columns": [
+                    {"key": "name", "label": "名称", "input": "text"},
+                    {"key": "color", "label": "颜色", "input": "color"},
+                    {"key": "href", "label": "链接", "input": "text"},
+                ],
+            },
+            {
+                "name": "links",
+                "label": "外部链接",
+                "type": "list",
+                "columns": [
+                    {"key": "label", "label": "名称", "input": "text"},
+                    {"key": "href", "label": "链接", "input": "text"},
+                ],
+            },
+        ],
+    ),
 }
 
 
@@ -576,16 +766,29 @@ def config_edit(request: Request, name: str):
     require_login(request)
     if name not in CONFIG_PAGES:
         raise HTTPException(404)
-    label, keys = CONFIG_PAGES[name]
+    label, specs = CONFIG_PAGES[name]
     data = store.load_yaml(name)
     fields = []
-    for key in keys:
-        value = data.get(key, {})
-        if isinstance(value, (dict, list)):
+    for spec in specs:
+        key = spec["name"]
+        value = forms.nested_get(data, key.split("."))
+        ftype = spec.get("type", "text")
+        field = dict(spec)
+        if ftype == "yaml":
+            value = value if isinstance(value, (dict, list)) else {}
             value = yaml.safe_dump(value, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
-            fields.append({"name": key, "label": key, "type": "textarea", "value": value})
+            field["value"] = value
+        elif ftype == "checkbox":
+            field["value"] = bool(value)
+        elif ftype == "list":
+            field["value"] = value if isinstance(value, list) else []
+        elif ftype == "csv":
+            field["value"] = ", ".join(value if isinstance(value, list) else [])
+        elif ftype == "number":
+            field["value"] = value if value is not None else ""
         else:
-            fields.append({"name": key, "label": key, "type": "text", "value": value if value is not None else ""})
+            field["value"] = value if value is not None else ""
+        fields.append(field)
     return render(request, "config_form.html", {"name": name, "label": label, "fields": fields})
 
 
@@ -596,15 +799,9 @@ async def config_save(request: Request, name: str, csrf_token: str = Form("", al
         return RedirectResponse(ap(f"/config/{name}?error=会话失效"), status_code=303)
     form = await request.form()
     data = store.load_yaml(name)
-    label, keys = CONFIG_PAGES[name]
-    for key in keys:
-        raw = form.get(key, "")
-        if isinstance(data.get(key), (dict, list)) or str(raw).lstrip().startswith(("-", "{", "[")):
-            parsed, err = parse_yaml_block(str(raw), key)
-            if err:
-                return RedirectResponse(ap(f"/config/{name}?error={err}"), status_code=303)
-            data[key] = parsed
-        else:
-            data[key] = str(raw)
+    label, specs = CONFIG_PAGES[name]
+    data, err = forms.parse_config(data, specs, form)
+    if err:
+        return RedirectResponse(ap(f"/config/{name}?error={err}"), status_code=303)
     store.save_yaml(name, data)
     return after_build_redirect(f"/config/{name}")

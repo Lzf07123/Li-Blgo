@@ -1,0 +1,8 @@
+{{ define "main" }}
+{{ $strings := hugo.Data.strings }}
+<div class="not-found">
+  <h1 class="page-title">{{ $strings.common.not_found_title }}</h1>
+  <p class="not-found-body">{{ $strings.common.not_found_body }}</p>
+  <p><a class="more-link" href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a></p>
+</div>
+{{ end }}

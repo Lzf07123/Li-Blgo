@@ -5,16 +5,87 @@
 <form method="post" action="/{{ admin_path }}/config/{{ name }}">
   <input type="hidden" name="_csrf" value="{{ csrf }}">
   {% for field in fields %}
-  <label>{{ field.label }}
-    {% if field.type == "textarea" %}
-      <textarea name="{{ field.name }}" rows="8" class="mono">{{ field.value }}</textarea>
+    {% if field.type == "list" %}
+    <fieldset class="config-list">
+      <legend>{{ field.label }}</legend>
+      {% if field.help %}<p class="field-help">{{ field.help }}</p>{% endif %}
+      <table class="table-shell list-rows">
+        <thead>
+          <tr>
+            {% for col in field.columns %}<th>{{ col.label }}</th>{% endfor %}
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rows-{{ field.name }}">
+          {% for row in field.value %}
+          <tr>
+            {% for col in field.columns %}
+            <td><input type="{{ col.get('input', 'text') }}" name="{{ field.name }}[{{ loop.index0 }}][{{ col.key }}]" value="{{ row.get(col.key, '') }}"></td>
+            {% endfor %}
+            <td><button type="button" class="btn-link danger list-remove">删除</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <button type="button" class="btn btn-sm btn-secondary list-add" data-field="{{ field.name }}" data-columns='{{ field.columns|tojson }}'>添加一行</button>
+    </fieldset>
     {% else %}
-      <input type="text" name="{{ field.name }}" value="{{ field.value }}">
+    <label>{{ field.label }}
+      {% if field.type == "yaml" %}
+        <textarea name="{{ field.name }}" rows="8" class="mono">{{ field.value }}</textarea>
+      {% elif field.type == "checkbox" %}
+        <input type="checkbox" name="{{ field.name }}" value="1" {% if field.value %}checked{% endif %}>
+      {% elif field.type == "number" %}
+        <input type="number" name="{{ field.name }}" value="{{ field.value }}">
+      {% else %}
+        <input type="text" name="{{ field.name }}" value="{{ field.value }}">
+      {% endif %}
+      {% if field.help %}<small class="field-help">{{ field.help }}</small>{% endif %}
+    </label>
     {% endif %}
-  </label>
   {% endfor %}
   <div class="form-actions">
     <button type="submit" class="btn">保存并重建</button>
+    <a class="btn btn-ghost" href="/{{ admin_path }}/">返回仪表盘</a>
   </div>
 </form>
+<script>
+  (function () {
+    function attachRemove(button) {
+      button.addEventListener("click", function () {
+        var tr = button.closest("tr");
+        if (tr && confirm("删除这一行？")) {
+          tr.remove();
+        }
+      });
+    }
+    document.querySelectorAll(".list-remove").forEach(attachRemove);
+    document.querySelectorAll(".list-add").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var field = btn.dataset.field;
+        var columns = JSON.parse(btn.dataset.columns);
+        var tbody = document.getElementById("rows-" + field);
+        var idx = tbody.rows.length;
+        var tr = document.createElement("tr");
+        columns.forEach(function (col) {
+          var td = document.createElement("td");
+          var input = document.createElement("input");
+          input.type = col.input || "text";
+          input.name = field + "[" + idx + "][" + col.key + "]";
+          td.appendChild(input);
+          tr.appendChild(td);
+        });
+        var td = document.createElement("td");
+        var del = document.createElement("button");
+        del.type = "button";
+        del.className = "btn-link danger list-remove";
+        del.textContent = "删除";
+        td.appendChild(del);
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+        attachRemove(del);
+      });
+    });
+  })();
+</script>
 {% endblock %}

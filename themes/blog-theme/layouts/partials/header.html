@@ -1,5 +1,6 @@
 {{ $brand := hugo.Data.brand }}
 {{ $nav := hugo.Data.strings.nav }}
+{{ $current := .RelPermalink }}
 <header class="site-header">
   <div class="nav-inner">
     <a class="brand-logo" href="{{ .Site.Home.RelPermalink }}">
@@ -11,13 +12,13 @@
       {{ end }}
     </a>
     <nav class="site-nav" aria-label="主导航">
-      <a href="{{ .Site.Home.RelPermalink }}">{{ $nav.home }}</a>
-      <a href="{{ "posts/" | relURL }}">{{ $nav.posts }}</a>
-      <a href="{{ "projects/" | relURL }}">{{ $nav.projects }}</a>
-      <a href="{{ "timeline/" | relURL }}">{{ $nav.timeline }}</a>
-      <a href="{{ "about/" | relURL }}">{{ $nav.about }}</a>
-      <a href="{{ "resources/" | relURL }}">{{ $nav.resources }}</a>
-      <a href="{{ "search-ui/" | relURL }}">{{ $nav.search }}</a>
+      <a href="{{ .Site.Home.RelPermalink }}" {{ if eq $current .Site.Home.RelPermalink }}aria-current="page"{{ end }}>{{ $nav.home }}</a>
+      <a href="{{ "posts/" | relURL }}" {{ if hasPrefix $current "/posts/" }}aria-current="page"{{ end }}>{{ $nav.posts }}</a>
+      <a href="{{ "projects/" | relURL }}" {{ if hasPrefix $current "/projects/" }}aria-current="page"{{ end }}>{{ $nav.projects }}</a>
+      <a href="{{ "timeline/" | relURL }}" {{ if hasPrefix $current "/timeline/" }}aria-current="page"{{ end }}>{{ $nav.timeline }}</a>
+      <a href="{{ "about/" | relURL }}" {{ if hasPrefix $current "/about/" }}aria-current="page"{{ end }}>{{ $nav.about }}</a>
+      <a href="{{ "resources/" | relURL }}" {{ if hasPrefix $current "/resources/" }}aria-current="page"{{ end }}>{{ $nav.resources }}</a>
+      <a href="{{ "search-ui/" | relURL }}" {{ if hasPrefix $current "/search-ui/" }}aria-current="page"{{ end }}>{{ $nav.search }}</a>
     </nav>
   </div>
   <span class="flow-line" aria-hidden="true"></span>

@@ -1,24 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="list-head">
-  <h1>{{ label }}</h1>
+  <h1>{{ label }}（{{ total }}）</h1>
   {% if section in ["posts", "projects", "timeline"] %}
   <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
   {% endif %}
 </div>
+<form class="list-filters" method="get" action="/{{ admin_path }}/{{ section }}">
+  <label class="visually-hidden" for="q">搜索标题、标识或标签</label>
+  <input id="q" type="search" name="q" value="{{ q }}" placeholder="搜索标题 / 标识 / 标签">
+  {% if section == "posts" %}
+  <select name="status" aria-label="按状态筛选">
+    <option value="">全部状态</option>
+    <option value="published" {% if status == "published" %}selected{% endif %}>已发布</option>
+    <option value="draft" {% if status == "draft" %}selected{% endif %}>草稿</option>
+  </select>
+  {% endif %}
+  <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
+  {% if q or status %}<a class="btn-link" href="/{{ admin_path }}/{{ section }}">清除</a>{% endif %}
+</form>
 <table class="table-shell">
   <thead><tr><th>标题</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
   <tbody>
   {% for item in items %}
     <tr>
-      <td>{{ item.title }}</td>
+      <td><a href="/{{ admin_path }}/{{ section }}/{{ item.slug }}/edit">{{ item.title }}</a></td>
       <td>{{ item.date }}</td>
-      <td>{{ item.status }}</td>
+      <td><span class="badge {{ 'badge-warning' if item.status == 'draft' else 'badge-success' }}">{{ status_labels.get(item.status, item.status) }}</span></td>
       <td class="row-actions">
         <a href="/{{ admin_path }}/{{ section }}/{{ item.slug }}/edit">编辑</a>
+        <a href="/{{ section }}/{{ item.slug }}/" target="_blank" rel="noopener">查看</a>
         {% if section != "timeline" %}
         <form method="post" action="/{{ admin_path }}/{{ section }}/{{ item.slug }}/delete"
-              onsubmit="return confirm('确定删除？')">
+              onsubmit="return confirm('确定删除？删除后会立即重建公开站。')">
           <input type="hidden" name="_csrf" value="{{ csrf }}">
           <button type="submit" class="btn-link danger">删除</button>
         </form>
@@ -26,8 +40,23 @@
       </td>
     </tr>
   {% else %}
-    <tr><td colspan="4">暂无内容</td></tr>
+    <tr>
+      <td colspan="4">
+        {% if q or status %}
+        <p>没有匹配的内容，换个关键词或清除筛选试试。</p>
+        {% else %}
+        <p>还没有内容，点右上角“新建”开始。</p>
+        {% endif %}
+      </td>
+    </tr>
   {% endfor %}
   </tbody>
 </table>
+{% if pages > 1 %}
+<nav class="pagination" aria-label="分页">
+  {% if page > 1 %}<a class="btn btn-sm btn-secondary" href="?page={{ page - 1 }}&amp;q={{ q|urlencode }}&amp;status={{ status }}">上一页</a>{% endif %}
+  <span>第 {{ page }} / {{ pages }} 页</span>
+  {% if page < pages %}<a class="btn btn-sm btn-secondary" href="?page={{ page + 1 }}&amp;q={{ q|urlencode }}&amp;status={{ status }}">下一页</a>{% endif %}
+</nav>
+{% endif %}
 {% endblock %}

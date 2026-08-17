@@ -2,36 +2,136 @@
 {% block content %}
 <h1>{{ label }}{% if slug %}: {{ slug }}{% endif %}</h1>
 {% if error %}<p class="flash">{{ error }}</p>{% endif %}
-<form method="post" action="/{{ admin_path }}/{{ section }}/save">
-  <input type="hidden" name="_csrf" value="{{ csrf }}">
-  <input type="hidden" name="slug" value="{{ slug }}">
-  {% if not slug and section in ["posts", "projects", "timeline"] %}
-  <label>标识（slug，新建时必填，小写字母数字与连字符）
-    <input type="text" name="new_slug" required pattern="[a-z0-9][a-z0-9-]{0,63}">
-  </label>
-  {% endif %}
-  {% for field in fields %}
-    {% set name, label, ftype, value = field[0], field[1], field[2], field[3] %}
-    <label>{{ label }}
-      {% if ftype == "select" %}
-        <select name="{{ name }}">
-          {% for option in field[4] %}
-          <option value="{{ option }}" {% if option == value %}selected{% endif %}>{{ option }}</option>
-          {% endfor %}
-        </select>
-      {% elif ftype == "textarea" %}
-        <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
-      {% else %}
-        <input type="text" name="{{ name }}" value="{{ value }}">
+<div class="editor-layout">
+  <div class="editor-main">
+    <form id="edit-form" method="post" action="/{{ admin_path }}/{{ section }}/save">
+      <input type="hidden" name="_csrf" value="{{ csrf }}">
+      <input type="hidden" name="slug" value="{{ slug }}">
+      {% if not slug and section in ["posts", "projects", "timeline"] %}
+      <label>标识（slug，新建时必填，小写字母数字与连字符）
+        <input type="text" name="new_slug" required pattern="[a-z0-9][a-z0-9-]{0,63}">
+      </label>
       {% endif %}
-    </label>
-  {% endfor %}
-  <label>正文 Markdown
-    <textarea name="body" rows="24" class="mono">{{ body or "" }}</textarea>
-  </label>
-  <div class="form-actions">
-    <button type="submit" name="action" value="save" class="btn">保存并重建</button>
-    <button type="submit" name="action" value="preview" class="btn btn-ghost">保存并预览</button>
+      {% for field in fields %}
+        {% set name, label, ftype, value = field[0], field[1], field[2], field[3] %}
+        <label>{{ label }}
+          {% if ftype == "select" %}
+            <select name="{{ name }}">
+              {% for option in field[4] %}
+              <option value="{{ option }}" {% if option == value %}selected{% endif %}>{{ option }}</option>
+              {% endfor %}
+            </select>
+          {% elif ftype == "textarea" %}
+            <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
+          {% else %}
+            <input type="text" name="{{ name }}" value="{{ value }}">
+          {% endif %}
+        </label>
+      {% endfor %}
+      <label>正文 Markdown
+        <div class="editor-toolbar">
+          <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
+          <span id="body-count" class="editor-count"></span>
+        </div>
+        <textarea id="body" name="body" rows="24" class="mono">{{ body or "" }}</textarea>
+      </label>
+      <div class="form-actions">
+        <button type="submit" name="action" value="save_stay" class="btn">保存（留在本页）</button>
+        <button type="submit" name="action" value="save" class="btn btn-secondary">保存并返回列表</button>
+        <button type="submit" name="action" value="preview_raw" class="btn btn-ghost" id="preview-btn">生成预览</button>
+      </div>
+    </form>
   </div>
-</form>
+  <aside class="editor-preview">
+    <div class="editor-preview-head">
+      <span>Hugo 预览</span>
+      {% if preview_path %}
+      <a id="preview-open" class="btn-link" href="/{{ admin_path }}{{ preview_path }}?raw=1" target="_blank" rel="noopener">新窗口打开</a>
+      {% endif %}
+    </div>
+    <iframe id="preview-frame" name="preview-frame" title="Hugo 预览" class="preview-frame"></iframe>
+  </aside>
+</div>
+
+<dialog id="image-dialog" class="media-dialog">
+  <form method="dialog">
+    <h2>插入图片</h2>
+    <p>点选下面图片，或先到<a href="/{{ admin_path }}/media">媒体库</a>上传。</p>
+    {% if media_items %}
+    <ul class="media-pick-list">
+      {% for m in media_items %}
+      <li>
+        <button type="button" class="media-pick" data-path="{{ m.url }}">
+          <span>{{ m.rel }}</span>
+          <small>{{ m.size }} 字节</small>
+        </button>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p>媒体库还没有图片，先去上传。</p>
+    {% endif %}
+    <label>或直接填图片路径
+      <input id="image-path-input" type="text" placeholder="/img/2026/08/xxx.webp">
+    </label>
+    <div class="form-actions">
+      <button type="button" id="image-insert-confirm" class="btn">插入</button>
+      <button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">取消</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  (function () {
+    var form = document.getElementById("edit-form");
+    var body = document.getElementById("body");
+    var count = document.getElementById("body-count");
+    var dialog = document.getElementById("image-dialog");
+
+    function updateCount() {
+      var text = body.value;
+      var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      count.textContent = text.length + " 字符 / " + words + " 词";
+    }
+    body.addEventListener("input", updateCount);
+    updateCount();
+
+    function insertAtCursor(text) {
+      var start = body.selectionStart;
+      var end = body.selectionEnd;
+      body.value = body.value.slice(0, start) + text + body.value.slice(end);
+      body.selectionStart = body.selectionEnd = start + text.length;
+      body.focus();
+    }
+
+    document.getElementById("insert-image").addEventListener("click", function () {
+      dialog.showModal();
+    });
+    document.querySelectorAll(".media-pick").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        document.getElementById("image-path-input").value = btn.dataset.path;
+      });
+    });
+    document.getElementById("image-insert-confirm").addEventListener("click", function () {
+      var path = document.getElementById("image-path-input").value.trim();
+      if (path) {
+        insertAtCursor("![](" + path + ")\n");
+      }
+      dialog.close();
+    });
+
+    document.getElementById("preview-btn").addEventListener("click", function (e) {
+      e.preventDefault();
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "action";
+      input.value = "preview_raw";
+      form.appendChild(input);
+      form.target = "preview-frame";
+      form.submit();
+      form.target = "_self";
+      form.removeChild(input);
+    });
+  })();
+</script>
 {% endblock %}

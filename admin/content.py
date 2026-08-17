@@ -30,7 +30,7 @@ def _read_frontmatter(path: Path) -> dict:
     return {}
 
 
-def list_markdown(section: str) -> list[dict]:
+def list_markdown(section: str, q: str = "", status: str = "") -> list[dict]:
     directory = settings.content_root / section
     if not directory.exists():
         return []
@@ -43,8 +43,20 @@ def list_markdown(section: str) -> list[dict]:
                 "title": fm.get("title", p.stem),
                 "date": fm.get("date", ""),
                 "status": fm.get("status", "published"),
+                "tags": fm.get("tags") or [],
             }
         )
+    if q:
+        ql = q.lower()
+        items = [
+            it
+            for it in items
+            if ql in it["title"].lower()
+            or ql in it["slug"].lower()
+            or any(ql in str(t).lower() for t in it["tags"])
+        ]
+    if status and section == "posts":
+        items = [it for it in items if it["status"] == status]
     return items
 
 

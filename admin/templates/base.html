@@ -4,29 +4,71 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Li&Blog 后台{% endblock %}</title>
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=22">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=22">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=22">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=23">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=23">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=23">
+  <script>
+    (function () {
+      var saved = localStorage.getItem("liblog-admin-theme");
+      if (saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+        document.documentElement.classList.add("dark");
+      }
+    })();
+  </script>
 </head>
 <body class="admin-body">
   <header class="admin-header">
-    <a class="admin-brand" href="/{{ admin_path }}/">Li&Blog 后台</a>
-    <nav class="admin-nav">
-      <a href="/{{ admin_path }}/posts">文章</a>
-      <a href="/{{ admin_path }}/projects">项目</a>
-      <a href="/{{ admin_path }}/timeline">时间线</a>
-      <a href="/{{ admin_path }}/about">关于我</a>
-      <a href="/{{ admin_path }}/resources">资源</a>
-      <a href="/{{ admin_path }}/config/brand">品牌</a>
-      <a href="/{{ admin_path }}/config/strings">文案</a>
-      <a href="/{{ admin_path }}/config/homepage">首页</a>
-      <a href="/{{ admin_path }}/stats">统计</a>
+    <div class="admin-header-top">
+      <a class="admin-brand" href="/{{ admin_path }}/">Li&Blog 后台</a>
+      <div class="admin-header-actions">
+        <a class="btn btn-sm btn-ghost" href="/" target="_blank" rel="noopener">公开站</a>
+        <button id="theme-toggle" class="btn btn-sm btn-ghost" type="button" aria-label="切换深浅色">深浅色</button>
+      </div>
+    </div>
+    <nav class="admin-nav" aria-label="后台栏目">
+      <span class="admin-nav-group">内容</span>
+      <a href="/{{ admin_path }}/posts" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/posts') else '' }}">文章</a>
+      <a href="/{{ admin_path }}/projects" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/projects') else '' }}">项目</a>
+      <a href="/{{ admin_path }}/timeline" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/timeline') else '' }}">时间线</a>
+      <a href="/{{ admin_path }}/about" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/about') else '' }}">关于我</a>
+      <a href="/{{ admin_path }}/resources" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/resources') else '' }}">资源</a>
+      <span class="admin-nav-group">设置</span>
+      <a href="/{{ admin_path }}/config/brand" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/config/brand') else '' }}">品牌</a>
+      <a href="/{{ admin_path }}/config/strings" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/config/strings') else '' }}">文案</a>
+      <a href="/{{ admin_path }}/config/homepage" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/config/homepage') else '' }}">首页</a>
+      <a href="/{{ admin_path }}/config/profile" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/config/profile') else '' }}">资料</a>
+      <span class="admin-nav-group">系统</span>
+      <a href="/{{ admin_path }}/media" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/media') else '' }}">媒体库</a>
+      <a href="/{{ admin_path }}/stats" class="{{ 'active' if request.url.path.startswith('/' + admin_path + '/stats') else '' }}">统计</a>
       <a href="/{{ admin_path }}/logout">登出</a>
     </nav>
   </header>
   <main class="admin-main">
-    {% if flash %}<p class="flash">{{ flash }}</p>{% endif %}
+    {% if flash %}<p class="flash" role="status">{{ flash }}</p>{% endif %}
     {% block content %}{% endblock %}
   </main>
+  <script>
+    (function () {
+      var btn = document.getElementById("theme-toggle");
+      if (btn) {
+        btn.setAttribute("aria-pressed", document.documentElement.classList.contains("dark") ? "true" : "false");
+        btn.addEventListener("click", function () {
+          var root = document.documentElement;
+          var dark = root.classList.toggle("dark");
+          localStorage.setItem("liblog-admin-theme", dark ? "dark" : "light");
+          btn.setAttribute("aria-pressed", dark ? "true" : "false");
+        });
+      }
+      document.querySelectorAll("form[data-busy]").forEach(function (form) {
+        form.addEventListener("submit", function () {
+          var button = form.querySelector('button[type="submit"]');
+          if (button) {
+            button.disabled = true;
+            button.textContent = "处理中…";
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
