@@ -316,12 +316,13 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
-  min-height: min(78vh, 640px);
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 32px 0;
+  padding: 24px 0;
   text-align: center;
 }
 .hero-inner {
@@ -331,10 +332,10 @@ input:focus, select:focus, textarea:focus {
   will-change: transform, opacity;
 }
 .hero .badge-row { justify-content: center; }
-.hero-kicker { color: var(--liblog-muted); margin: 0 0 8px; }
-.hero-title { margin: 0 0 8px; font-size: 2rem; line-height: 1.25; }
-.hero-tagline { font-size: 1.05rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 12px; }
-.hero-meta, .hero-goal { color: var(--liblog-muted); margin: 4px 0; font-size: 0.9rem; }
+.hero-kicker { color: var(--liblog-muted); margin: 0 0 10px; font-size: 0.95rem; }
+.hero-title { margin: 0 0 10px; font-size: 2.5rem; line-height: 1.2; }
+.hero-tagline { font-size: 1.25rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 14px; }
+.hero-meta, .hero-goal { color: var(--liblog-muted); margin: 5px 0; font-size: 0.95rem; }
 .hero-inner > * { animation: liblog-fade-up 0.6s var(--liblog-ease-out) both; }
 .hero-inner > *:nth-child(2) { animation-delay: 0.06s; }
 .hero-inner > *:nth-child(3) { animation-delay: 0.12s; }
@@ -549,7 +550,10 @@ input:focus, select:focus, textarea:focus {
   .site-nav a { padding: 6px 2px; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
-  .hero { min-height: 62vh; }
+  .hero { min-height: 100vh; min-height: 100svh; padding: 24px 0; }
+  .hero-title { font-size: 1.8rem; }
+  .hero-tagline { font-size: 1.08rem; }
+  .hero-meta, .hero-goal { font-size: 0.9rem; }
   .hero-title { font-size: 1.6rem; }
   .hero-tagline { font-size: 1rem; }
   .hero-meta, .hero-goal { font-size: 0.85rem; }
