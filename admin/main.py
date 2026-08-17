@@ -40,11 +40,15 @@ templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
 
 settings.preview_root.mkdir(parents=True, exist_ok=True)
-app.mount("/static", StaticFiles(directory=str(ROOT / "themes" / "blog-theme" / "static")), name="static")
 app.mount(
     f"/{settings.admin_path}/preview-out",
     StaticFiles(directory=str(settings.preview_root)),
     name="preview-out",
+)
+app.mount(
+    f"/{settings.admin_path}/static",
+    StaticFiles(directory=str(ROOT / "themes" / "blog-theme" / "static")),
+    name="admin-static",
 )
 
 

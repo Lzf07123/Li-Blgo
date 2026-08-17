@@ -23,6 +23,7 @@ services:
       - path: .env
         required: false
     environment:
+      ADMIN_PATH: ${ADMIN_PATH:-admin}
       GOMEMLIMIT: ${GOMEMLIMIT:-256MiB}
       HUGO_NUMWORKERMULTIPLIER: ${HUGO_NUMWORKERMULTIPLIER:-0.5}
       HUGO_BIN: hugo

@@ -136,7 +136,7 @@ config/
 
 ### 首启 Setup（三步向导）
 
-- 触发：SQLite 无管理员记录时，访问后台任意路径 302 到 `/admin-xxxx/setup`
+- 触发：SQLite 无管理员记录时，访问后台任意路径 302 到 `/admin/setup`
 - 步骤 1 基础信息：站点名称/定位/承诺（brand.yaml）+ 姓名/身份/方向/目标（profile.yaml）
 - 步骤 2 管理员创建：用户名 + 强密码（PBKDF2-HMAC-SHA256，600k 迭代），创建后 setup 永久失效
 - 步骤 3 OIDC 绑定（可跳过）：展示需登记的精确回调地址；配置缺失则隐藏；成功后写入 `oidc_sub`
@@ -166,7 +166,7 @@ config/
 
 ### 后台安全
 
-- 秘密路径 `/admin-xxxx` + 强密码 + 登录限速 + 可选 IP 白名单
+- 秘密路径 `/admin` + 强密码 + 登录限速 + 可选 IP 白名单
 - 容器非 root；不挂 Docker socket；admin 不暴露宿主端口
 - OIDC secret 只存环境变量/secret 文件，不进 git
 - 后台关闭时 nginx 返回中性"暂不可用"页
@@ -175,10 +175,10 @@ config/
 
 依据《OIDC 对接指南》实现，对接方契约全部满足：
 
-- 必选：回调端点 `GET /admin-xxxx/oidc/callback`（state 校验、error 按失败处理、换码带 PKCE）
+- 必选：回调端点 `GET /admin/oidc/callback`（state 校验、error 按失败处理、换码带 PKCE）
 - 令牌：JWKS 按 kid 验签 RS256；校验 iss / aud=client_id / nonce / iat / exp / at_hash
 - userinfo：access_token 调用，`sub` 与管理员绑定值精确匹配
-- 登出通道：回程登出 `POST /admin-xxxx/oidc/backchannel`（验签、120 秒窗口、jti 防重放、events 检查、按 (sub,sid) 下线）
+- 登出通道：回程登出 `POST /admin/oidc/backchannel`（验签、120 秒窗口、jti 防重放、events 检查、按 (sub,sid) 下线）
 - 本地会话自带过期，不依赖门户送达
 - 登出本网站始终可用；RP 发起登出列为二期可选
 - 客户端类型：机密客户端；登记回调与回程地址逐字符精确匹配

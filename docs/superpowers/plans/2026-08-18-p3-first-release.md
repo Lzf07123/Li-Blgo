@@ -4,7 +4,7 @@
 
 **Goal:** 交付可容器化运行的第一版：admin 基础镜像带全软件源加速变量；nginx 托管公开站并反代后台；匿名打点与导入；Fuse.js 本地搜索页；compose 一键拉起并端到端验证。
 
-**Architecture:** 单机 Docker Compose：nginx（公开站 + `/admin-xxxx` 反代 + beacon 匿名日志）+ admin（FastAPI，profile 按需启动）；content/config/output/data 用 bind 挂载（仓库即数据源），beacon-log 用命名卷。
+**Architecture:** 单机 Docker Compose：nginx（公开站 + `/admin` 反代 + beacon 匿名日志）+ admin（FastAPI，profile 按需启动）；content/config/output/data 用 bind 挂载（仓库即数据源），beacon-log 用命名卷。
 
 **Tech Stack:** Docker Compose v2+、nginx:alpine、python:3.12-slim + Hugo v0.165.0 二进制、Fuse.js 7（本地化）。
 
@@ -31,7 +31,7 @@
 
 **Files:** Create `nginx/default.conf`
 
-- [ ] root=output 静态直出；`/admin-xxxx/` 反代 `http://admin:8000`（保留 Host/X-Forwarded-*）
+- [ ] root=output 静态直出；`/admin/` 反代 `http://admin:8000`（保留 Host/X-Forwarded-*）
 - [ ] `location = /api/beacon`：`empty_gif` + 匿名日志 `beacon.log`（格式 `$time_iso8601|$request_uri`）
 - [ ] 常规 access_log 关闭；安全头与 body 大小限制
 
@@ -62,9 +62,9 @@
 
 - [ ] `docker compose build admin`（默认源；慢则用加速变量）
 - [ ] `HTTP_PORT=18080 docker compose up -d` → curl 首页含定位语
-- [ ] 未启 admin 时 `/admin-xxxx/login` 返回 502 中性页
-- [ ] `HTTP_PORT=18080 docker compose --profile admin up -d` → `/admin-xxxx/login` 200、首启 302 setup
-- [ ] 访问公开页触发 beacon → 启动 admin 导入 → `/admin-xxxx/stats` 出现路径与次数
+- [ ] 未启 admin 时 `/admin/login` 返回 502 中性页
+- [ ] `HTTP_PORT=18080 docker compose --profile admin up -d` → `/admin/login` 200、首启 302 setup
+- [ ] 访问公开页触发 beacon → 启动 admin 导入 → `/admin/stats` 出现路径与次数
 - [ ] `/search-ui/` 200 且 fuse.min.js 可访问
 
 ### Task 7: 文档与提交

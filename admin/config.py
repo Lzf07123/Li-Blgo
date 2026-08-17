@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parent.parent
 
 class Settings:
     def __init__(self) -> None:
-        self.admin_path = os.getenv("ADMIN_PATH", "admin-xxxx").strip("/")
+        self.admin_path = os.getenv("ADMIN_PATH", "admin").strip("/")
         self.db_path = Path(os.getenv("DB_PATH", str(ROOT / "data" / "blog.db")))
         self.content_root = Path(os.getenv("CONTENT_ROOT", str(ROOT / "content")))
         self.config_root = Path(os.getenv("CONFIG_ROOT", str(ROOT / "config")))
