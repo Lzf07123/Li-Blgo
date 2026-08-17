@@ -316,19 +316,6 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Hero ---------- */
 .hero { position: relative; padding: 48px 0 24px; }
 .hero { text-align: center; }
-.hero-avatar {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto 14px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  background: var(--liblog-primary-soft);
-  color: var(--liblog-primary);
-  font-size: 1.4rem;
-  font-weight: 700;
-  box-shadow: var(--liblog-shadow-sm);
-}
 .hero .badge-row { justify-content: center; }
 .hero-kicker { color: var(--liblog-muted); margin: 0 0 8px; }
 .hero-title { margin: 0 0 8px; font-size: 2rem; line-height: 1.25; }
@@ -548,7 +535,6 @@ input:focus, select:focus, textarea:focus {
   .site-nav a { padding: 6px 2px; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
-  .hero-avatar { width: 44px; height: 44px; font-size: 1.1rem; border-radius: 12px; }
   .hero-title { font-size: 1.6rem; }
   .hero-tagline { font-size: 1rem; }
   .hero-meta, .hero-goal { font-size: 0.85rem; }
