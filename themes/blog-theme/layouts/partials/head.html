@@ -6,8 +6,10 @@
 <meta name="description" content="{{ $brand.tagline }}">
 <meta name="theme-color" content="#f6fbf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=10">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=10">
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=11">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=11">
+<script defer src="{{ "js/ambient.js" | relURL }}"></script>
+<script defer src="{{ "js/effects.js" | relURL }}"></script>
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
 <link rel="stylesheet" href="{{ "css/katex.min.css" | relURL }}">
 <script defer src="{{ "js/katex.min.js" | relURL }}"></script>

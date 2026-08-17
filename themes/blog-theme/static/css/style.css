@@ -375,60 +375,28 @@ input:focus, select:focus, textarea:focus {
 }
 .ambient-soft .aurora { opacity: 0.2; }
 .ambient-soft .aurora-3, .ambient-soft .aurora-4 { display: none; }
-.tech-dot {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--liblog-tech-dot-glow);
-  box-shadow: 0 0 12px var(--liblog-tech-dot-glow);
-  animation: liblog-dot-float 9s ease-in-out infinite;
-  will-change: transform;
+.ambient-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }
-.dot-1 { top: 22%; left: 12%; animation-delay: 0s; }
-.dot-2 { top: 58%; left: 82%; animation-delay: 1.6s; }
-.dot-3 { top: 30%; left: 70%; animation-delay: 3.2s; }
-@keyframes liblog-dot-float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.55; }
-  50% { transform: translateY(-10px) scale(1.15); opacity: 0.9; }
+
+/* BlurText 词级浮现（一次性入场） */
+.blur-word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(8px);
+  filter: blur(8px);
+  transition:
+    opacity 0.5s var(--liblog-ease-out),
+    transform 0.5s var(--liblog-ease-out),
+    filter 0.5s var(--liblog-ease-out);
 }
-.shape { position: absolute; opacity: 0.12; }
-.shape-line {
-  width: 260px;
-  height: 1px;
-  top: 72%;
-  left: -260px;
-  background: linear-gradient(90deg, transparent, var(--liblog-primary), transparent);
-  animation: liblog-line-drift 60s linear infinite;
-  will-change: transform;
-}
-@keyframes liblog-line-drift {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(100vw + 520px)); }
-}
-.shape-square {
-  width: 22px;
-  height: 22px;
-  top: 16%;
-  right: 14%;
-  border: 1px solid var(--liblog-primary);
-  border-radius: 4px;
-  animation: liblog-shape-swing 50s ease-in-out infinite alternate;
-  will-change: transform;
-}
-.shape-z {
-  width: 56px;
-  height: 36px;
-  top: 46%;
-  left: 28%;
-  background: var(--liblog-primary-soft);
-  clip-path: polygon(0 0, 100% 0, 100% 22%, 25% 78%, 100% 78%, 100% 100%, 0 100%, 0 78%, 75% 22%, 0 22%);
-  animation: liblog-shape-swing 45s ease-in-out infinite alternate;
-  will-change: transform;
-}
-@keyframes liblog-shape-swing {
-  from { transform: translateY(0) rotate(0deg); }
-  to { transform: translateY(-18px) rotate(8deg); }
+.blur-word.blur-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
 }
 
 /* ---------- Hero 顶部辉光（静态、极淡） ---------- */
@@ -515,7 +483,6 @@ input:focus, select:focus, textarea:focus {
   .site-nav { margin-left: 0; }
   .ambient::before { opacity: 0.15; }
   .aurora { opacity: 0.15; }
-  .tech-dot, .shape { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

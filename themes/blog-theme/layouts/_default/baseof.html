@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>{{ partial "head.html" . }}</head>
-<body>
-  {{ $density := "none" }}
-  {{ if .IsHome }}{{ $density = "full" }}
-  {{ else if eq .Kind "section" }}{{ $density = "soft" }}
-  {{ else if eq .Kind "page" }}{{ if eq .Section "posts" }}{{ $density = "none" }}{{ else }}{{ $density = "soft" }}{{ end }}{{ end }}
+{{ $density := "none" }}
+{{ if .IsHome }}{{ $density = "full" }}
+{{ else if eq .Kind "section" }}{{ $density = "soft" }}
+{{ else if eq .Kind "page" }}{{ if eq .Section "posts" }}{{ $density = "none" }}{{ else }}{{ $density = "soft" }}{{ end }}{{ end }}
+<body data-ambient="{{ $density }}">
   {{ partial "ambient.html" (dict "density" $density) }}
   {{ partial "header.html" . }}
   <main class="page-shell">{{ block "main" . }}{{ end }}</main>
