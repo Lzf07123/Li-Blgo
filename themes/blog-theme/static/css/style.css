@@ -97,7 +97,7 @@ a:hover { color: var(--liblog-primary-hover); }
   width: 200%;
   background: linear-gradient(90deg, transparent, var(--liblog-flow-gradient) 25%, var(--liblog-flow-gradient) 75%, transparent);
   opacity: 0.7;
-  animation: liblog-flow-slide 5s linear infinite;
+  animation: liblog-flow-slide 7s linear infinite;
   will-change: transform;
 }
 @keyframes liblog-flow-slide {
@@ -349,8 +349,8 @@ input:focus, select:focus, textarea:focus {
   background:
     repeating-linear-gradient(0deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px),
     repeating-linear-gradient(90deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px);
-  animation: liblog-grid-move 12s linear infinite;
-  opacity: 0.35;
+  animation: liblog-grid-move 18s linear infinite;
+  opacity: 0.28;
   will-change: transform;
 }
 @keyframes liblog-grid-move {
@@ -360,8 +360,8 @@ input:focus, select:focus, textarea:focus {
 .aurora {
   position: absolute;
   border-radius: 50%;
-  opacity: 0.3;
-  animation: liblog-aurora 22s ease-in-out infinite alternate;
+  opacity: 0.26;
+  animation: liblog-aurora 28s ease-in-out infinite alternate;
   will-change: transform;
 }
 .aurora-1 { width: 520px; height: 520px; left: -120px; top: -80px; background: radial-gradient(circle, var(--liblog-aurora-1), transparent 65%); }
@@ -381,17 +381,18 @@ input:focus, select:focus, textarea:focus {
   width: 150px;
   opacity: 0;
   background: linear-gradient(100deg, transparent, var(--liblog-tech-beam) 45%, var(--liblog-tech-beam-2) 55%, transparent);
-  animation: liblog-beam 10s ease-in-out infinite;
+  animation: liblog-beam 14s ease-in-out infinite;
   will-change: transform;
 }
 .beam-1 { left: 8%; animation-delay: 0s; }
 .beam-2 { left: 45%; animation-delay: 3.4s; }
 .beam-3 { left: 78%; animation-delay: 6.8s; }
 @keyframes liblog-beam {
-  0%, 60% { transform: rotate(16deg) translateX(-320px); opacity: 0; }
-  12% { opacity: 0.4; }
-  48% { opacity: 0.4; }
-  72%, 100% { transform: rotate(16deg) translateX(1100px); opacity: 0; }
+  0% { transform: rotate(16deg) translateX(-320px); opacity: 0; }
+  5% { opacity: 0.35; animation-timing-function: ease-out; }
+  38% { opacity: 0.35; animation-timing-function: ease-in; }
+  50% { transform: rotate(16deg) translateX(1100px); opacity: 0; animation-timing-function: ease-out; }
+  100% { transform: rotate(16deg) translateX(1100px); opacity: 0; }
 }
 .tech-dot {
   position: absolute;
@@ -400,15 +401,15 @@ input:focus, select:focus, textarea:focus {
   border-radius: 50%;
   background: var(--liblog-tech-dot-glow);
   box-shadow: 0 0 12px var(--liblog-tech-dot-glow);
-  animation: liblog-dot-float 6s ease-in-out infinite;
+  animation: liblog-dot-float 9s ease-in-out infinite;
   will-change: transform;
 }
 .dot-1 { top: 22%; left: 12%; animation-delay: 0s; }
 .dot-2 { top: 58%; left: 82%; animation-delay: 1.6s; }
 .dot-3 { top: 30%; left: 70%; animation-delay: 3.2s; }
 @keyframes liblog-dot-float {
-  0%, 100% { transform: translateY(0); opacity: 0.7; }
-  50% { transform: translateY(-8px); opacity: 1; }
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.55; }
+  50% { transform: translateY(-10px) scale(1.15); opacity: 0.9; }
 }
 .shape { position: absolute; opacity: 0.12; }
 .shape-line {
@@ -417,7 +418,7 @@ input:focus, select:focus, textarea:focus {
   top: 72%;
   left: -260px;
   background: linear-gradient(90deg, transparent, var(--liblog-primary), transparent);
-  animation: liblog-line-drift 45s linear infinite;
+  animation: liblog-line-drift 60s linear infinite;
   will-change: transform;
 }
 @keyframes liblog-line-drift {
@@ -431,7 +432,7 @@ input:focus, select:focus, textarea:focus {
   right: 14%;
   border: 1px solid var(--liblog-primary);
   border-radius: 4px;
-  animation: liblog-shape-swing 40s ease-in-out infinite alternate;
+  animation: liblog-shape-swing 50s ease-in-out infinite alternate;
   will-change: transform;
 }
 .shape-z {
@@ -441,7 +442,7 @@ input:focus, select:focus, textarea:focus {
   left: 28%;
   background: var(--liblog-primary-soft);
   clip-path: polygon(0 0, 100% 0, 100% 22%, 25% 78%, 100% 78%, 100% 100%, 0 100%, 0 78%, 75% 22%, 0 22%);
-  animation: liblog-shape-swing 35s ease-in-out infinite alternate;
+  animation: liblog-shape-swing 45s ease-in-out infinite alternate;
   will-change: transform;
 }
 @keyframes liblog-shape-swing {

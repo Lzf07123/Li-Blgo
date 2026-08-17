@@ -21,7 +21,7 @@
   border-radius: 28px;
   background: radial-gradient(closest-side, var(--liblog-primary-soft), transparent 76%);
   opacity: 0.55;
-  animation: liblog-halo 4.5s ease-in-out infinite;
+  animation: liblog-halo 6s ease-in-out infinite;
   will-change: transform;
 }
 @keyframes liblog-halo {
