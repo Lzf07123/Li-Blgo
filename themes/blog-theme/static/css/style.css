@@ -332,122 +332,17 @@ input:focus, select:focus, textarea:focus {
   to { opacity: 1; transform: none; }
 }
 
-/* ---------- 全局氛围层（设计子模块全量视觉） ---------- */
-.ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.ambient-none { display: none; }
 .site-header, .page-shell, .site-footer { position: relative; z-index: 1; }
-.ambient::before {
+
+/* ---------- Hero 顶部辉光（静态、极淡） ---------- */
+.hero::before {
   content: "";
   position: absolute;
-  inset: -56px;
-  background:
-    repeating-linear-gradient(0deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px),
-    repeating-linear-gradient(90deg, transparent 0 54px, var(--liblog-tech-grid-line) 54px 56px);
-  animation: liblog-grid-move 18s linear infinite;
-  opacity: 0.28;
-  will-change: transform;
-}
-@keyframes liblog-grid-move {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(56px, 56px, 0); }
-}
-.aurora {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0.26;
-  animation: liblog-aurora 28s ease-in-out infinite alternate;
-  will-change: transform;
-}
-.aurora-1 { width: 520px; height: 520px; left: -120px; top: -80px; background: radial-gradient(circle, var(--liblog-aurora-1), transparent 65%); }
-.aurora-2 { width: 460px; height: 460px; right: -100px; top: 18%; background: radial-gradient(circle, var(--liblog-aurora-2), transparent 65%); animation-delay: -6s; }
-.aurora-3 { width: 380px; height: 380px; left: 16%; bottom: -140px; background: radial-gradient(circle, var(--liblog-aurora-3), transparent 65%); animation-delay: -12s; }
-.aurora-4 { width: 320px; height: 320px; right: 20%; bottom: 6%; background: radial-gradient(circle, var(--liblog-aurora-4), transparent 65%); animation-delay: -16s; }
-@keyframes liblog-aurora {
-  from { transform: translate3d(0, 0, 0) scale(1); }
-  to { transform: translate3d(40px, -30px, 0) scale(1.15); }
-}
-.ambient-soft .aurora { opacity: 0.2; }
-.ambient-soft .aurora-3, .ambient-soft .aurora-4 { display: none; }
-.tech-beam {
-  position: absolute;
-  top: -20%;
-  bottom: -20%;
-  width: 150px;
-  opacity: 0;
-  background: linear-gradient(100deg, transparent, var(--liblog-tech-beam) 45%, var(--liblog-tech-beam-2) 55%, transparent);
-  animation: liblog-beam 14s ease-in-out infinite;
-  will-change: transform;
-}
-.beam-1 { left: 8%; animation-delay: 0s; }
-.beam-2 { left: 45%; animation-delay: 3.4s; }
-.beam-3 { left: 78%; animation-delay: 6.8s; }
-@keyframes liblog-beam {
-  0% { transform: rotate(16deg) translateX(-320px); opacity: 0; }
-  5% { opacity: 0.35; animation-timing-function: ease-out; }
-  38% { opacity: 0.35; animation-timing-function: ease-in; }
-  50% { transform: rotate(16deg) translateX(1100px); opacity: 0; animation-timing-function: ease-out; }
-  100% { transform: rotate(16deg) translateX(1100px); opacity: 0; }
-}
-.tech-dot {
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--liblog-tech-dot-glow);
-  box-shadow: 0 0 12px var(--liblog-tech-dot-glow);
-  animation: liblog-dot-float 9s ease-in-out infinite;
-  will-change: transform;
-}
-.dot-1 { top: 22%; left: 12%; animation-delay: 0s; }
-.dot-2 { top: 58%; left: 82%; animation-delay: 1.6s; }
-.dot-3 { top: 30%; left: 70%; animation-delay: 3.2s; }
-@keyframes liblog-dot-float {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.55; }
-  50% { transform: translateY(-10px) scale(1.15); opacity: 0.9; }
-}
-.shape { position: absolute; opacity: 0.12; }
-.shape-line {
-  width: 260px;
-  height: 1px;
-  top: 72%;
-  left: -260px;
-  background: linear-gradient(90deg, transparent, var(--liblog-primary), transparent);
-  animation: liblog-line-drift 60s linear infinite;
-  will-change: transform;
-}
-@keyframes liblog-line-drift {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(100vw + 520px)); }
-}
-.shape-square {
-  width: 22px;
-  height: 22px;
-  top: 16%;
-  right: 14%;
-  border: 1px solid var(--liblog-primary);
-  border-radius: 4px;
-  animation: liblog-shape-swing 50s ease-in-out infinite alternate;
-  will-change: transform;
-}
-.shape-z {
-  width: 56px;
-  height: 36px;
-  top: 46%;
-  left: 28%;
-  background: var(--liblog-primary-soft);
-  clip-path: polygon(0 0, 100% 0, 100% 22%, 25% 78%, 100% 78%, 100% 100%, 0 100%, 0 78%, 75% 22%, 0 22%);
-  animation: liblog-shape-swing 45s ease-in-out infinite alternate;
-  will-change: transform;
-}
-@keyframes liblog-shape-swing {
-  from { transform: translateY(0) rotate(0deg); }
-  to { transform: translateY(-18px) rotate(8deg); }
+  inset: -20% 0 0 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 0%, var(--liblog-primary-soft), transparent 68%);
+  opacity: 0.5;
 }
 
 /* ---------- 卡片签名渐变描边 ---------- */
@@ -521,9 +416,6 @@ input:focus, select:focus, textarea:focus {
   .hero-title { font-size: 1.8rem; }
   .nav-inner { flex-direction: column; align-items: flex-start; }
   .site-nav { margin-left: 0; }
-  .ambient::before { opacity: 0.15; }
-  .aurora { opacity: 0.15; }
-  .tech-dot, .tech-beam, .shape { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
