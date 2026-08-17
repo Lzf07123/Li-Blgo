@@ -8,4 +8,5 @@
       {{ with $brand.police }}<a href="{{ $brand.police_url }}" rel="nofollow">{{ $footer.police_label }} {{ . }}</a>{{ end }}
     </div>
   </div>
+  <img src="/api/beacon?p={{ .RelPermalink }}" width="1" height="1" alt="" aria-hidden="true">
 </footer>

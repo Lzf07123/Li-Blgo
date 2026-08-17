@@ -15,6 +15,7 @@ class Settings:
         self.config_root = Path(os.getenv("CONFIG_ROOT", str(ROOT / "config")))
         self.output_root = Path(os.getenv("OUTPUT_ROOT", str(ROOT / "output")))
         self.preview_root = Path(os.getenv("PREVIEW_ROOT", str(ROOT / ".preview-out")))
+        self.beacon_log = os.getenv("BEACON_LOG", str(ROOT / "data" / "beacon.log"))
         self.cookie_secure = os.getenv("COOKIE_SECURE", "0") == "1"
         self.session_ttl = int(os.getenv("SESSION_TTL", "43200"))
         self.session_secret = os.getenv("ADMIN_SESSION_SECRET", secrets.token_hex(32))

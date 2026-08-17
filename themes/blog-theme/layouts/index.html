@@ -1,3 +1,4 @@
+{{ define "main" }}
 {{ $brand := hugo.Data.brand }}
 {{ $profile := hugo.Data.profile }}
 {{ $home := hugo.Data.homepage }}
@@ -62,3 +63,5 @@
   </div>
   <p><a class="more-link" href="{{ "posts/" | relURL }}">{{ $strings.home.view_all }}</a></p>
 </section>
+
+{{ end }}

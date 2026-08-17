@@ -1,0 +1,31 @@
+{{ define "main" }}
+<h1 class="page-title">{{ .Title }}</h1>
+<p class="meta">按标题、摘要与标签本地搜索，不上传任何内容。</p>
+<input id="q" class="search-input" type="search" placeholder="输入关键词…" autocomplete="off">
+<ul id="results" class="search-results"></ul>
+{{ end }}
+{{ define "scripts" }}
+<script defer src="{{ "js/fuse.min.js" | relURL }}"></script>
+<script defer>
+fetch('/search/index.json')
+  .then(function (r) { return r.json(); })
+  .then(function (posts) {
+    var fuse = new Fuse(posts, { keys: ['title', 'summary', 'tags'], includeScore: true });
+    var input = document.getElementById('q');
+    var list = document.getElementById('results');
+    input.addEventListener('input', function () {
+      list.innerHTML = '';
+      var q = input.value.trim();
+      if (!q) { return; }
+      fuse.search(q).slice(0, 20).forEach(function (r) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.href = r.item.url;
+        a.textContent = r.item.title;
+        li.appendChild(a);
+        list.appendChild(li);
+      });
+    });
+  });
+</script>
+{{ end }}

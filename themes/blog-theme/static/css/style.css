@@ -102,6 +102,14 @@ a:hover { color: var(--liblog-primary-hover); text-decoration: underline; }
 }
 .footer-beian { display: flex; gap: 16px; }
 .pagination { display: flex; gap: 12px; margin-top: 24px; }
+.search-input {
+  width: 100%; max-width: 480px; padding: 10px 14px; margin-top: 8px;
+  background: var(--liblog-surface); color: var(--liblog-fg);
+  border: 1px solid var(--liblog-border); border-radius: 8px; font-size: 1rem;
+}
+.search-input:focus { outline: 2px solid var(--liblog-ring); outline-offset: 2px; }
+.search-results { list-style: none; padding: 0; margin-top: 16px; }
+.search-results li { padding: 10px 0; border-bottom: 1px solid var(--liblog-border); }
 
 @media (max-width: 768px) {
   .hero-title { font-size: 1.8rem; }

@@ -2,25 +2,38 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "80:80"
-      - "443:443"
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
     volumes:
-      - output:/usr/share/nginx/html:ro
+      - ./output:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - beacon-log:/var/log/nginx
     restart: unless-stopped
 
   admin:
     profiles: ["admin"]
-    build: .
+    build:
+      context: .
+      args:
+        APT_MIRROR: ${APT_MIRROR:-deb.debian.org}
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+        HUGO_DOWNLOAD_URL: ${HUGO_DOWNLOAD_URL:-}
+        HUGO_CHECKSUM_URL: ${HUGO_CHECKSUM_URL:-}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      GOMEMLIMIT: ${GOMEMLIMIT:-256MiB}
+      HUGO_NUMWORKERMULTIPLIER: ${HUGO_NUMWORKERMULTIPLIER:-0.5}
+      HUGO_BIN: hugo
+      BEACON_LOG: /app/beacon/beacon.log
     volumes:
-      - content:/app/content
-      - output:/app/output
-      - data:/app/data
+      - ./content:/app/content
+      - ./config:/app/config
+      - ./output:/app/output
+      - ./data:/app/data
       - beacon-log:/app/beacon
     restart: "no"
 
 volumes:
-  content:
-  output:
-  data:
   beacon-log:

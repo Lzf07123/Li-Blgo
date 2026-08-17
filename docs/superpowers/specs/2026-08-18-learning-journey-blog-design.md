@@ -225,23 +225,27 @@ services:
     image: nginx:alpine
     ports: ["80:80", "443:443"]
     volumes:
-      - output:/usr/share/nginx/html:ro
+      - ./output:/usr/share/nginx/html:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
       - beacon-log:/var/log/nginx
   admin:
     profiles: ["admin"]
     build: .
     volumes:
-      - content:/app/content
-      - output:/app/output
-      - data:/app/data
+      - ./content:/app/content
+      - ./config:/app/config
+      - ./output:/app/output
+      - ./data:/app/data
       - beacon-log:/app/beacon
 ```
 
-命令：日常 `docker compose up -d`；管理 `docker compose --profile admin up -d`；停后台 `docker compose --profile admin stop admin`。
+命令：日常 `docker compose up -d`；管理 `docker compose --profile admin up -d`；停后台 `docker compose --profile admin stop admin`。端口可用 `${HTTP_PORT}` / `${HTTPS_PORT}` 覆盖（如本地验证用 18080）。
 
-卷：content（Markdown）、output（构建产物，nginx+admin 共享）、data（SQLite）、beacon-log（匿名打点）。
+挂载：content/config/output/data 用仓库 bind 挂载（仓库即数据源，单份数据）；beacon-log 为命名卷（nginx 写匿名打点，admin 启动导入）。
 
-环境变量（.env，不进 git）：`LIPASS_ISSUER`、`LIPASS_CLIENT_ID`、`LIPASS_CLIENT_SECRET`、`ADMIN_OIDC_SUB`（setup 绑定后写入）。
+环境变量（.env，不进 git）：`LIPASS_ISSUER`、`LIPASS_CLIENT_ID`、`LIPASS_CLIENT_SECRET`、`LIPASS_REDIRECT_URI`、`ADMIN_PATH`、`ADMIN_SESSION_SECRET` 等；模板见 `.env.example`。
+
+软件源加速变量（构建期 `--build-arg`）：`APT_MIRROR`、`PIP_INDEX_URL`、`HUGO_DOWNLOAD_URL`、`HUGO_CHECKSUM_URL`——apt/pip/Hugo 下载全部可走国内镜像或 GH 加速前缀，默认官方源。
 
 ## 12. 性能预算
 
@@ -259,8 +263,8 @@ services:
 - **P0 设计实例化（本阶段）**：设计文档 + design-system/blog + 令牌 + 配置骨架 + AGENTS.md
 - **P1 公开站**：Hugo 主题骨架（Goldmark/shortcodes/Chroma）+ 分段编排壳 + 内容结构 + strings.yaml + 3 篇示例 + 兄弟项目 Markdown 初稿
 - **P2 后台**：Setup 向导 + 双登录（本地 + OIDC）+ 八栏目 + 预览（走 Hugo）+ 保存触发编排构建
-- **P3 容器化**：Dockerfile + compose.yaml（profiles）+ 匿名打点导入
-- **P4 搜索统计**：Fuse.js 索引（Hugo 模板生成 JSON）+ empty_gif 打点
+- **P3 容器化**：Dockerfile（加速变量）+ compose.yaml（profiles/bind 挂载）+ nginx 反代与匿名打点（已完成，P3→P5 合并推进）
+- **P4 搜索统计**：Fuse.js 本地化 + 搜索页 + empty_gif 打点 + 启动导入（已完成）
 - **P5 备案上线**：域名、服务器、备案、HTTPS、Li&Pass 客户端登记、正式部署
 
 ## 14. 决策记录

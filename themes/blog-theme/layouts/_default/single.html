@@ -1,3 +1,4 @@
+{{ define "main" }}
 {{ $strings := hugo.Data.strings }}
 <article class="article">
   <p class="meta"><a href="{{ .Site.Home.RelPermalink }}">{{ $strings.common.back }}</a></p>
@@ -15,3 +16,5 @@
     </div>
   {{ end }}
 </article>
+
+{{ end }}

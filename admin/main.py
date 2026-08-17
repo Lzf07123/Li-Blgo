@@ -12,6 +12,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from admin import build, content as store, oidc, security
+from admin.ingest import import_beacon_log
 from admin.config import ROOT, settings
 from admin.db import connect, create_admin, get_admin, init_db
 from admin.session import COOKIE, create_session, delete_session, get_session
@@ -20,6 +21,9 @@ from admin.session import COOKIE, create_session, delete_session, get_session
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
+    imported = import_beacon_log()
+    if imported:
+        print(f"[beacon] imported {imported} hits")
     yield
 
 
