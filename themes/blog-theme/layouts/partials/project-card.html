@@ -1,9 +1,10 @@
 {{ $strings := hugo.Data.strings }}
+{{ $tech_colors := hugo.Data.tech }}
 <article class="project-card">
   <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
   <p class="project-summary">{{ .Params.summary }}</p>
   <div class="badge-row">
-    {{ range .Params.tech }}{{ partial "badge.html" (dict "label" . "href" "" "color" "") }}{{ end }}
+    {{ range .Params.tech }}{{ partial "badge.html" (dict "label" . "href" "" "color" (index $tech_colors . | default "")) }}{{ end }}
   </div>
   <p class="meta">{{ $strings.common.status_label }}：{{ .Params.status }}</p>
 </article>
