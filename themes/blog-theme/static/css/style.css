@@ -225,8 +225,16 @@ a:hover { color: var(--liblog-primary-hover); }
 .card-interactive:hover { transform: translateY(-1px); box-shadow: var(--liblog-shadow-md); }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
 .project-card, .post-card { padding: 20px 24px; }
+.project-card { display: flex; flex-direction: column; }
 .project-card h3, .post-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
 .project-summary, .post-summary { margin: 8px 0; }
+.project-summary { flex: 1; }
+.project-card .badge-row { margin-top: 12px; }
+.project-card .meta {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--liblog-border);
+}
 .post-card + .post-card { margin-top: 12px; }
 
 /* ---------- 表单 ---------- */
