@@ -1,0 +1,35 @@
+baseURL = "https://blog.example.com/"
+title = "Li&Blog"
+theme = "blog-theme"
+dataDir = "config"
+defaultContentLanguage = "zh-cn"
+timeZone = "Asia/Shanghai"
+enableRobotsTXT = true
+
+[pagination]
+pagerSize = 20
+
+[taxonomies]
+tag = "tags"
+
+[markup.goldmark.renderer]
+unsafe = true
+
+[markup.highlight]
+codeFences = true
+lineNos = true
+lineNumbersInTable = false
+noClasses = false
+style = "friendly"
+
+[outputs]
+home = ["HTML", "RSS"]
+
+[outputFormats.Search]
+mediaType = "application/json"
+baseName = "index"
+isPlainText = true
+notAlternativeFormats = true
+
+[params]
+themeKey = "liblog-theme"

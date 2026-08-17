@@ -1,0 +1,11 @@
+{{ $brand := hugo.Data.brand }}
+{{ $footer := hugo.Data.strings.footer }}
+<footer class="site-footer">
+  <div class="footer-inner">
+    <p class="footer-copyright">{{ replace $brand.copyright "{year}" (now.Format "2006") }}</p>
+    <div class="footer-beian">
+      {{ with $brand.icp }}<a href="{{ $brand.icp_url }}" rel="nofollow">{{ . }}</a>{{ end }}
+      {{ with $brand.police }}<a href="{{ $brand.police_url }}" rel="nofollow">{{ $footer.police_label }} {{ . }}</a>{{ end }}
+    </div>
+  </div>
+</footer>

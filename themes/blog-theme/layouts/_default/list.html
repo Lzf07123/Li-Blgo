@@ -1,0 +1,6 @@
+<h1 class="page-title">{{ .Title }}</h1>
+{{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+<div class="post-list">
+  {{ range .Paginator.Pages }}{{ partial "post-card.html" . }}{{ end }}
+</div>
+{{ template "_internal/pagination.html" . }}

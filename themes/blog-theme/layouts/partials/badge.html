@@ -1,0 +1,4 @@
+<span class="badge">
+  {{ with .color }}<span class="badge-dot" style="background-color: {{ . }}"></span>{{ else }}<span class="badge-dot badge-dot-default"></span>{{ end }}
+  {{ if .href }}<a class="badge-link" href="{{ .href }}">{{ .label }}</a>{{ else }}<span class="badge-label">{{ .label }}</span>{{ end }}
+</span>

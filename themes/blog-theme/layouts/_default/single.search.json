@@ -1,0 +1,1 @@
+[{{ range $i, $p := where .Site.RegularPages "Type" "posts" }}{{ if $i }},{{ end }}{{ dict "title" $p.Title "url" $p.RelPermalink "summary" $p.Summary "tags" $p.Params.tags | jsonify }}{{ end }}]

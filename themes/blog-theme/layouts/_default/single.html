@@ -1,0 +1,17 @@
+{{ $strings := hugo.Data.strings }}
+<article class="article">
+  <p class="meta"><a href="{{ .Site.Home.RelPermalink }}">{{ $strings.common.back }}</a></p>
+  <h1 class="page-title">{{ .Title }}</h1>
+  <p class="meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ $strings.common.published_at }} {{ .Date.Format "2006-01-02" }}</time>
+    {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
+  </p>
+  {{ if .TableOfContents }}<nav class="toc" aria-label="目录">{{ .TableOfContents }}</nav>{{ end }}
+  <div class="article-body">{{ .Content }}</div>
+  {{ if .Params.show_skills }}
+    <h2 class="section-title">{{ hugo.Data.strings.home.skills_title }}</h2>
+    <div class="badge-row">
+      {{ range hugo.Data.profile.skills }}{{ partial "badge.html" . }}{{ end }}
+    </div>
+  {{ end }}
+</article>

@@ -1,0 +1,8 @@
+<article class="post-card">
+  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+  <p class="meta">
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+    {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
+  </p>
+  {{ with .Summary }}<p class="post-summary">{{ . }}</p>{{ end }}
+</article>

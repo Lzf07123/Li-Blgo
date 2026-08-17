@@ -1,0 +1,8 @@
+.git
+output
+data
+.build-tmp
+.preview-out
+__pycache__
+.env
+.DS_Store

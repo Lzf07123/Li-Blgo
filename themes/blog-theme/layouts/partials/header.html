@@ -1,0 +1,22 @@
+{{ $brand := hugo.Data.brand }}
+{{ $nav := hugo.Data.strings.nav }}
+<header class="site-header">
+  <div class="nav-inner">
+    <a class="brand-logo" href="{{ .Site.Home.RelPermalink }}">
+      {{ if $brand.logo }}
+        <img src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}">
+      {{ else }}
+        <span class="logo-fallback" aria-hidden="true">{{ substr $brand.name 0 2 }}</span>
+        <span class="brand-name-text">{{ $brand.name }}</span>
+      {{ end }}
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="{{ .Site.Home.RelPermalink }}">{{ $nav.home }}</a>
+      <a href="{{ "posts/" | relURL }}">{{ $nav.posts }}</a>
+      <a href="{{ "projects/" | relURL }}">{{ $nav.projects }}</a>
+      <a href="{{ "timeline/" | relURL }}">{{ $nav.timeline }}</a>
+      <a href="{{ "about/" | relURL }}">{{ $nav.about }}</a>
+      <a href="{{ "resources/" | relURL }}">{{ $nav.resources }}</a>
+    </nav>
+  </div>
+</header>

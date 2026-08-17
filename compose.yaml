@@ -1,0 +1,26 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - output:/usr/share/nginx/html:ro
+      - beacon-log:/var/log/nginx
+    restart: unless-stopped
+
+  admin:
+    profiles: ["admin"]
+    build: .
+    volumes:
+      - content:/app/content
+      - output:/app/output
+      - data:/app/data
+      - beacon-log:/app/beacon
+    restart: "no"
+
+volumes:
+  content:
+  output:
+  data:
+  beacon-log:

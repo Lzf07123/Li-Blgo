@@ -1,0 +1,5 @@
+<h1 class="page-title">{{ .Title }}</h1>
+{{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+<div class="card-grid">
+  {{ range .Pages.ByTitle }}{{ partial "project-card.html" . }}{{ end }}
+</div>

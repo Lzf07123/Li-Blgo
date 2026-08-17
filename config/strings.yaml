@@ -10,6 +10,7 @@ nav:
 
 home:
   hero_title: 你好，我是
+  goal_title: 当前目标
   journey_title: 学习历程
   skills_title: 技能栈
   projects_title: 项目集
@@ -23,6 +24,7 @@ common:
   published_at: 发布于
   back: 返回
   draft: 草稿
+  status_label: 状态
 
 footer:
   rights: 保留所有权利

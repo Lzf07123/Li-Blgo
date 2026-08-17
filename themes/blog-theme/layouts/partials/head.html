@@ -1,0 +1,19 @@
+<script>(function(){var d=document.documentElement;d.classList.toggle("dark",window.matchMedia("(prefers-color-scheme: dark)").matches)})()</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+{{ $brand := hugo.Data.brand }}
+<title>{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }} · {{ $brand.name }}{{ end }}</title>
+<meta name="description" content="{{ $brand.tagline }}">
+<meta name="theme-color" content="#f6fbf9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}">
+{{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
+<link rel="stylesheet" href="{{ "css/katex.min.css" | relURL }}">
+<script defer src="{{ "js/katex.min.js" | relURL }}"></script>
+<script defer src="{{ "js/auto-render.min.js" | relURL }}"></script>
+{{ end }}
+{{ if and .Page.Params.mermaid (fileExists "static/js/mermaid.min.js") }}
+<script defer src="{{ "js/mermaid.min.js" | relURL }}"></script>
+<script>mermaid.initialize({startOnLoad:true});</script>
+{{ end }}

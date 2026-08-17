@@ -1,0 +1,116 @@
+/* Li&Blog 公开站组件样式：只使用 --liblog-* 令牌，禁止硬编码颜色 */
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--liblog-bg);
+  color: var(--liblog-fg);
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+  line-height: 1.75;
+  transition: background-color var(--liblog-motion-base) var(--liblog-ease-out),
+    color var(--liblog-motion-base) var(--liblog-ease-out);
+}
+a { color: var(--liblog-primary); text-decoration: none; }
+a:hover { color: var(--liblog-primary-hover); text-decoration: underline; }
+:focus-visible { outline: 2px solid var(--liblog-ring); outline-offset: 2px; border-radius: 4px; }
+::selection { background: var(--liblog-primary); color: var(--liblog-primary-fg); }
+
+.page-shell { max-width: 980px; margin: 0 auto; padding: 24px 20px 64px; }
+
+.site-header { border-bottom: 1px solid var(--liblog-border); background: var(--liblog-surface); }
+.nav-inner {
+  max-width: 980px; margin: 0 auto; padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+}
+.brand-logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; color: var(--liblog-fg); }
+.brand-logo:hover { text-decoration: none; }
+.logo-fallback {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--liblog-primary-soft); color: var(--liblog-primary); font-weight: 800;
+}
+.site-nav { display: flex; gap: 18px; flex-wrap: wrap; }
+
+.hero { padding: 48px 0 24px; }
+.hero-kicker { color: var(--liblog-muted); margin: 0 0 8px; }
+.hero-title { margin: 0 0 8px; font-size: 2.4rem; line-height: 1.2; }
+.hero-tagline { font-size: 1.2rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 12px; }
+.hero-meta, .hero-goal { color: var(--liblog-muted); margin: 4px 0; }
+
+.section { margin-top: 40px; }
+.section-title { font-size: 1.35rem; border-left: 3px solid var(--liblog-primary); padding-left: 10px; }
+
+.badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: 999px;
+  background: var(--liblog-surface); border: 1px solid var(--liblog-border); font-size: 0.875rem;
+}
+.badge-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.badge-dot-default { background-color: var(--liblog-primary); }
+.badge a { color: var(--liblog-fg); }
+.badge a:hover { color: var(--liblog-primary); }
+
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 12px; }
+.project-card, .post-card {
+  background: var(--liblog-surface); border: 1px solid var(--liblog-border);
+  border-radius: 16px; padding: 20px 24px; box-shadow: var(--liblog-shadow-sm);
+}
+.post-card + .post-card { margin-top: 12px; }
+.project-card h3, .post-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+.project-summary, .post-summary { margin: 8px 0; }
+.meta { color: var(--liblog-muted); font-size: 0.875rem; }
+.tag { margin-left: 8px; color: var(--liblog-secondary); }
+
+.timeline { position: relative; margin-top: 16px; padding-left: 20px; border-left: 2px solid var(--liblog-border); }
+.timeline-node { position: relative; padding: 0 0 20px 16px; }
+.timeline-node::before {
+  content: ""; position: absolute; left: -25px; top: 6px;
+  width: 10px; height: 10px; border-radius: 50%; background: var(--liblog-primary);
+}
+.timeline-date { display: inline-block; color: var(--liblog-primary); font-weight: 600; font-size: 0.875rem; margin-bottom: 4px; }
+.timeline-body h3 { margin: 0 0 4px; font-size: 1rem; }
+.timeline-preview .timeline-node { padding-bottom: 12px; }
+.more-link { font-weight: 600; }
+
+.article .page-title { margin-top: 8px; }
+.article-body { margin-top: 16px; }
+.article-body h2 { margin-top: 32px; }
+.article-body pre, .article-body .highlight {
+  background: var(--liblog-surface-2); border: 1px solid var(--liblog-border);
+  border-radius: 8px; padding: 12px 16px; overflow-x: auto; font-size: 0.875rem;
+}
+.article-body code { background: var(--liblog-surface-2); border-radius: 4px; padding: 2px 5px; font-size: 0.875em; }
+.article-body pre code, .article-body .highlight code { background: none; padding: 0; }
+.article-body table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+.article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
+.article-body th { background: var(--liblog-surface-2); }
+.article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
+.toc { background: var(--liblog-surface); border: 1px solid var(--liblog-border); border-radius: 8px; padding: 12px 20px; margin-top: 12px; font-size: 0.9rem; }
+.admonition { border-radius: 8px; padding: 12px 16px; margin: 16px 0; border: 1px solid var(--liblog-border); background: var(--liblog-surface-2); }
+.admonition-note { border-color: var(--liblog-secondary); background: var(--liblog-secondary-soft); }
+.admonition-warning { border-color: var(--liblog-warning); background: var(--liblog-warning-soft); }
+.admonition-danger { border-color: var(--liblog-destructive); background: var(--liblog-destructive-soft); }
+
+.site-footer { border-top: 1px solid var(--liblog-border); background: var(--liblog-surface); }
+.footer-inner {
+  max-width: 980px; margin: 0 auto; padding: 20px;
+  display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  color: var(--liblog-muted); font-size: 0.875rem;
+}
+.footer-beian { display: flex; gap: 16px; }
+.pagination { display: flex; gap: 12px; margin-top: 24px; }
+
+@media (max-width: 768px) {
+  .hero-title { font-size: 1.8rem; }
+  .nav-inner { flex-direction: column; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

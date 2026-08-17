@@ -1,0 +1,14 @@
+<h1 class="page-title">{{ .Title }}</h1>
+{{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+<div class="timeline">
+  {{ range .Pages.ByDate.Reverse }}
+    <div class="timeline-node">
+      <time class="timeline-date">{{ .Date.Format "2006-01" }}</time>
+      <div class="timeline-body">
+        <h3>{{ .Title }}</h3>
+        {{ with .Params.kind }}<p class="meta">{{ . }}</p>{{ end }}
+        {{ with .Summary }}<p>{{ . }}</p>{{ end }}
+      </div>
+    </div>
+  {{ end }}
+</div>

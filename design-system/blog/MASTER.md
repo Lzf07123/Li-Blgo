@@ -66,7 +66,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | validator | 阶段 0：frontmatter/内部链接/图片存在性静态校验 |
-| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到 `.build-tmp/` |
+| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到 `.build-tmp/`；Hugo 为固定版本二进制（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum，禁止第三方 Hugo 镜像 |
 | publisher | 阶段 2：产物抽检通过后原子切换/增量同步到 `output/` |
 | cleaner | 阶段 3：清理临时目录与 Hugo 缓存 |
 | preview | 后台预览：`hugo --buildDrafts` 临时输出，与线上同一渲染器 |
@@ -119,6 +119,8 @@
 - [ ] 全量构建峰值内存 ≤ 256MB（GOMEMLIMIT 实测记录到 MASTER.md）
 - [ ] 保存单篇/全量重建 1–3 秒（1000 篇规模实测），中断后输出目录完整可用
 - [ ] 后台预览与线上构建共用 Hugo 渲染器
+
+**P1 实测（2026-08-18，37 页，Hugo 0.165.0 extended / macOS arm64）：** 构建耗时约 15ms，峰值 RSS ≈ 55.6MB（`GOMEMLIMIT=256MiB`），首页含 4 兄弟项目徽章与最新文章，搜索索引 3 条，无占位符残留。
 
 ## 6. 文件映射（模板 → 本博客）
 

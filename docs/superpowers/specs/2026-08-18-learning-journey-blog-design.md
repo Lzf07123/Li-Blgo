@@ -64,6 +64,7 @@ flowchart LR
 要点：
 
 - `GOMEMLIMIT` 显式限制 Hugo 进程内存；`HUGO_NUMWORKERMULTIPLIER` 降低并行度进一步压低峰值
+- Hugo 二进制为固定版本（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum；禁止第三方 Hugo 镜像；构建在容器内执行，不依赖宿主机工具链
 - Hugo 原生产出分页列表、标签/归档、RSS、sitemap、搜索 JSON（模板生成），无需自研聚合器
 - **保存单篇 = 全量 Hugo 构建（1–3 秒）**，无需自研增量；"全部重建"同样秒级
 - 可选 `--renderSegments`（home/list/page/taxonomy 分开渲染）供极端小内存场景进一步分段

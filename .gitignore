@@ -8,3 +8,6 @@ data/
 output/
 .pytest_cache/
 *.log
+.build-tmp/
+.preview-out/
+bin/
