@@ -108,7 +108,7 @@ config/
 
 | 区块 | 内容 | 数据来源 | 后台栏目 |
 | --- | --- | --- | --- |
-| Hero | Logo/占位 + 姓名 + 定位 + 身份/方向/目标 | brand.yaml + profile.yaml | 品牌 / 关于我 |
+| Hero | Logo/占位 + 姓名 + 定位 + 身份/方向/目标 + 技能徽章（`hero.show_skills` 控制，同栏展示） | brand.yaml + profile.yaml + homepage.yaml | 品牌 / 关于我 / 首页设置 |
 | 兄弟项目徽章 | 四兄弟项目徽章（链接仓库或复盘） | projects frontmatter | 项目 |
 | 技术栈徽章 | 技能徽章行（官方色圆点） | profile.yaml skills | 关于我 |
 | 历程速览 | 最近 N 个里程碑 | timeline + homepage.yaml | 时间线 / 首页设置 |

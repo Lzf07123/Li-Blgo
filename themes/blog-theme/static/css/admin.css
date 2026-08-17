@@ -1,13 +1,12 @@
 /* 后台样式：只使用 --liblog-* 令牌 */
 .admin-body { background: var(--liblog-bg); color: var(--liblog-fg); min-height: 100vh; }
-.admin-center { display: flex; align-items: center; justify-content: center; padding: 48px 16px; }
 
 /* ---------- 页头与导航 ---------- */
 .admin-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  padding: 12px 24px;
+  padding: 12px 32px;
   background: var(--liblog-surface);
   border-bottom: 1px solid var(--liblog-border);
   box-shadow: var(--liblog-shadow-sm);
@@ -52,36 +51,100 @@
   color: var(--liblog-primary);
   font-weight: 600;
 }
-.admin-main { max-width: 1080px; margin: 0 auto; padding: 24px; }
+.admin-main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px 32px 64px; }
 
-/* ---------- 认证卡 ---------- */
-.auth-card {
-  width: 100%;
-  max-width: 420px;
-  background: var(--liblog-surface);
-  border: 1px solid var(--liblog-border);
-  border-radius: 16px;
-  padding: 32px;
-  box-shadow: var(--liblog-shadow-md);
-  position: relative;
+/* ---------- 认证页（登录 / 设置向导） ---------- */
+.auth-page {
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 14% 18%, var(--liblog-primary-soft), transparent 42%),
+    radial-gradient(circle at 86% 78%, var(--liblog-secondary-soft), transparent 40%),
+    var(--liblog-bg);
 }
-.auth-card::before {
+.auth-shell {
+  width: min(960px, 100%);
+  max-height: calc(100svh - 48px);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  border: 1px solid var(--liblog-border);
+  border-radius: 24px;
+  background: var(--liblog-surface);
+  box-shadow: var(--liblog-shadow-lg);
+  overflow: hidden;
+}
+.auth-shell--wide { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+.auth-aside {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 36px 32px;
+  background: var(--liblog-surface-2);
+  color: var(--liblog-brand-fg);
+}
+.auth-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; }
+.auth-logo {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--liblog-primary-soft);
+  color: var(--liblog-primary);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+.auth-lock { width: 60px; height: 60px; color: var(--liblog-primary); margin-bottom: 4px; }
+.auth-lock-shackle, .auth-lock-body { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; }
+.auth-lock-hole { fill: currentColor; }
+.auth-kicker { margin: 0 0 6px; color: var(--liblog-muted); font-size: 0.8rem; letter-spacing: 0.08em; }
+.auth-title { margin: 0 0 8px; font-size: 1.7rem; line-height: 1.25; }
+.auth-tagline { margin: 0 0 6px; color: var(--liblog-primary); font-weight: 600; }
+.auth-promise { margin: 0; color: var(--liblog-muted); font-size: 0.9rem; }
+.auth-aside-note { margin: 0; color: var(--liblog-muted); font-size: 0.75rem; }
+.auth-steps {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+.auth-steps li { position: relative; padding-left: 26px; color: var(--liblog-muted); font-weight: 600; }
+.auth-steps li::before {
   content: "";
   position: absolute;
-  inset: -28px;
-  z-index: -1;
-  border-radius: 28px;
-  background: radial-gradient(closest-side, var(--liblog-primary-soft), transparent 76%);
-  opacity: 0.55;
-  animation: liblog-halo 6s ease-in-out infinite;
-  will-change: transform;
+  left: 0;
+  top: 0.35em;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--liblog-border);
+  background: var(--liblog-surface);
 }
-@keyframes liblog-halo {
-  0%, 100% { opacity: 0.35; transform: scale(1); }
-  50% { opacity: 0.65; transform: scale(1.04); }
+.auth-steps li.is-current { color: var(--liblog-primary); }
+.auth-steps li.is-current::before { border-color: var(--liblog-primary); background: var(--liblog-primary); }
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 40px 48px;
+  overflow-y: auto;
 }
-.auth-card h1 { margin-top: 0; }
-.auth-card h2 { font-size: 1rem; margin: 20px 0 8px; color: var(--liblog-muted); }
+.auth-step { margin: 0 0 6px; color: var(--liblog-primary); font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; }
+.auth-heading { margin: 0 0 6px; font-size: 1.5rem; }
+.auth-sub { margin: 0 0 8px; color: var(--liblog-muted); font-size: 0.9rem; }
+.auth-error { margin: 16px 0 0; }
+.auth-form { margin-top: 12px; }
+.auth-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 28px; margin-top: 12px; }
+.auth-form-grid fieldset { border: 0; margin: 0; padding: 0; }
+.auth-form-grid legend { font-weight: 700; margin: 8px 0 2px; }
+.btn-block { width: 100%; }
 
 /* ---------- 表单 ---------- */
 label { display: block; margin: 12px 0; font-weight: 600; }
@@ -260,11 +323,17 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 }
 @media (max-width: 768px) {
   .admin-header { flex-direction: column; align-items: stretch; padding: 10px 16px; }
+  .admin-main { padding: 20px 16px 48px; }
   .admin-header-top { margin-bottom: 8px; }
-  .admin-main { padding: 16px; }
   .table-shell { display: block; overflow-x: auto; }
   .stat-card { min-width: calc(50% - 8px); }
   .media-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .list-filters input[type="search"] { width: 100%; }
   .list-filters { align-items: stretch; }
+}
+@media (max-width: 820px) {
+  .auth-shell, .auth-shell--wide { grid-template-columns: 1fr; max-height: none; }
+  .auth-aside { padding: 24px; }
+  .auth-panel { padding: 28px 24px; }
+  .auth-form-grid { grid-template-columns: 1fr; }
 }

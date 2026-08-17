@@ -139,7 +139,7 @@ def login_page(request: Request):
     if not has_admin:
         return RedirectResponse(ap("/setup"), status_code=302)
     ensure_anon_session(request)
-    response = render(request, "login.html", {"oidc_enabled": oidc.enabled()})
+    response = render(request, "login.html", {"oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     if getattr(request.state, "new_session_id", None):
         attach_session_cookie(response, request.state.new_session_id)
     return response
@@ -153,15 +153,15 @@ def login_submit(
     csrf_token: str = Form("", alias="_csrf"),
 ):
     if not csrf_ok(request, {"_csrf": csrf_token}):
-        return render(request, "login.html", {"error": "会话失效，请重试", "oidc_enabled": oidc.enabled()})
+        return render(request, "login.html", {"error": "会话失效，请重试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     key = f"{client_ip(request)}:{username}"
     if not rate.allow(key, 5, 60):
-        return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled()})
+        return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     conn = connect()
     admin = get_admin(conn)
     conn.close()
     if admin is None or not security.verify_password(password, admin["password_hash"]):
-        return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled()})
+        return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     session_id = create_session("local")
     response = RedirectResponse(ap("/"), status_code=303)
     response.set_cookie(
@@ -275,7 +275,7 @@ def setup_account_page(request: Request):
     if has_admin:
         return RedirectResponse(ap("/"), status_code=302)
     ensure_anon_session(request)
-    response = render(request, "setup_account.html", {})
+    response = render(request, "setup_account.html", {"brand": store.load_yaml("brand")})
     if getattr(request.state, "new_session_id", None):
         attach_session_cookie(response, request.state.new_session_id)
     return response

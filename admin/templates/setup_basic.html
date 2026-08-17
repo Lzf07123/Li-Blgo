@@ -3,28 +3,62 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>基础信息 · Li&Blog 设置</title>
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css">
+  <title>基础信息 · {{ brand.name }} 设置</title>
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=24">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=24">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=24">
 </head>
-<body class="admin-body admin-center">
-  <main class="auth-card">
-    <h1>第一步：基础信息</h1>
-    {% if error %}<p class="flash">{{ error }}</p>{% endif %}
-    <form method="post" action="/{{ admin_path }}/setup/basic">
-      <input type="hidden" name="_csrf" value="{{ csrf }}">
-      <h2>站点</h2>
-      <label>站点名称<input type="text" name="site_name" value="{{ brand.name }}" required></label>
-      <label>一句话定位<input type="text" name="tagline" value="{{ brand.tagline }}"></label>
-      <label>品牌承诺<input type="text" name="promise" value="{{ brand.promise }}"></label>
-      <label>人格比喻<input type="text" name="persona" value="{{ brand.persona }}"></label>
-      <h2>个人</h2>
-      <label>姓名<input type="text" name="name" value="{{ profile.name }}"></label>
-      <label>身份<input type="text" name="identity" value="{{ profile.identity }}"></label>
-      <label>方向<input type="text" name="direction" value="{{ profile.direction }}"></label>
-      <label>当前目标<input type="text" name="goal" value="{{ profile.goal }}"></label>
-      <button type="submit" class="btn">下一步：创建管理员</button>
-    </form>
+<body class="admin-body auth-page">
+  <main class="auth-shell auth-shell--wide">
+    <aside class="auth-aside">
+      <div class="auth-brand">
+        <span class="auth-logo" aria-hidden="true">{{ brand.name[:1] }}</span>
+        <span class="auth-brand-name">{{ brand.name }}</span>
+      </div>
+      <div class="auth-aside-body">
+        <svg class="auth-lock" viewBox="0 0 64 64" aria-hidden="true">
+          <path class="auth-lock-shackle" d="M20 28v-9a12 12 0 0 1 24 0v9"/>
+          <rect class="auth-lock-body" x="12" y="28" width="40" height="26" rx="6"/>
+          <circle class="auth-lock-hole" cx="32" cy="40" r="4"/>
+          <path class="auth-lock-hole" d="M32 44v7"/>
+        </svg>
+        <p class="auth-kicker">首次设置</p>
+        <h1 class="auth-title">{{ brand.name }}</h1>
+        <p class="auth-tagline">{{ brand.tagline }}</p>
+        <ol class="auth-steps">
+          <li class="is-current">基础信息</li>
+          <li>创建管理员</li>
+          <li>绑定 OIDC（可选）</li>
+        </ol>
+      </div>
+      <p class="auth-aside-note">第 1 步 / 共 3 步</p>
+    </aside>
+    <section class="auth-panel">
+      <p class="auth-step">第 1 步 / 共 3 步</p>
+      <h2 class="auth-heading">基础信息</h2>
+      <p class="auth-sub">先填写站点与个人基础信息</p>
+      {% if error %}<p class="flash auth-error" role="alert">{{ error }}</p>{% endif %}
+      <form method="post" action="/{{ admin_path }}/setup/basic" class="auth-form">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <div class="auth-form-grid">
+          <fieldset>
+            <legend>站点</legend>
+            <label>站点名称<input type="text" name="site_name" value="{{ brand.name }}" required></label>
+            <label>一句话定位<input type="text" name="tagline" value="{{ brand.tagline }}"></label>
+            <label>品牌承诺<input type="text" name="promise" value="{{ brand.promise }}"></label>
+            <label>人格比喻<input type="text" name="persona" value="{{ brand.persona }}"></label>
+          </fieldset>
+          <fieldset>
+            <legend>个人</legend>
+            <label>姓名<input type="text" name="name" value="{{ profile.name }}"></label>
+            <label>身份<input type="text" name="identity" value="{{ profile.identity }}"></label>
+            <label>方向<input type="text" name="direction" value="{{ profile.direction }}"></label>
+            <label>当前目标<input type="text" name="goal" value="{{ profile.goal }}"></label>
+          </fieldset>
+        </div>
+        <button type="submit" class="btn btn-block">下一步：创建管理员</button>
+      </form>
+    </section>
   </main>
 </body>
 </html>
