@@ -109,9 +109,10 @@ a:hover { color: var(--liblog-primary-hover); }
 .page-shell {
   flex: 1;
   width: min(960px, calc(100% - 32px));
-  margin: 24px auto 0;
+  margin: 0 auto;
   padding: 0 0 48px;
 }
+.page-shell > *:first-child { margin-top: 24px; }
 .site-footer {
   flex-shrink: 0;
   margin-top: auto;
@@ -316,6 +317,9 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 0;
   min-height: 100vh;
   min-height: 100svh;
   display: flex;
@@ -324,12 +328,18 @@ input:focus, select:focus, textarea:focus {
   justify-content: center;
   padding: 24px 0;
   text-align: center;
+  margin-top: 0 !important;
+}
+.page-shell > *:not(.hero) {
+  position: relative;
+  z-index: 1;
+  background: var(--liblog-bg);
 }
 .hero-inner {
   position: relative;
   z-index: 1;
   width: 100%;
-  will-change: transform, opacity;
+  will-change: transform, opacity, filter;
 }
 .hero .badge-row { justify-content: center; }
 .hero-kicker { color: var(--liblog-muted); margin: 0 0 10px; font-size: 0.95rem; }
