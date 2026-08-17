@@ -17,7 +17,7 @@
     {{ if $home.hero.show_skills }}
     <div class="badge-row hero-skills">
       {{ range first (int $home.hero.skills_limit) $profile.skills }}
-        {{ partial "badge.html" . }}
+        {{ partial "badge.html" (merge . (dict "readme" true)) }}
       {{ end }}
     </div>
     {{ end }}

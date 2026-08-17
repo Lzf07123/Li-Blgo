@@ -39,7 +39,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | brand-logo | Logo 占位/图片，品牌色文字兜底 |
-| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name` 字段） |
+| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字，模拟 README shields 标准，零外链） |
 | card | 项目卡/文章卡 |
 | timeline-node | 时间线节点 |
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |

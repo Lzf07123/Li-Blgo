@@ -21,6 +21,7 @@
   --liblog-primary-soft: #d9f4ee;
   --liblog-primary-fg: #ffffff;
   --liblog-brand-fg: #24433e;
+  --liblog-badge-readme-fg: #ffffff;
 
   /* 按钮（仅后台）：半透明单色 */
   --liblog-btn-primary-bg: rgba(47, 127, 116, 0.1);
@@ -110,6 +111,7 @@
   --liblog-primary-soft: rgba(127, 212, 198, 0.16);
   --liblog-primary-fg: #17332e;
   --liblog-brand-fg: #d7efea;
+  --liblog-badge-readme-fg: #ffffff;
 
   /* 按钮（深） */
   --liblog-btn-primary-bg: rgba(127, 212, 198, 0.13);

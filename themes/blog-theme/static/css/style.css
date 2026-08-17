@@ -245,6 +245,23 @@ main:focus { outline: none; }
 .badge-dot-default { background-color: var(--liblog-primary); }
 .badge a { color: var(--liblog-fg); }
 .badge a:hover { color: var(--liblog-primary); }
+.badge-readme {
+  --badge-readme-bg: var(--liblog-primary);
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--badge-readme-bg);
+  color: var(--liblog-badge-readme-fg);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: var(--liblog-shadow-sm);
+}
+.badge-readme a { color: inherit; }
+.badge-readme a:hover { color: inherit; opacity: 0.9; }
 .badge-success { background: var(--liblog-success-soft-solid, var(--liblog-success-soft)); color: var(--liblog-success-soft-fg, var(--liblog-success)); border-color: var(--liblog-success); }
 .badge-warning { background: var(--liblog-warning-soft-solid, var(--liblog-warning-soft)); color: var(--liblog-warning-soft-fg, var(--liblog-warning)); border-color: var(--liblog-warning); }
 .badge-danger { background: var(--liblog-destructive-soft-solid, var(--liblog-destructive-soft)); color: var(--liblog-destructive-soft-fg, var(--liblog-destructive)); border-color: var(--liblog-destructive); }

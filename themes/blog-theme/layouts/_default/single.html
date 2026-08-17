@@ -28,7 +28,7 @@
   {{ if .Params.show_skills }}
     <h2 class="section-title">{{ hugo.Data.strings.home.skills_title }}</h2>
     <div class="badge-row">
-      {{ range hugo.Data.profile.skills }}{{ partial "badge.html" . }}{{ end }}
+      {{ range hugo.Data.profile.skills }}{{ partial "badge.html" (merge . (dict "readme" true)) }}{{ end }}
     </div>
   {{ end }}
   {{ if or .PrevInSection .NextInSection }}
