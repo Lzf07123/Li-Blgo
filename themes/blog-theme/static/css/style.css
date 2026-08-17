@@ -237,7 +237,7 @@ a:hover { color: var(--liblog-primary-hover); }
     box-shadow var(--liblog-motion-base) var(--liblog-ease-out);
 }
 .card-interactive:hover { transform: translateY(-1px); box-shadow: var(--liblog-shadow-md); }
-.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-top: 16px; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
 .project-card, .post-card { padding: 20px 24px; }
 .project-card { display: flex; flex-direction: column; }
 .project-card h3, .post-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
@@ -316,11 +316,24 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Hero ---------- */
 .hero { position: relative; padding: 48px 0 24px; }
 .hero { text-align: center; }
+.hero-avatar {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 14px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--liblog-primary-soft);
+  color: var(--liblog-primary);
+  font-size: 1.4rem;
+  font-weight: 700;
+  box-shadow: var(--liblog-shadow-sm);
+}
 .hero .badge-row { justify-content: center; }
 .hero-kicker { color: var(--liblog-muted); margin: 0 0 8px; }
-.hero-title { margin: 0 0 8px; font-size: 2.4rem; line-height: 1.2; }
-.hero-tagline { font-size: 1.2rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 12px; }
-.hero-meta, .hero-goal { color: var(--liblog-muted); margin: 4px 0; }
+.hero-title { margin: 0 0 8px; font-size: 2rem; line-height: 1.25; }
+.hero-tagline { font-size: 1.05rem; color: var(--liblog-primary); font-weight: 600; margin: 0 0 12px; }
+.hero-meta, .hero-goal { color: var(--liblog-muted); margin: 4px 0; font-size: 0.9rem; }
 .hero > * { position: relative; z-index: 1; animation: liblog-fade-up 0.6s var(--liblog-ease-out) both; }
 .hero > *:nth-child(2) { animation-delay: 0.06s; }
 .hero > *:nth-child(3) { animation-delay: 0.12s; }
@@ -451,17 +464,23 @@ input:focus, select:focus, textarea:focus {
   opacity: 0.5;
 }
 
-/* ---------- 卡片签名渐变描边 ---------- */
+/* ---------- 统一卡片规格（圆角16 / surface底 / 细描边 / 轻阴影 / 悬浮上移） ---------- */
 .project-card, .post-card, .journey-panel {
-  border: 1px solid transparent;
-  background:
-    linear-gradient(var(--liblog-surface), var(--liblog-surface)) padding-box,
-    var(--liblog-flow-gradient) border-box;
+  border: 1px solid var(--liblog-border);
+  border-radius: 16px;
+  background: var(--liblog-surface);
+  box-shadow: var(--liblog-shadow-sm);
+  transition: transform var(--liblog-motion-base) var(--liblog-ease-out),
+    box-shadow var(--liblog-motion-base) var(--liblog-ease-out);
+}
+.project-card:hover, .post-card:hover, .journey-panel:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--liblog-shadow-md);
 }
 
 /* ---------- 文章 / 代码 / 提示块 / 目录 ---------- */
-.section { margin-top: 40px; }
-.section-title { font-size: 1.35rem; text-align: center; }
+.section { margin-top: 48px; }
+.section-title { font-size: 1.25rem; text-align: center; }
 .section-title::after {
   content: "";
   display: block;

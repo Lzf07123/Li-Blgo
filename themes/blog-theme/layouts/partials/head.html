@@ -6,8 +6,8 @@
 <meta name="description" content="{{ $brand.tagline }}">
 <meta name="theme-color" content="#f6fbf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
-<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=13">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=13">
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=14">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=14">
 {{ $density := partial "density.html" . }}
 {{ if ne $density "none" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
