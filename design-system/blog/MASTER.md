@@ -58,7 +58,7 @@
 | session | SQLite 服务端会话 + HttpOnly Cookie + CSRF |
 | form / input | 内容编辑表单（令牌样式） |
 | tabs | 八栏目顶部标签页 |
-| table-shell | 列表（文章/项目/时间线/资源） |
+| table-shell | 统一后台表格组件（`admin/templates/partials/table.html`）：列表/最近文章/统计共用；支持服务端排序、分页、空状态、移动端卡片化；50 轮迭代记录见 `TABLE-COMPONENT.md` |
 | markdown-editor | 文本区 + 服务端预览 |
 | editor-preview | 编辑器右侧 Hugo 实时预览（分栏 iframe，保存后由 Hugo 渲染） |
 | media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越，上传即重建 |

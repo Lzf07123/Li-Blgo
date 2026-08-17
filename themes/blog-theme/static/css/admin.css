@@ -189,20 +189,331 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .list-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
 .list-filters input[type="search"] { width: 280px; }
 .list-filters label { margin: 0; }
+
+/* ============ 后台表格组件（v1–v50 迭代） ============ */
+
+/* v1 外壳：圆角容器 + 细边框 + 溢出隐藏 */
+.table-shell-wrap {
+  position: relative;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--liblog-surface);
+  box-shadow: var(--liblog-shadow-sm);
+}
+/* v2 表格：占满容器、合并边框 */
 .table-shell {
   width: 100%;
   border-collapse: collapse;
   background: var(--liblog-surface);
-  border: 1px solid var(--liblog-border);
-  border-radius: 12px;
-  overflow: hidden;
+  color: var(--liblog-fg);
 }
-.table-shell th, .table-shell td { border-bottom: 1px solid var(--liblog-border); padding: 10px 14px; text-align: left; }
-.table-shell th { background: var(--liblog-surface-2); font-size: 0.875rem; }
-.table-shell tr:last-child td { border-bottom: none; }
+/* v3 表头：背景令牌 + 语义色文字 */
+.table-shell thead th {
+  background: var(--liblog-surface-2);
+  color: var(--liblog-fg);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+/* v4 单元格：统一内边距与垂直对齐 */
+.table-shell th,
+.table-shell td {
+  padding: 11px 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+/* v5 表头：底部边框与 sticky 定位 */
+.table-shell thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  border-bottom: 2px solid var(--liblog-border);
+}
+/* v6 数据行：细分隔线 */
+.table-shell tbody td {
+  border-bottom: 1px solid var(--liblog-border);
+}
+/* v7 末行：去掉多余分隔线 */
+.table-shell tbody tr:last-child td {
+  border-bottom: none;
+}
+/* v8 斑马纹：偶数行浅底 */
+.table-shell--striped tbody tr:nth-child(even) {
+  background: var(--liblog-surface-2);
+}
+/* v9 行悬停：浅主色提示，不覆盖斑马纹 */
+.table-shell tbody tr:hover {
+  background: var(--liblog-primary-soft);
+}
+/* v10 行聚焦：键盘可见焦点环 */
+.table-shell tbody tr:focus-within {
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: -2px;
+}
+/* v11 语义：表头 scope 由模板输出，这里只保证排序列可点 */
+.table-col-sortable {
+  white-space: nowrap;
+}
+/* v12 排序链接：继承表头颜色，整列可点 */
+.table-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  font-weight: 700;
+}
+.table-sort:hover { color: var(--liblog-primary); text-decoration: none; }
+/* v13 排序标记：主色小箭头，不与文字换行 */
+.table-sort-mark {
+  color: var(--liblog-primary);
+  font-size: 0.75rem;
+  line-height: 1;
+}
+/* v14 长容器：列表多时内部滚动，表头吸顶 */
+.table-shell-wrap {
+  max-height: calc(100svh - 260px);
+  overflow: auto;
+}
+/* v15 操作列：不换行、右对齐、间距一致 */
+.table-col-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+.table-col-actions .btn-link,
+.table-col-actions form {
+  margin-left: 12px;
+}
+.table-col-actions form { display: inline-block; }
+/* v16 行内操作按钮：继承链接样式 + 触达高度 */
+.table-col-actions .btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+}
+/* v17 危险操作：语义色 */
+.table-col-actions .btn-link.danger,
+.row-actions .btn-link.danger {
+  color: var(--liblog-destructive);
+}
+/* v18 数字列：右对齐 + 等宽数字 */
+.table-col-right {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+/* v19 标题列：长标题省略，保留完整 title */
+.table-col-title {
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* v20 标题链接：主色 + hover 下划线 */
+.table-col-title a {
+  color: var(--liblog-primary);
+}
+.table-col-title a:hover { text-decoration: underline; }
+/* v21 日期列：弱化文字、不换行 */
+.table-col-date {
+  color: var(--liblog-muted);
+  white-space: nowrap;
+}
+/* v22 状态列：徽章垂直居中 */
+.table-col-status .badge {
+  display: inline-flex;
+  align-items: center;
+}
+/* v23 空状态：居中、弱化、留白 */
+.table-empty-row td {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--liblog-muted);
+  font-size: 0.9rem;
+}
+/* v24 空状态：语义强调容器 */
+.table-shell-wrap:has(.table-empty-row) {
+  border-style: dashed;
+}
+/* v25 筛选区：与表格保持节奏一致 */
+.list-filters {
+  padding: 0;
+}
+.list-filters select,
+.list-filters input[type="search"] {
+  min-height: 44px;
+}
+/* v26 筛选按钮：与输入框等高 */
+.list-filters .btn {
+  min-height: 44px;
+}
+/* v27 分页：弹性间距 + 信息区 */
+.pagination {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.pagination-info {
+  color: var(--liblog-muted);
+  font-size: 0.85rem;
+}
+/* v28 分页按钮：次级样式 + 触达高度 */
+.pagination .btn {
+  min-height: 36px;
+}
+/* v29 焦点：所有行内操作可见焦点环 */
+.table-col-actions a:focus-visible,
+.table-sort:focus-visible {
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* v30 移动端：外壳不再横向滚动，改为卡片化 */
+@media (max-width: 768px) {
+  .table-shell-wrap {
+    overflow: hidden;
+    max-height: none;
+  }
+}
+/* v31 移动端：隐藏表头，用单元格标签替代 */
+@media (max-width: 768px) {
+  .table-shell--cards thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}
+/* v32 移动端：行变成独立卡片 */
+@media (max-width: 768px) {
+  .table-shell--cards tbody tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--liblog-border);
+  }
+}
+/* v33 移动端：单元格两栏布局 */
+@media (max-width: 768px) {
+  .table-shell--cards td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 6px 14px;
+    border: 0;
+    text-align: right;
+  }
+}
+/* v34 移动端：data-label 作为左标签 */
+@media (max-width: 768px) {
+  .table-shell--cards td::before {
+    content: attr(data-label);
+    color: var(--liblog-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+}
+/* v35 移动端：操作列不再右对齐，按钮靠右 */
+@media (max-width: 768px) {
+  .table-shell--cards .table-col-actions {
+    text-align: right;
+    justify-content: flex-end;
+  }
+}
+/* v36 移动端：标题列允许换行 */
+@media (max-width: 768px) {
+  .table-shell--cards .table-col-title {
+    max-width: none;
+    white-space: normal;
+  }
+}
+/* v37 移动端：空状态跨行居中 */
+@media (max-width: 768px) {
+  .table-shell--cards .table-empty-row td {
+    display: block;
+    text-align: center;
+  }
+}
+/* v38 移动端：分页按钮更大触达区 */
+@media (max-width: 768px) {
+  .pagination .btn {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+/* v39 可访问性：aria-sort 列不显示默认排序样式 */
+.table-col-sortable[aria-sort="none"] .table-sort-mark {
+  display: none;
+}
+/* v40 可访问性：caption 使用全局隐藏类 */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+/* v41 一致性：编辑表格（配置表单）复用外壳与表头 */
+.config-list .table-shell-wrap {
+  border-radius: 8px;
+  box-shadow: none;
+}
+/* v42 一致性：编辑表格输入框占满单元格 */
+.config-list .list-rows input {
+  width: 100%;
+  min-width: 0;
+}
+/* v43 一致性：编辑表格删除按钮不换行 */
+.config-list .list-rows .btn-link {
+  white-space: nowrap;
+}
+/* v44 性能：行悬停过渡克制 */
+.table-shell tbody tr {
+  transition: background-color var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+/* v45 性能：不引入阴影动画，减少重绘 */
+.table-shell-wrap {
+  contain: layout style;
+}
+/* v46 深色模式：悬停与斑马纹使用令牌自动适配 */
+.table-shell--striped tbody tr:nth-child(even),
+.table-shell tbody tr:hover {
+  color: inherit;
+}
+/* v47 表单筛选：小屏时搜索框占满一行 */
+@media (max-width: 768px) {
+  .list-filters input[type="search"] {
+    width: 100%;
+  }
+  .list-filters select {
+    flex: 1;
+  }
+}
+/* v48 表单筛选：清除链接触达高度 */
+.list-filters .btn-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+/* v49 分页：空页码链接禁用态（模板不输出链接时占位） */
+.pagination a[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.5;
+}
+/* v50 收尾：确保表格组件在窄屏无横向溢出 */
+.table-shell-wrap {
+  width: 100%;
+}
 .row-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .row-actions form { margin: 0; }
-.pagination { display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
 
 /* ---------- 编辑器 ---------- */
 .editor-layout {
@@ -325,7 +636,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   .admin-header { flex-direction: column; align-items: stretch; padding: 10px 16px; }
   .admin-main { padding: 20px 16px 48px; }
   .admin-header-top { margin-bottom: 8px; }
-  .table-shell { display: block; overflow-x: auto; }
+  .table-shell:not(.table-shell--cards) { display: block; overflow-x: auto; }
   .stat-card { min-width: calc(50% - 8px); }
   .media-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .list-filters input[type="search"] { width: 100%; }

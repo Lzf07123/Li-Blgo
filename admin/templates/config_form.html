@@ -9,24 +9,26 @@
     <fieldset class="config-list">
       <legend>{{ field.label }}</legend>
       {% if field.help %}<p class="field-help">{{ field.help }}</p>{% endif %}
-      <table class="table-shell list-rows">
-        <thead>
-          <tr>
-            {% for col in field.columns %}<th>{{ col.label }}</th>{% endfor %}
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="rows-{{ field.name }}">
-          {% for row in field.value %}
-          <tr>
-            {% for col in field.columns %}
-            <td><input type="{{ col.get('input', 'text') }}" name="{{ field.name }}[{{ loop.index0 }}][{{ col.key }}]" value="{{ row.get(col.key, '') }}"></td>
+      <div class="table-shell-wrap">
+        <table class="table-shell list-rows">
+          <thead>
+            <tr>
+              {% for col in field.columns %}<th>{{ col.label }}</th>{% endfor %}
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="rows-{{ field.name }}">
+            {% for row in field.value %}
+            <tr>
+              {% for col in field.columns %}
+              <td><input type="{{ col.get('input', 'text') }}" name="{{ field.name }}[{{ loop.index0 }}][{{ col.key }}]" value="{{ row.get(col.key, '') }}"></td>
+              {% endfor %}
+              <td><button type="button" class="btn-link danger list-remove">删除</button></td>
+            </tr>
             {% endfor %}
-            <td><button type="button" class="btn-link danger list-remove">删除</button></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </tbody>
+        </table>
+      </div>
       <button type="button" class="btn btn-sm btn-secondary list-add" data-field="{{ field.name }}" data-columns='{{ field.columns|tojson }}'>添加一行</button>
     </fieldset>
     {% else %}

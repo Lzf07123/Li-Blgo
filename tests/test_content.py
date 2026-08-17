@@ -58,6 +58,24 @@ class TestContent(unittest.TestCase):
         self.assertEqual(len(content.list_markdown("posts", status="draft")), 1)
         self.assertEqual(len(content.list_markdown("posts", q="不存在")), 0)
 
+    def test_list_markdown_sort(self):
+        content.write_markdown(
+            "posts",
+            "b",
+            {"title": "Beta", "date": "2026-08-20", "status": "published"},
+            "正文",
+        )
+        content.write_markdown(
+            "posts",
+            "a",
+            {"title": "Alpha", "date": "2026-08-10", "status": "draft"},
+            "正文",
+        )
+        asc = content.list_markdown("posts", sort="title", order="asc")
+        desc = content.list_markdown("posts", sort="date", order="desc")
+        self.assertEqual([i["slug"] for i in asc], ["a", "b"])
+        self.assertEqual([i["slug"] for i in desc], ["b", "a"])
+
 
 if __name__ == "__main__":
     unittest.main()

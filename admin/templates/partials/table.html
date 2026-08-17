@@ -1,0 +1,66 @@
+{% if table %}
+<div class="table-shell-wrap">
+  <table class="table-shell table-shell--cards{{ ' table-shell--striped' if table.striped else '' }}">
+    {% if table.caption %}<caption class="visually-hidden">{{ table.caption }}</caption>{% endif %}
+    <thead>
+      <tr>
+      {% for col in table.columns %}
+        {% set align_class = ' table-col-right' if col.type == 'number' or col.align == 'right' else '' %}
+        <th scope="col" class="table-col-{{ col.key }}{{ ' table-col-sortable' if col.sortable }}{{ align_class }}"
+            {% if col.sortable %}aria-sort="{{ 'ascending' if table.sort == col.key and table.order == 'asc' else ('descending' if table.sort == col.key and table.order == 'desc' else 'none') }}"{% endif %}>
+          {% if col.sortable and table.sort_links.get(col.key) %}
+          <a class="table-sort" href="{{ table.sort_links[col.key] }}">{{ col.label }}{% if table.sort == col.key %}<span class="table-sort-mark" aria-hidden="true">{{ '↑' if table.order == 'asc' else '↓' }}</span>{% endif %}</a>
+          {% else %}
+          {{ col.label }}
+          {% endif %}
+        </th>
+      {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in table.rows %}
+      <tr>
+      {% for col in table.columns %}
+        {% set align_class = ' table-col-right' if col.type == 'number' or col.align == 'right' else '' %}
+        {% if col.type == 'link' %}
+        <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
+          <a href="{{ row[col.key ~ '_href'] }}"{% if row.get(col.key ~ '_external') %} target="_blank" rel="noopener"{% endif %}>{{ row[col.key] }}</a>
+        </td>
+        {% elif col.type == 'badge' %}
+        <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
+          <span class="badge {{ row.get(col.key ~ '_class', 'badge-muted') }}">{{ row.get(col.key ~ '_label', row[col.key]) }}</span>
+        </td>
+        {% elif col.type == 'actions' %}
+        <td class="table-col-actions" data-label="{{ col.label }}">
+          {% for act in row.get(col.key, []) %}
+            {% if act.method %}
+            <form method="post" action="{{ act.href }}"{% if act.confirm %} onsubmit="return confirm('{{ act.confirm }}')"{% endif %}>
+              <input type="hidden" name="_csrf" value="{{ csrf }}">
+              <button type="submit" class="btn-link{{ ' danger' if act.danger else '' }}">{{ act.label }}</button>
+            </form>
+            {% else %}
+            <a class="btn-link{{ ' danger' if act.danger else '' }}" href="{{ act.href }}"{% if act.external %} target="_blank" rel="noopener"{% endif %}>{{ act.label }}</a>
+            {% endif %}
+          {% endfor %}
+        </td>
+        {% else %}
+        <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">{{ row[col.key] }}</td>
+        {% endif %}
+      {% endfor %}
+      </tr>
+    {% else %}
+      <tr class="table-empty-row">
+        <td colspan="{{ table.columns|length }}">{{ table.empty or '暂无数据' }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% if table.pagination and table.pagination.pages > 1 %}
+<nav class="pagination" aria-label="分页">
+  {% if table.pagination.page > 1 %}<a class="btn btn-sm btn-secondary" href="{{ table.pagination.prev_url }}">上一页</a>{% endif %}
+  <span class="pagination-info">第 {{ table.pagination.page }} / {{ table.pagination.pages }} 页 · 共 {{ table.pagination.total }} 条</span>
+  {% if table.pagination.page < table.pagination.pages %}<a class="btn btn-sm btn-secondary" href="{{ table.pagination.next_url }}">下一页</a>{% endif %}
+</nav>
+{% endif %}

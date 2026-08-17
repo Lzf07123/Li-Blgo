@@ -22,29 +22,8 @@
 </div>
 {% if recent_posts %}
 <h2>最近文章</h2>
-<table class="table-shell">
-  <thead><tr><th>标题</th><th>日期</th><th>状态</th><th>操作</th></tr></thead>
-  <tbody>
-  {% for item in recent_posts %}
-    <tr>
-      <td>{{ item.title }}</td>
-      <td>{{ item.date }}</td>
-      <td><span class="badge {{ 'badge-warning' if item.status == 'draft' else 'badge-success' }}">{{ status_labels.get(item.status, item.status) }}</span></td>
-      <td class="row-actions"><a href="/{{ admin_path }}/posts/{{ item.slug }}/edit">编辑</a></td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+{% with table = recent_table %}{% include "partials/table.html" %}{% endwith %}
 {% endif %}
 <h2>访问统计（最近）</h2>
-<table class="table-shell">
-  <thead><tr><th>路径</th><th>日期</th><th>次数</th></tr></thead>
-  <tbody>
-  {% for row in stats %}
-    <tr><td>{{ row.path }}</td><td>{{ row.day }}</td><td>{{ row.views }}</td></tr>
-  {% else %}
-    <tr><td colspan="3">暂无数据（统计上线后展示）</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+{% with table = stats_table %}{% include "partials/table.html" %}{% endwith %}
 {% endblock %}

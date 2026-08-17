@@ -4,6 +4,7 @@ import datetime
 from contextlib import asynccontextmanager
 from math import ceil
 from typing import Optional
+from urllib.parse import urlencode
 
 import yaml
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -127,6 +128,12 @@ def after_build_redirect(base: str) -> RedirectResponse:
     if result.returncode != 0:
         return RedirectResponse(ap(f"{base}?error=构建失败"), status_code=303)
     return RedirectResponse(ap(f"{base}?ok=已保存并重建({elapsed}s)"), status_code=303)
+
+
+def query_url(base: str, **params) -> str:
+    parts = {k: v for k, v in params.items() if v not in (None, "")}
+    qs = urlencode(parts)
+    return f"{base}?{qs}" if qs else base
 
 
 # ---------- 登录与登出 ----------
@@ -357,6 +364,30 @@ def dashboard(request: Request):
     conn = connect()
     stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
     conn.close()
+    recent_columns = [
+        {"key": "title", "label": "标题", "type": "link"},
+        {"key": "date", "label": "日期", "type": "text"},
+        {"key": "status", "label": "状态", "type": "badge"},
+        {"key": "actions", "label": "操作", "type": "actions"},
+    ]
+    recent_rows = [
+        {
+            "title": p["title"],
+            "title_href": ap(f"/posts/{p['slug']}/edit"),
+            "date": p["date"],
+            "status": p["status"],
+            "status_label": STATUS_LABELS.get(p["status"], p["status"]),
+            "status_class": "badge-warning" if p["status"] == "draft" else "badge-success",
+            "actions": [{"label": "编辑", "href": ap(f"/posts/{p['slug']}/edit")}],
+        }
+        for p in recent_posts
+    ]
+    stats_columns = [
+        {"key": "path", "label": "路径", "type": "text"},
+        {"key": "day", "label": "日期", "type": "text"},
+        {"key": "views", "label": "次数", "type": "number"},
+    ]
+    stats_rows = [dict(r) for r in stats]
     return render(
         request,
         "dashboard.html",
@@ -366,6 +397,19 @@ def dashboard(request: Request):
             "recent_posts": recent_posts,
             "stats": stats,
             "media_count": len(media_store.list_media()),
+            "recent_table": {
+                "caption": "最近文章",
+                "columns": recent_columns,
+                "rows": recent_rows,
+                "empty": "暂无文章",
+                "striped": True,
+            },
+            "stats_table": {
+                "caption": "最近访问统计",
+                "columns": stats_columns,
+                "rows": stats_rows,
+                "empty": "暂无数据（统计上线后展示）",
+            },
         },
     )
 
@@ -376,7 +420,19 @@ def stats_page(request: Request):
     conn = connect()
     rows = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 200").fetchall()
     conn.close()
-    return render(request, "stats.html", {"rows": rows})
+    columns = [
+        {"key": "path", "label": "路径", "type": "text"},
+        {"key": "day", "label": "日期", "type": "text"},
+        {"key": "views", "label": "次数", "type": "number"},
+    ]
+    table = {
+        "caption": "访问统计",
+        "columns": columns,
+        "rows": [dict(r) for r in rows],
+        "empty": "暂无数据",
+        "striped": True,
+    }
+    return render(request, "stats.html", {"table": table})
 
 
 @app.post(ap("/rebuild"))
@@ -479,34 +535,113 @@ def _edit_fields(section: str, fm: dict) -> list:
 
 
 @app.get(ap("/{section}"), response_class=HTMLResponse)
-def section_list(request: Request, section: str, q: str = "", status: str = "", page: int = 1):
+def section_list(
+    request: Request,
+    section: str,
+    q: str = "",
+    status: str = "",
+    page: int = 1,
+    sort: str = "date",
+    order: str = "desc",
+    per_page: int = 50,
+):
     require_login(request)
     if section not in SECTIONS:
         raise HTTPException(404)
     if SECTIONS[section]["single"]:
         return RedirectResponse(ap(f"/{section}/edit"), status_code=302)
-    items = store.list_markdown(section, q=q, status=status)
+    if sort not in ("title", "date", "status", "slug"):
+        sort = "date"
+    if order not in ("asc", "desc"):
+        order = "desc"
+    per_page = min(max(int(per_page), 10), 100) if per_page else 50
+    items = store.list_markdown(section, q=q, status=status, sort=sort, order=order)
     total = len(items)
     page = max(1, page)
-    page_size = 50
-    pages = max(1, ceil(total / page_size))
+    pages = max(1, ceil(total / per_page))
     if page > pages:
         page = pages
-    start = (page - 1) * page_size
-    page_items = items[start : start + page_size]
+    start = (page - 1) * per_page
+    page_items = items[start : start + per_page]
+    base = ap(f"/{section}")
+
+    def qurl(**over):
+        params = {"q": q, "status": status, "sort": sort, "order": order, "per_page": per_page}
+        params.update(over)
+        return query_url(base, **params)
+
+    columns = [
+        {"key": "title", "label": "标题", "type": "link", "sortable": True},
+        {"key": "date", "label": "日期", "type": "text", "sortable": True},
+        {"key": "status", "label": "状态", "type": "badge", "sortable": section != "timeline"},
+        {"key": "actions", "label": "操作", "type": "actions"},
+    ]
+    rows = []
+    for item in page_items:
+        actions = [
+            {"label": "编辑", "href": ap(f"/{section}/{item['slug']}/edit")},
+            {"label": "查看", "href": f"/{section}/{item['slug']}/", "external": True},
+        ]
+        if section != "timeline":
+            actions.append(
+                {
+                    "label": "删除",
+                    "href": ap(f"/{section}/{item['slug']}/delete"),
+                    "method": "post",
+                    "danger": True,
+                    "confirm": "确定删除？删除后会立即重建公开站。",
+                }
+            )
+        rows.append(
+            {
+                "title": item["title"],
+                "title_href": ap(f"/{section}/{item['slug']}/edit"),
+                "date": item["date"],
+                "status": item["status"],
+                "status_label": STATUS_LABELS.get(item["status"], item["status"]),
+                "status_class": "badge-warning" if item["status"] == "draft" else "badge-success",
+                "actions": actions,
+            }
+        )
+    sort_links = {}
+    for key in ("title", "date", "status"):
+        if key == "status" and section == "timeline":
+            continue
+        next_order = "asc" if (sort == key and order == "desc") else "desc"
+        sort_links[key] = qurl(sort=key, order=next_order, page="")
+    empty = "没有匹配的内容，换个关键词或清除筛选试试。" if (q or status) else "还没有内容，点右上角“新建”开始。"
+    table = {
+        "caption": f"{SECTIONS[section]['label']}列表",
+        "columns": columns,
+        "rows": rows,
+        "empty": empty,
+        "striped": True,
+        "sort": sort,
+        "order": order,
+        "sort_links": sort_links,
+        "pagination": {
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "prev_url": qurl(page=page - 1) if page > 1 else "",
+            "next_url": qurl(page=page + 1) if page < pages else "",
+        },
+    }
     return render(
         request,
         "list.html",
         {
             "section": section,
             "label": SECTIONS[section]["label"],
-            "items": page_items,
             "q": q,
             "status": status,
             "page": page,
             "pages": pages,
             "total": total,
-            "page_size": page_size,
+            "per_page": per_page,
+            "sort": sort,
+            "order": order,
+            "table": table,
         },
     )
 

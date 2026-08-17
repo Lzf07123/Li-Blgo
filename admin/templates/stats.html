@@ -1,14 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>访问统计</h1>
-<table class="table-shell">
-  <thead><tr><th>路径</th><th>日期</th><th>次数</th></tr></thead>
-  <tbody>
-  {% for row in rows %}
-    <tr><td>{{ row.path }}</td><td>{{ row.day }}</td><td>{{ row.views }}</td></tr>
-  {% else %}
-    <tr><td colspan="3">暂无数据</td></tr>
-  {% endfor %}
-  </tbody>
-</table>
+{% include "partials/table.html" %}
 {% endblock %}
