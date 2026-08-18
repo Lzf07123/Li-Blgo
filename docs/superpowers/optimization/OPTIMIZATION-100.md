@@ -28,7 +28,7 @@
 | v003 | SEO | og:locale、article 时间/标签、meta author | 完成 | 提交 7c88b4f；about 页含 og:locale 与 author |
 | v004 | SEO | BreadcrumbList JSON-LD | 完成 | about 等非首页含 BreadcrumbList；发现 `--minify` 下 jsonify 双重编码，v005 用 safeJS 修复 |
 | v005 | SEO | Article JSON-LD 增强（image/wordCount/inLanguage/publisher） | 完成 | Hugo 构建 353 页通过；BlogPosting/BreadcrumbList/WebSite 全部通过 JSON 解析校验 |
-| v006 | SEO | WebSite/Organization JSON-LD 补 sameAs（profile links） | 计划 | — |
+| v006 | SEO | WebSite JSON-LD 补 sameAs（profile links） | 完成 | 首页 WebSite JSON-LD 含 GitHub sameAs，JSON 校验通过 |
 | v007 | SEO | 自定义 robots.txt（含 Sitemap）+ [sitemap] 配置 | 计划 | — |
 | v008 | SEO | llms.txt 输出格式与模板 | 计划 | — |
 | v009 | SEO | security.txt 与 humans.txt | 计划 | — |

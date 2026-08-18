@@ -33,8 +33,12 @@
 <link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=35">
 <link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=39">
 {{ if .IsHome }}
+{{ $website := dict "@context" "https://schema.org" "@type" "WebSite" "name" $brand.name "url" .Site.Home.Permalink }}
+{{ $same := slice }}
+{{ range hugo.Data.profile.links }}{{ if strings.HasPrefix .href "http" }}{{ $same = $same | append .href }}{{ end }}{{ end }}
+{{ with $same }}{{ $website = merge $website (dict "sameAs" .) }}{{ end }}
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebSite","name":{{ $brand.name | jsonify }},"url":{{ .Site.Home.Permalink | jsonify }}}
+{{ $website | jsonify | safeJS }}
 </script>
 {{ else if eq .Kind "page" }}
 {{ $article := dict "@context" "https://schema.org" "@type" "BlogPosting" "headline" .Title "description" (.Summary | plainify | replaceRE "[\\s]+" " " | truncate 160 "…") "url" .Permalink "inLanguage" "zh-CN" "wordCount" .WordCount "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink) }}
