@@ -14,4 +14,6 @@ output/
 .preview-out/
 bin/
 .hugo_build.lock
-content/posts/untitled.md
+# 文章内容不入 git（保留本地工作区与栏目索引）
+content/posts/*
+!content/posts/_index.md
