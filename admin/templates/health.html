@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">健康检查</span>
+</nav>
+<div class="list-head">
+  <h1>健康检查</h1>
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/health">重新检查</a>
+</div>
+<div class="stat-cards">
+  <div class="stat-card"><span>通过</span><strong>{{ ok_count }}/{{ total }}</strong></div>
+</div>
+{% with table = table %}{% include "partials/table.html" %}{% endwith %}
+{% endblock %}

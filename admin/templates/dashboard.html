@@ -22,6 +22,17 @@
   </form>
 </div>
 <p class="build-info">最近构建：{{ last_build }}</p>
+{% if output_info %}
+<div class="admin-card build-card">
+  <h2>构建产物</h2>
+  <p>
+    大小 {{ output_info.size_mb }} MB · 文件 {{ output_info.file_count }} 个 ·
+    <span class="admin-badge {{ 'admin-badge--published' if output_info.ok else 'admin-badge--danger' }}">
+      {{ "完整" if output_info.ok else "有缺失" }}
+    </span>
+  </p>
+</div>
+{% endif %}
 {% if drafts %}
 <h2>草稿</h2>
 <ul class="draft-list">
@@ -41,6 +52,18 @@
     <span class="stat-bar-label" title="{{ r.path }}">{{ r.path }}</span>
     <span class="stat-bar"><i style="width: {{ r.pct }}%"></i></span>
     <span class="stat-bar-value">{{ r.views }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+{% if trend %}
+<h2>7 日访问趋势</h2>
+<div class="stat-bars trend-bars">
+  {% for t in trend %}
+  <div class="stat-bar-row" title="{{ t.day }}：{{ t.total }} 次">
+    <span class="stat-bar-label">{{ t.day[5:] }}</span>
+    <span class="stat-bar"><i style="width: {{ t.pct }}%"></i></span>
+    <span class="stat-bar-value">{{ t.total }}</span>
   </div>
   {% endfor %}
 </div>

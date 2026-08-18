@@ -3,6 +3,11 @@
 <div class="list-head">
   <h1>媒体库（{{ items|length }}）</h1>
 </div>
+<div class="stat-cards">
+  <div class="stat-card"><span>图片总数</span><strong>{{ items|length }}</strong></div>
+  <div class="stat-card"><span>占用空间</span><strong>{{ (total_size / 1024 / 1024)|round(2) }} MB</strong></div>
+  <div class="stat-card"><span>最大单张</span><strong>{{ (largest / 1024)|round(0)|int }} KB</strong></div>
+</div>
 <form class="list-filters" method="get" action="/{{ admin_path }}/media">
   <label class="visually-hidden" for="q">按文件名搜索</label>
   <input id="q" type="search" name="q" value="{{ q }}" placeholder="按文件名搜索">

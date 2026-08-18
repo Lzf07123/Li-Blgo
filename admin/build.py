@@ -6,6 +6,7 @@ import sys
 import time
 
 from admin.config import ROOT
+from scripts.build import verify_output
 
 
 def _run(args, timeout=180):
@@ -31,3 +32,26 @@ def run_full():
 
 def run_preview():
     return _run(["--preview"])
+
+
+def output_info() -> dict:
+    """返回 output/ 产物信息：体积、文件数、构建时间与完整性。"""
+    from admin.config import settings
+
+    out = settings.output_root
+    index_file = out / "index.html"
+    if not index_file.exists():
+        return {}
+    total = 0
+    count = 0
+    for p in out.rglob("*"):
+        if p.is_file():
+            total += p.stat().st_size
+            count += 1
+    issues = verify_output(out)
+    return {
+        "size_mb": round(total / 1024 / 1024, 2),
+        "file_count": count,
+        "mtime": index_file.stat().st_mtime,
+        "ok": not issues,
+    }

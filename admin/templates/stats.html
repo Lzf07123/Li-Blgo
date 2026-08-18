@@ -7,7 +7,24 @@
 </nav>
 <div class="list-head">
 <h1>访问统计</h1>
-<a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/stats/export">导出 CSV</a>
+<a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/stats/export?start={{ start }}&end={{ end }}">导出 CSV</a>
+</div>
+<form class="list-filters" method="get" action="/{{ admin_path }}/stats">
+  <label class="visually-hidden" for="start">开始日期</label>
+  <input id="start" type="date" name="start" value="{{ start }}">
+  <label class="visually-hidden" for="end">结束日期</label>
+  <input id="end" type="date" name="end" value="{{ end }}">
+  <select name="group" aria-label="分组方式">
+    <option value="path" {% if group == "path" %}selected{% endif %}>按路径</option>
+    <option value="month" {% if group == "month" %}selected{% endif %}>按月</option>
+    <option value="year" {% if group == "year" %}selected{% endif %}>按年</option>
+  </select>
+  <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
+  {% if start or end %}<a class="btn-link" href="/{{ admin_path }}/stats">清除</a>{% endif %}
+</form>
+<div class="stat-cards">
+  <div class="stat-card"><span>总访问</span><strong>{{ total_views }}</strong></div>
+  <div class="stat-card"><span>独立路径</span><strong>{{ unique_paths }}</strong></div>
 </div>
 {% include "partials/table.html" %}
 {% endblock %}

@@ -152,6 +152,7 @@ ADMIN_NAV = [
             {"label": "媒体库", "path": "/media", "icon": "image"},
             {"label": "统计", "path": "/stats", "icon": "chart"},
             {"label": "操作日志", "path": "/logs", "icon": "text"},
+            {"label": "健康检查", "path": "/health", "icon": "chart"},
             {"label": "内容体检", "path": "/audit", "icon": "card"},
             {"label": "备份", "path": "/backup", "icon": "archive"},
         ],
@@ -594,11 +595,24 @@ def dashboard(request: Request):
     recent_posts = posts[:5]
     conn = connect()
     stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
+    trend_rows = conn.execute(
+        "SELECT day, SUM(views) AS total FROM stats "
+        "WHERE day >= date('now', '-6 days') GROUP BY day ORDER BY day"
+    ).fetchall()
     conn.close()
+    trend_map = {r["day"]: r["total"] for r in trend_rows}
+    trend = []
+    for offset in range(6, -1, -1):
+        day = (datetime.date.today() - datetime.timedelta(days=offset)).isoformat()
+        trend.append({"day": day, "total": trend_map.get(day, 0)})
+    trend_max = max((t["total"] for t in trend), default=0)
+    for t in trend:
+        t["pct"] = round(t["total"] * 100 / trend_max) if trend_max else 0
     last_build = "尚未构建"
     index_file = settings.output_root / "index.html"
     if index_file.exists():
         last_build = datetime.datetime.fromtimestamp(index_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+    output_info = build.output_info()
     top_rows = [{"path": display_path(r["path"]), "views": r["views"]} for r in stats[:5]]
     top_max = max((r["views"] for r in top_rows), default=0)
     for r in top_rows:
@@ -645,6 +659,8 @@ def dashboard(request: Request):
             "stats": stats,
             "media_count": len(media_store.list_media()),
             "last_build": last_build,
+            "output_info": output_info,
+            "trend": trend,
             "top_rows": top_rows,
             "recent_table": {
                 "caption": "最近文章",
@@ -664,20 +680,65 @@ def dashboard(request: Request):
 
 
 @app.get(ap("/stats"), response_class=HTMLResponse)
-def stats_page(request: Request):
+def stats_page(
+    request: Request,
+    start: str = "",
+    end: str = "",
+    group: str = "path",
+    limit: int = 500,
+):
     require_login(request)
     conn = connect()
-    rows = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 200").fetchall()
+    params: list = []
+    if group == "month":
+        sql = (
+            "SELECT strftime('%Y-%m', day) AS period, SUM(views) AS total, "
+            "COUNT(DISTINCT path) AS paths FROM stats WHERE 1=1"
+        )
+    elif group == "year":
+        sql = (
+            "SELECT strftime('%Y', day) AS period, SUM(views) AS total, "
+            "COUNT(DISTINCT path) AS paths FROM stats WHERE 1=1"
+        )
+    else:
+        sql = "SELECT path, day, views FROM stats WHERE 1=1"
+    if start:
+        sql += " AND day >= ?"
+        params.append(start)
+    if end:
+        sql += " AND day <= ?"
+        params.append(end)
+    if group in ("month", "year"):
+        sql += " GROUP BY period ORDER BY period DESC LIMIT ?"
+        params.append(min(max(int(limit), 10), 1000))
+    else:
+        sql += " ORDER BY views DESC LIMIT ?"
+        params.append(min(max(int(limit), 10), 1000))
+    rows = conn.execute(sql, params).fetchall()
     conn.close()
-    columns = [
-        {"key": "path", "label": "路径", "type": "link"},
-        {"key": "day", "label": "日期", "type": "text"},
-        {"key": "views", "label": "次数", "type": "number"},
-    ]
-    table = {
-        "caption": "访问统计",
-        "columns": columns,
-        "rows": [
+    if group in ("month", "year"):
+        total_views = sum(r["total"] for r in rows)
+        unique_paths = sum(r["paths"] for r in rows)
+        columns = [
+            {"key": "period", "label": "周期", "type": "text"},
+            {"key": "total", "label": "访问", "type": "number"},
+            {"key": "paths", "label": "独立路径", "type": "number"},
+        ]
+    else:
+        total_views = sum(r["views"] for r in rows)
+        unique_paths = len({r["path"] for r in rows})
+        columns = [
+            {"key": "path", "label": "路径", "type": "link"},
+            {"key": "day", "label": "日期", "type": "text"},
+            {"key": "views", "label": "次数", "type": "number"},
+        ]
+    if group in ("month", "year"):
+        table_rows = [
+            {"period": r["period"], "total": r["total"], "paths": r["paths"]}
+            for r in rows
+        ]
+    else:
+        table_rows = [
             {
                 "path": display_path(r["path"]),
                 "path_href": safe_stats_href(r["path"]),
@@ -685,11 +746,26 @@ def stats_page(request: Request):
                 "views": r["views"],
             }
             for r in rows
-        ],
+        ]
+    table = {
+        "caption": "访问统计",
+        "columns": columns,
+        "rows": table_rows,
         "empty": "暂无数据",
         "striped": True,
     }
-    return render(request, "stats.html", {"table": table})
+    return render(
+        request,
+        "stats.html",
+        {
+            "table": table,
+            "start": start,
+            "end": end,
+            "group": group,
+            "total_views": total_views,
+            "unique_paths": unique_paths,
+        },
+    )
 
 
 @app.post(ap("/rebuild"))
@@ -709,6 +785,8 @@ def rebuild(request: Request, csrf_token: str = Form("", alias="_csrf")):
 def media_page(request: Request, q: str = ""):
     require_login(request)
     items = media_store.list_media()
+    total_size = sum(it["size"] for it in items)
+    largest = max((it["size"] for it in items), default=0)
     if q:
         ql = q.lower()
         items = [it for it in items if ql in it["rel"].lower()]
@@ -779,7 +857,17 @@ def media_page(request: Request, q: str = ""):
         }
         for m in sorted(groups, reverse=True)
     ]
-    return render(request, "media.html", {"items": items, "groups": grouped, "q": q})
+    return render(
+        request,
+        "media.html",
+        {
+            "items": items,
+            "groups": grouped,
+            "q": q,
+            "total_size": total_size,
+            "largest": largest,
+        },
+    )
 
 
 @app.post(ap("/media/upload"))
@@ -897,10 +985,19 @@ def post_pin(
 
 
 @app.get(ap("/stats/export"))
-def stats_export(request: Request):
+def stats_export(request: Request, start: str = "", end: str = ""):
     require_login(request)
     conn = connect()
-    rows = conn.execute("SELECT path, day, views FROM stats ORDER BY day DESC, views DESC").fetchall()
+    sql = "SELECT path, day, views FROM stats WHERE 1=1"
+    params: list = []
+    if start:
+        sql += " AND day >= ?"
+        params.append(start)
+    if end:
+        sql += " AND day <= ?"
+        params.append(end)
+    sql += " ORDER BY day DESC, views DESC"
+    rows = conn.execute(sql, params).fetchall()
     conn.close()
 
     def csv_cell(value) -> str:
@@ -1016,6 +1113,68 @@ def logs_page(request: Request):
         "striped": True,
     }
     return render(request, "logs.html", {"table": table})
+
+
+@app.get(ap("/health"), response_class=HTMLResponse)
+def admin_health_page(request: Request):
+    require_login(request)
+    import shutil
+
+    checks = []
+
+    def check(name: str, ok: bool, detail: str = "") -> None:
+        checks.append(
+            {
+                "name": name,
+                "ok": ok,
+                "detail": detail,
+                "label": "正常" if ok else "异常",
+                "class": "admin-badge--published" if ok else "admin-badge--danger",
+            }
+        )
+
+    for name, path in (
+        ("content 目录", settings.content_root),
+        ("config 目录", settings.config_root),
+        ("output 目录", settings.output_root),
+        ("data 目录", settings.db_path.parent),
+        ("preview 目录", settings.preview_root),
+        ("媒体目录", media_store.MEDIA_ROOT),
+    ):
+        path.mkdir(parents=True, exist_ok=True)
+        check(f"{name}可写", os.access(path, os.W_OK))
+    hugo_bin = os.environ.get("HUGO_BIN", shutil.which("hugo") or "")
+    check("Hugo 二进制可用", bool(hugo_bin), hugo_bin or "未找到（容器内应内置）")
+    check("GOMEMLIMIT 已设置", bool(os.environ.get("GOMEMLIMIT")), os.environ.get("GOMEMLIMIT", ""))
+    check("beacon 日志可读", os.path.exists(settings.beacon_log), str(settings.beacon_log))
+    try:
+        conn = connect()
+        conn.execute("SELECT 1 FROM audit_log LIMIT 1").fetchone()
+        conn.close()
+        check("SQLite 可读写", True)
+    except Exception as exc:  # noqa: BLE001
+        check("SQLite 可读写", False, str(exc))
+    columns = [
+        {"key": "name", "label": "检查项", "type": "text"},
+        {"key": "label", "label": "状态", "type": "badge"},
+        {"key": "detail", "label": "详情", "type": "text"},
+    ]
+    table = {
+        "caption": "健康检查",
+        "columns": columns,
+        "rows": [
+            {"name": c["name"], "label": c["label"], "label_class": c["class"], "detail": c["detail"]}
+            for c in checks
+        ],
+        "empty": "无检查项",
+        "striped": True,
+    }
+    ok_count = sum(1 for c in checks if c["ok"])
+    return render(
+        request,
+        "health.html",
+        {"checks": checks, "ok_count": ok_count, "total": len(checks), "table": table},
+    )
 
 
 def _tag_counts() -> list[dict]:
@@ -1986,4 +2145,3 @@ def account_session_revoke(
     delete_session(session_id)
     _audit("session_revoked", f"session={session_id[:8]}…")
     return RedirectResponse(ap("/settings/account?ok=已撤销会话"), status_code=303)
-

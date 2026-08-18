@@ -115,6 +115,7 @@
       }
       document.querySelectorAll("form[data-busy]").forEach(function (form) {
         form.addEventListener("submit", function () {
+          form.setAttribute("aria-busy", "true");
           var button = form.querySelector('button[type="submit"]');
           if (button) {
             button.disabled = true;
