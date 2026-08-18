@@ -1,7 +1,8 @@
 {{ $strings := hugo.Data.strings }}
 <div id="search-modal" class="search-modal" hidden>
   <div class="search-modal-backdrop" data-close-search></div>
-  <div class="search-modal-panel" role="dialog" aria-modal="true" aria-label="{{ $strings.nav.search }}">
+  <div class="search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" aria-describedby="search-modal-info">
+    <h2 id="search-modal-title" class="visually-hidden">{{ $strings.nav.search }}</h2>
     <div class="search-modal-head">
       <svg class="search-modal-icon" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
