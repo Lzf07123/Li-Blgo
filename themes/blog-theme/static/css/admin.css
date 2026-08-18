@@ -706,6 +706,11 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .custom-select-option:hover,
 .custom-select-option.is-active { background: var(--liblog-primary-soft); color: var(--liblog-primary); }
 .custom-select-option.is-selected { font-weight: 600; color: var(--liblog-primary); }
+.custom-select-menu::-webkit-scrollbar { width: 8px; }
+.custom-select-menu::-webkit-scrollbar-thumb {
+  background: var(--liblog-border);
+  border-radius: 999px;
+}
 label .custom-select { display: block; }
 @media (max-width: 768px) {
   .list-filters .custom-select { flex: 1; }
@@ -1280,6 +1285,21 @@ body.editor-fullscreen #body {
   height: 18px;
   flex: none;
   accent-color: var(--liblog-primary);
+}
+.admin-main input[type="date"],
+.admin-main input[type="color"] {
+  border: 1px solid var(--liblog-border);
+  border-radius: 8px;
+  background: var(--liblog-surface);
+  color: var(--liblog-fg);
+  min-height: 40px;
+  padding: 6px 10px;
+}
+.admin-main input[type="date"]:focus,
+.admin-main input[type="color"]:focus {
+  border-color: var(--liblog-primary);
+  box-shadow: 0 0 0 3px var(--liblog-primary-soft);
+  outline: none;
 }
 .admin-main label:has(> input[type="checkbox"]),
 .admin-main label:has(> input[type="radio"]),

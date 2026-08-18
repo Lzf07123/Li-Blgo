@@ -31,12 +31,13 @@
 <meta name="twitter:title" content="{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }}{{ end }}">
 <meta name="twitter:description" content="{{ $desc }}">
 {{ with $og_image }}<meta name="twitter:image" content="{{ . | absURL }}"><meta name="twitter:image:alt" content="{{ $brand.name }}">{{ end }}
+{{/* theme-color 字面值与 tokens.css 的 --liblog-bg 浅/深值保持一致 */}}
 <meta name="theme-color" content="#f6fbf9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
 {{ with $brand.favicon }}<link rel="icon" href="{{ . | relURL }}" sizes="any">{{ end }}
 {{ with $brand.logo }}<link rel="apple-touch-icon" href="{{ . | relURL }}">{{ end }}
 <link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=37">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=54">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=55">
 {{ if .IsHome }}
 {{ $website := dict "@context" "https://schema.org" "@type" "WebSite" "name" $brand.name "url" .Site.Home.Permalink }}
 {{ $same := slice }}

@@ -858,6 +858,11 @@ input:focus, select:focus, textarea:focus {
 }
 .search-item.is-active a,
 .search-item a:hover { background: var(--liblog-primary-soft); text-decoration: none; }
+.search-item a:focus-visible {
+  background: var(--liblog-primary-soft);
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: -2px;
+}
 .search-item-title { font-weight: 600; }
 .search-item-snippet {
   color: var(--liblog-muted);
