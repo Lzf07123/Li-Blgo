@@ -626,6 +626,11 @@ input:focus, select:focus, textarea:focus {
 
 /* ---------- 文章 / 代码 / 提示块 / 目录 ---------- */
 .section { margin-top: 48px; }
+/* 离屏区块跳过渲染与布局（浏览器支持的场景自动生效） */
+.section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 480px;
+}
 .section-title { font-size: 1.25rem; text-align: center; }
 .section-title::after {
   content: "";

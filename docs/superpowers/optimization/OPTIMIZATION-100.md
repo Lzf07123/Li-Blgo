@@ -38,7 +38,7 @@
 | v013 | 性能 | 打印样式（隐藏导航/氛围/打点，正文干净排版） | 完成 | 96 测试全绿；Hugo 构建通过，style.css 含 @media print，CSS 版本号已同步 |
 | v014 | 性能 | 图片渲染钩子补 width/height 减少 CLS | 完成 | 临时站验证：`<img src=/img/a.png … width=320 height=200>`；真实站点构建通过 |
 | v015 | 性能 | 站点 Logo fetchpriority=high + eager + width/height | 完成 | 首页输出 `loading=eager fetchpriority=high width=1265 height=1265` |
-| v016 | 性能 | 首页区块 content-visibility 优化 | 计划 | — |
+| v016 | 性能 | 首页区块 content-visibility 优化 | 完成 | 构建通过；style.css 含 `content-visibility: auto` 与 `contain-intrinsic-size` |
 | v017 | 性能 | 表格/长列表 contain 优化 | 计划 | — |
 | v018 | 性能 | nginx HTML no-cache、静态资源长缓存策略 | 计划 | — |
 | v019 | 性能 | nginx sendfile/tcp_nopush/gzip 参数细化 | 计划 | — |
