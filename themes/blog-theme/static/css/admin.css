@@ -291,6 +291,14 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   align-items: center;
   min-height: 36px;
 }
+.table-col-actions button.btn-link,
+.row-actions button.btn-link {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
 /* v17 危险操作：语义色 */
 .table-col-actions .btn-link.danger,
 .row-actions .btn-link.danger {

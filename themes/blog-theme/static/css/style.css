@@ -221,7 +221,17 @@ main:focus { outline: none; }
 .btn-ghost:not(:disabled):hover { background: var(--liblog-surface-2); color: var(--liblog-fg); }
 .btn-danger { color: var(--liblog-destructive-fg); background: var(--liblog-destructive); box-shadow: var(--liblog-shadow-sm); }
 .btn-danger:not(:disabled):hover { opacity: 0.9; }
-.btn-link { min-height: auto; padding: 0; color: var(--liblog-primary); }
+.btn-link {
+  min-height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--liblog-primary);
+  font: inherit;
+  line-height: inherit;
+  cursor: pointer;
+  appearance: none;
+}
 .btn-link:hover { text-decoration: underline; }
 .btn-sm { min-height: 36px; padding: 8px 14px; }
 
