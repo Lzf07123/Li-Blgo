@@ -88,7 +88,7 @@
 
 **P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP 加速变量 + 仓库内置 Hugo 二进制 SHA256 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
 
-**React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。
+**React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），后台主框架同源加载柔和效果（data-ambient=soft），服务器仍为纯静态。
 
 **容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回“后台服务未启动”引导页（502 → admin-off.html）而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷，admin 只读导入、偏移存 data 卷）；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权，无需宿主机目录；媒体容器内映射 `themes/blog-theme/static/img`，公开路径 `/img/`），上传图片持久化、容器重建不丢失；`content/ config/ output/` 为 bind 挂载，容器入口以 root 自动修复挂载目录属主（仅当 UID 1000 不可写时）后降权运行，全新部署无需手动 chown；admin 每次启动自动全量构建（`LIBLOG_BOOTSTRAP_BUILD=0` 可关闭），nginx 对缺失产物返回“构建中”引导页（403 → pending.html）；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
 
