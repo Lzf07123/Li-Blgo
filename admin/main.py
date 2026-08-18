@@ -882,7 +882,9 @@ async def posts_import_submit(
     total_read = 0
     try:
         for f in files:
-            name = f.filename or "untitled.md"
+            name = (f.filename or "").strip()
+            if not name:
+                raise ValueError("存在缺少文件名的上传项")
             if name.lower().endswith(".zip"):
                 data = await read_limited(f, settings.import_max_zip_bytes)
                 total_read += len(data)

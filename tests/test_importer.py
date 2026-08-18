@@ -61,6 +61,19 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(len(result["errors"]), 1)
         self.assertIn("不支持的文件类型", result["errors"][0])
 
+    def test_import_rejects_blank_filename(self):
+        result = importer.import_posts([("", b"---\ntitle: A\n---\n")])
+        self.assertEqual(result["imported"], 0)
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertIn("缺少文件名", result["errors"][0])
+
+    def test_import_rejects_empty_file(self):
+        result = importer.import_posts([("untitled.md", b"")])
+        self.assertEqual(result["imported"], 0)
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertIn("文件内容为空", result["errors"][0])
+        self.assertFalse((settings.content_root / "posts" / "untitled.md").exists())
+
     def test_limits_read_from_settings(self):
         original_files = settings.import_max_files
         original_bytes = settings.import_max_file_bytes

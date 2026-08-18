@@ -130,6 +130,30 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertFalse((settings.content_root / "posts" / "old-slug.md").exists())
             self.assertTrue((settings.content_root / "posts" / "new-slug.md").exists())
 
+    def test_batch_import_rejects_empty_markdown(self):
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/import",
+                data={"_csrf": csrf},
+                files={"files": ("untitled.md", b"", "text/markdown")},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("文件内容为空", r.text)
+            self.assertFalse(
+                (settings.content_root / "posts" / "untitled.md").exists()
+            )
+
+    def test_batch_import_page_lists_pending_files(self):
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts/import")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('id="import-pending"', r.text)
+            self.assertIn('id="import-pending-list"', r.text)
+            self.assertIn('addEventListener("change"', r.text)
+
     def test_project_save_preserves_unknown_fields(self):
         store.write_markdown(
             "projects",

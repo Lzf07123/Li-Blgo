@@ -89,6 +89,27 @@
       summary.textContent = "上传中 " + pct + "%";
     }
 
+    function showPending() {
+      var files = input.files;
+      rows = [];
+      list.innerHTML = "";
+      if (!files.length) {
+        panel.hidden = true;
+        return;
+      }
+      panel.hidden = false;
+      overallBar.style.width = "0%";
+      overall.setAttribute("aria-valuenow", "0");
+      summary.textContent = "等待上传";
+      summary.classList.remove("is-done", "is-error");
+      Array.prototype.slice.call(files).forEach(function (file) {
+        var row = addFileRow(file);
+        row.total = file.size;
+      });
+    }
+
+    input.addEventListener("change", showPending);
+
     function uploadFile(file, row) {
       return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest();
@@ -135,19 +156,9 @@
       e.preventDefault();
       var files = input.files;
       if (!files.length) return;
-      rows = [];
-      list.innerHTML = "";
-      panel.hidden = false;
-      overallBar.style.width = "0%";
-      overall.setAttribute("aria-valuenow", "0");
-      summary.textContent = "准备上传";
-      summary.classList.remove("is-done", "is-error");
+      showPending();
       submitBtn.disabled = true;
       var pending = Array.prototype.slice.call(files);
-      pending.forEach(function (file) {
-        var row = addFileRow(file);
-        row.total = file.size;
-      });
       var done = 0;
       var failed = 0;
       pending.forEach(function (file, idx) {

@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+  .import-pending-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+  .import-pending-list .upload-file {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+</style>
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
   <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
@@ -81,6 +90,12 @@
     <button type="submit" class="btn">导入并重建</button>
   </div>
 </form>
+<div id="import-pending" class="upload-progress-panel" hidden>
+  <div class="upload-progress-overview">
+    <span class="upload-status">待导入文件</span>
+  </div>
+  <ul id="import-pending-list" class="upload-file-list import-pending-list"></ul>
+</div>
 <script>
   (function () {
     var radios = document.querySelectorAll('input[name="source_mode"]');
@@ -88,6 +103,46 @@
       files: document.getElementById("source-files"),
       folder: document.getElementById("source-folder")
     };
+    var pendingPanel = document.getElementById("import-pending");
+    var pendingList = document.getElementById("import-pending-list");
+    var inputs = [
+      panes.files.querySelector('input[type="file"]'),
+      panes.folder.querySelector('input[type="file"]')
+    ];
+
+    function fmtSize(bytes) {
+      if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB";
+      if (bytes >= 1024) return Math.round(bytes / 1024) + " KB";
+      return bytes + " B";
+    }
+
+    function renderPending(input) {
+      pendingList.innerHTML = "";
+      if (!input.files.length) {
+        pendingPanel.hidden = true;
+        return;
+      }
+      pendingPanel.hidden = false;
+      Array.prototype.slice.call(input.files).forEach(function (file) {
+        var li = document.createElement("li");
+        li.className = "upload-file";
+        var name = document.createElement("span");
+        name.className = "upload-file-name";
+        name.textContent = file.webkitRelativePath || file.name;
+        name.title = file.webkitRelativePath || file.name;
+        var size = document.createElement("span");
+        size.className = "upload-file-size";
+        size.textContent = fmtSize(file.size);
+        var status = document.createElement("span");
+        status.className = "upload-status";
+        status.textContent = "等待导入";
+        li.appendChild(name);
+        li.appendChild(size);
+        li.appendChild(status);
+        pendingList.appendChild(li);
+      });
+    }
+
     function sync() {
       var checked = document.querySelector('input[name="source_mode"]:checked');
       if (!checked) return;
@@ -99,9 +154,15 @@
       otherInput.value = "";
       activeInput.required = true;
       otherInput.required = false;
+      renderPending(activeInput);
     }
     radios.forEach(function (radio) {
       radio.addEventListener("change", sync);
+    });
+    inputs.forEach(function (input) {
+      input.addEventListener("change", function () {
+        renderPending(input);
+      });
     });
     sync();
   })();

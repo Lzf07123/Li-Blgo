@@ -129,6 +129,9 @@ def import_posts(
     result = {"imported": 0, "skipped": 0, "errors": [], "files": []}
     seen = set()
     for filename, data in entries:
+        if not filename.strip():
+            result["errors"].append("缺少文件名")
+            continue
         if not filename.lower().endswith(MD_SUFFIXES):
             result["errors"].append(f"{filename}: 不支持的文件类型")
             continue
@@ -140,6 +143,9 @@ def import_posts(
             continue
         try:
             text = data.decode("utf-8-sig", errors="replace")
+            if not text.strip():
+                result["errors"].append(f"{filename}: 文件内容为空，已跳过")
+                continue
             slug, fm, body = parse_document(filename, text)
         except ValueError as exc:
             result["errors"].append(str(exc))
