@@ -9,6 +9,7 @@ import argparse
 import fcntl
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -28,6 +29,60 @@ def validate_content(root):
                 yaml.safe_load(text.split("---", 2)[1])
             except Exception as exc:  # noqa: BLE001 - 统一收集为可读错误
                 errors.append(f"{p.relative_to(root)}: frontmatter 解析失败: {exc}")
+    return errors
+
+
+def validate_content_links(root):
+    """校验 Markdown 内部链接与图片路径：站点路径映射到内容/静态文件存在性。
+
+    动态路径（/tags/、外链、锚点）跳过；媒体路径校验 /img/ 与 /assets/。
+    """
+    errors = []
+    content_root = root / "content"
+    theme_static = root / "themes" / "blog-theme" / "static"
+    site_static = root / "static"
+    if not content_root.exists():
+        return errors
+    md_link_re = re.compile(r"!?\[[^\]]*\]\(([^)]+)\)")
+    html_href_re = re.compile(r'\bhref\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+    html_src_re = re.compile(r'\bsrc\s*=\s*["\']([^"\']+)["\']', re.IGNORECASE)
+
+    def check_url(rel_path: str, source: str) -> None:
+        url = rel_path.strip().split()[0].strip("<>")
+        if not url or url.startswith(("#", "http://", "https://", "mailto:", "data:")):
+            return
+        clean = url.split("#")[0].split("?")[0].rstrip("/")
+        if clean.startswith(("/posts/", "/projects/", "/timeline/")):
+            rel = clean.lstrip("/")
+            candidates = [
+                content_root / f"{rel}.md",
+                content_root / rel / "_index.md",
+                content_root / rel / "index.md",
+            ]
+            if not any(c.exists() for c in candidates):
+                errors.append(f"{source}: 内部链接不存在 {url}")
+        elif clean in ("/about", "/resources") or clean.startswith(
+            ("/about/", "/resources/")
+        ):
+            name = clean.strip("/").split("/")[0]
+            target = content_root / f"{name}.md"
+            if not target.exists():
+                errors.append(f"{source}: 内部链接不存在 {url}")
+        elif clean.startswith(("/img/", "/assets/")):
+            rel = clean.lstrip("/")
+            found = any((base / rel).exists() for base in (theme_static, site_static))
+            if not found:
+                errors.append(f"{source}: 图片/资源不存在 {url}")
+
+    for p in sorted(content_root.rglob("*.md")):
+        text = p.read_text(encoding="utf-8")
+        source = p.relative_to(root).as_posix()
+        for m in md_link_re.finditer(text):
+            check_url(m.group(1), source)
+        for m in html_href_re.finditer(text):
+            check_url(m.group(1), source)
+        for m in html_src_re.finditer(text):
+            check_url(m.group(1), source)
     return errors
 
 
@@ -81,6 +136,7 @@ def publish(src, dst):
 def build(args):
     """执行 校验 → 渲染 → 发布 → 清理。"""
     errors = validate_content(ROOT)
+    errors += validate_content_links(ROOT)
     if errors:
         for err in errors:
             print(f"ERROR: {err}", file=sys.stderr)

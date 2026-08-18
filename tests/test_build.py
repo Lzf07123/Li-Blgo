@@ -5,7 +5,7 @@ import types
 import unittest
 from unittest import mock
 
-from scripts.build import publish, validate_content
+from scripts.build import publish, validate_content, validate_content_links
 
 
 class TestBuild(unittest.TestCase):
@@ -38,6 +38,28 @@ class TestBuild(unittest.TestCase):
             publish(src, dst)
             self.assertTrue((dst / "a.html").exists())
             self.assertFalse((dst / "old.html").exists())
+
+    def test_content_links_validate(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            (root / "content" / "posts").mkdir(parents=True)
+            (root / "themes" / "blog-theme" / "static" / "img").mkdir(parents=True)
+            (root / "content" / "posts" / "hello.md").write_text(
+                "---\ntitle: H\n---\n"
+                "![图](/img/ok.png)\n"
+                "[坏链](/posts/nope/)\n"
+                "[好链](/posts/hello/)\n"
+                "[外链](https://example.com)\n",
+                encoding="utf-8",
+            )
+            (root / "themes" / "blog-theme" / "static" / "img" / "ok.png").write_bytes(
+                b"png"
+            )
+            errors = validate_content_links(root)
+            self.assertTrue(any("/posts/nope/" in e for e in errors))
+            self.assertFalse(any("ok.png" in e for e in errors))
+            self.assertFalse(any("https://example.com" in e for e in errors))
+            self.assertFalse(any("/posts/hello/" in e for e in errors))
 
 
 class TestBootstrapBuild(unittest.TestCase):
