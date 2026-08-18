@@ -10,5 +10,12 @@
     <span class="meta-sep">·</span>
     <button type="button" class="btn-link" data-open-search>{{ $strings.nav.search }}</button>
   </p>
+  {{ $latest := first 3 (where .Site.RegularPages.ByDate.Reverse "Section" "posts") }}
+  {{ if $latest }}
+  <h2 class="section-title">{{ $strings.home.latest_title }}</h2>
+  <div class="post-list">
+    {{ range $latest }}{{ partial "post-card.html" . }}{{ end }}
+  </div>
+  {{ end }}
 </div>
 {{ end }}
