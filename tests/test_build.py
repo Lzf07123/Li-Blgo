@@ -5,7 +5,7 @@ import types
 import unittest
 from unittest import mock
 
-from scripts.build import publish, validate_content, validate_content_links
+from scripts.build import publish, validate_content, validate_content_links, verify_output
 
 
 class TestBuild(unittest.TestCase):
@@ -60,6 +60,21 @@ class TestBuild(unittest.TestCase):
             self.assertFalse(any("ok.png" in e for e in errors))
             self.assertFalse(any("https://example.com" in e for e in errors))
             self.assertFalse(any("/posts/hello/" in e for e in errors))
+
+    def test_verify_output_detects_missing_and_placeholder(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = pathlib.Path(d)
+            errors = verify_output(out, expect_absolute_urls=True)
+            self.assertTrue(any("index.html" in e for e in errors))
+            (out / "index.html").write_text(
+                '<a href="https://example.com/">x</a>', encoding="utf-8"
+            )
+            (out / "robots.txt").write_text("User-agent: *", encoding="utf-8")
+            errors = verify_output(out, expect_absolute_urls=True)
+            self.assertTrue(any("example.com" in e for e in errors))
+            (out / "index.html").write_text("<html></html>", encoding="utf-8")
+            errors = verify_output(out, expect_absolute_urls=True)
+            self.assertFalse(any("example.com" in e for e in errors))
 
 
 class TestBootstrapBuild(unittest.TestCase):

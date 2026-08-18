@@ -133,6 +133,31 @@ def publish(src, dst):
                 pass
 
 
+def verify_output(dst, expect_absolute_urls=False):
+    """抽检关键产物与占位符，返回错误列表。"""
+    errors = []
+    required = (
+        "index.html",
+        "index.xml",
+        "sitemap.xml",
+        "robots.txt",
+        "llms.txt",
+        "search/index.json",
+        "404.html",
+    )
+    for rel in required:
+        if not (dst / rel).exists():
+            errors.append(f"产物缺失: {rel}")
+    if expect_absolute_urls:
+        for rel in ("index.html", "robots.txt"):
+            target = dst / rel
+            if target.exists():
+                text = target.read_text(encoding="utf-8", errors="replace")
+                if "example.com" in text:
+                    errors.append(f"产物含占位域名 example.com: {rel}")
+    return errors
+
+
 def build(args):
     """执行 校验 → 渲染 → 发布 → 清理。"""
     errors = validate_content(ROOT)
@@ -158,6 +183,13 @@ def build(args):
 
     run_build(ROOT, tmp, hugo_cmd=hugo_cmd, memory_limit=memory_limit, extra=extra)
     publish(tmp, dst)
+    verify_errors = verify_output(
+        dst, expect_absolute_urls=bool(os.environ.get("SITE_BASEURL", "").strip())
+    )
+    if verify_errors:
+        for err in verify_errors:
+            print(f"ERROR: {err}", file=sys.stderr)
+        sys.exit(1)
     if not args.keep_tmp:
         shutil.rmtree(tmp)
     print(f"build OK -> {dst}")
