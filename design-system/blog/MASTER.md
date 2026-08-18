@@ -62,7 +62,7 @@
 | table-shell | 统一后台表格组件（`admin/templates/partials/table.html`）：列表/最近文章/统计共用；支持服务端排序、分页、空状态、移动端卡片化；50 轮迭代记录见 `TABLE-COMPONENT.md` |
 | markdown-editor | 文本区 + 服务端预览 |
 | editor-preview | 编辑器右侧 Hugo 实时预览（分栏 iframe，保存后由 Hugo 渲染） |
-| media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越，上传即重建 |
+| media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越；过大/过重图片自动缩放到 1600px 内并优化体积（Pillow，动图跳过），上传即重建 |
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
 | admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |

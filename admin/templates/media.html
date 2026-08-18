@@ -13,7 +13,7 @@
   <input type="hidden" name="_csrf" value="{{ csrf }}">
   <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" multiple required>
   <button type="submit" class="btn btn-sm">上传</button>
-  <small>支持多选；png / jpg / webp / gif / avif，单张 ≤ 5MB。上传后需保存文章或手动重建才会出现在公开站。</small>
+  <small>支持多选；png / jpg / webp / gif / avif，单张 ≤ 5MB；尺寸或体积过大时自动压缩到 1600px 内。上传后需保存文章或手动重建才会出现在公开站。</small>
 </form>
 {% for group in groups %}
 <h2 class="media-month">{{ group.month }}</h2>
