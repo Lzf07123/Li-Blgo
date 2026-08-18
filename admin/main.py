@@ -597,6 +597,7 @@ def _edit_fields(section: str, fm: dict) -> list:
     if section == "projects":
         return [
             ("title", "名称", "text", fm.get("title", "")),
+            ("date", "发布时间（可选，留空不显示）", "text", fm.get("date", "")),
             ("repo", "仓库链接", "text", fm.get("repo", "")),
             ("tech", "技术栈（逗号分隔）", "text", ", ".join(fm.get("tech") or [])),
             ("status", "状态", "text", fm.get("status", "active")),
@@ -847,7 +848,7 @@ def section_save(
                     if key in old:
                         fm[key] = old[key]
             elif section == "projects":
-                fm = {"title": title, "repo": repo, "status": status,
+                fm = {"title": title, "date": date, "repo": repo, "status": status,
                       "tech": [t.strip() for t in tech.split(",") if t.strip()], "summary": summary,
                       "badge": {"label": badge_label, "color": badge_color, "href": badge_href},
                       "show_on_home": old.get("show_on_home", True)}

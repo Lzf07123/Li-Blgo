@@ -26,7 +26,7 @@
 </script>
 {{ else if eq .Kind "page" }}
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ .Title | jsonify }},"description":{{ .Summary | plainify | jsonify }},"datePublished":{{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},"dateModified":{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" | jsonify }},"url":{{ .Permalink | jsonify }},"author":{"@type":"Person","name":{{ hugo.Data.profile.name | jsonify }}}}
+{"@context":"https://schema.org","@type":"BlogPosting","headline":{{ .Title | jsonify }},"description":{{ .Summary | plainify | jsonify }},{{ if gt .Date.Year 1 }}"datePublished":{{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},{{ end }}{{ if gt .Lastmod.Year 1 }}"dateModified":{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" | jsonify }},{{ end }}"url":{{ .Permalink | jsonify }},"author":{"@type":"Person","name":{{ hugo.Data.profile.name | jsonify }}}}
 </script>
 {{ end }}
 {{ $density := partial "density.html" . }}
