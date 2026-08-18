@@ -213,6 +213,37 @@ class AdminRoutesTest(unittest.TestCase):
         self.assertFalse(fm["show_on_home"])
         self.assertEqual(fm["tech"], ["Docker"])
 
+    def test_post_save_writes_cover_field(self):
+        store.write_markdown(
+            "posts",
+            "cover-post",
+            {"title": "C", "date": "2026-08-18", "status": "published"},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/save",
+                data={
+                    "_csrf": csrf,
+                    "slug": "cover-post",
+                    "new_slug": "",
+                    "action": "save_stay",
+                    "title": "C2",
+                    "date": "2026-08-18",
+                    "status": "published",
+                    "cover": "/img/2026/08/cover.webp",
+                    "body": "正文",
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, _ = store.read_markdown("posts", "cover-post")
+        self.assertEqual(fm["cover"], "/img/2026/08/cover.webp")
+
     def test_logout_post_requires_csrf(self):
         with TestClient(app) as client:
             csrf = self._login(client)

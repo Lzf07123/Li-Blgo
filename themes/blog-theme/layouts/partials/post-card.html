@@ -3,6 +3,11 @@
 {{ $level := 2 }}
 {{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ end }}
 <article class="post-card">
+  {{ with $p.Params.cover }}
+  <a class="post-cover-link" href="{{ $p.RelPermalink }}" tabindex="-1" aria-hidden="true">
+    <img class="post-cover" src="{{ . | relURL }}" alt="" loading="lazy" decoding="async">
+  </a>
+  {{ end }}
   {{ if eq $level 3 }}<h3>
   {{ else }}<h2>
   {{ end }}

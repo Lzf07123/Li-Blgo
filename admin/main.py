@@ -986,6 +986,7 @@ def _edit_fields(section: str, fm: dict) -> list:
             ("status", "状态", "select", fm.get("status", "published"), ["published", "draft"]),
             ("tags", "标签（逗号分隔）", "text", ", ".join(fm.get("tags") or [])),
             ("summary", "摘要", "textarea", fm.get("summary", "")),
+            ("cover", "封面图路径（/img/…，选填）", "text", fm.get("cover", "")),
             ("pinned", "置顶文章", "checkbox", bool(fm.get("pinned", False))),
         ]
     if section == "projects":
@@ -1226,6 +1227,7 @@ def section_save(
     status: str = Form("published"),
     tags: str = Form(""),
     summary: str = Form(""),
+    cover: str = Form(""),
     repo: str = Form(""),
     tech: str = Form(""),
     kind: str = Form(""),
@@ -1264,6 +1266,7 @@ def section_save(
                         "status": status,
                         "tags": [t.strip() for t in tags.split(",") if t.strip()],
                         "summary": summary,
+                        "cover": cover,
                         "pinned": pinned == "1",
                     }
                 )

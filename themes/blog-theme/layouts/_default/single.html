@@ -15,6 +15,11 @@
     <span aria-hidden="true">/</span>
     <span aria-current="page">{{ .Title }}</span>
   </nav>
+  {{ with .Params.cover }}
+  <figure class="article-cover">
+    <img src="{{ . | relURL }}" alt="{{ $.Title }}" loading="eager" decoding="async">
+  </figure>
+  {{ end }}
   <h1 class="page-title">{{ .Title }}</h1>
   {{ if or $has_date $has_updated $has_reading $has_tags }}
   <p class="meta">
