@@ -1,3 +1,4 @@
+import os
 import re
 import tempfile
 import types
@@ -5,6 +6,8 @@ import unittest
 from pathlib import Path
 
 from fastapi.testclient import TestClient
+
+os.environ.setdefault("LIBLOG_BOOTSTRAP_BUILD", "0")
 
 from admin import content as store, media, security
 from admin.config import settings

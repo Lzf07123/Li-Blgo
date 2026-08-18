@@ -34,6 +34,8 @@ docker compose --profile admin up -d
 
 默认公开站端口 80；如需自定义端口，在 `.env` 中设置 `HTTP_PORT` / `HTTPS_PORT`。
 
+首次部署无需手动构建：admin 启动时若 `output/index.html` 不存在会自动执行全量构建；构建完成前 nginx 返回“站点构建中”引导页（自动刷新），而不是 403。
+
 Docker Hub 基础镜像拉取加速：在 `.env` 设置 `DOCKER_MIRROR_PREFIX`（如 `docker.m.daocloud.io/`，必须以 `/` 结尾；留空为官方源），nginx 与 admin 基础镜像都会套用该前缀。
 
 Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 SHA256 校验），容器构建直接 COPY 并校验，不联网下载。

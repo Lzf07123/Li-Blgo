@@ -1,6 +1,7 @@
 """Li&Blog 管理后台主应用：Setup、双登录、八栏目、预览与重建。"""
 
 import datetime
+import os
 from contextlib import asynccontextmanager
 from math import ceil
 from typing import Optional
@@ -37,12 +38,32 @@ from admin.session import COOKIE, create_session, delete_session, get_session
 from admin.uploads import read_limited
 
 
+def _bootstrap_build() -> None:
+    """output/index.html 缺失时（新部署/首次访问前）自动全量构建；失败不阻塞启动。"""
+    if os.getenv("LIBLOG_BOOTSTRAP_BUILD", "1") == "0":
+        return
+    index = settings.output_root / "index.html"
+    if index.exists():
+        return
+    try:
+        result, elapsed = build.run_full()
+    except Exception as exc:  # noqa: BLE001 - 启动引导失败不应拖垮后台
+        print(f"[build] 启动引导构建异常：{exc}")
+        return
+    if result.returncode == 0:
+        print(f"[build] 启动引导构建成功（{elapsed}s）")
+    else:
+        tail = (result.stderr or result.stdout or "").strip()[-300:]
+        print(f"[build] 启动引导构建失败：{tail}")
+
+
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
     imported = import_beacon_log()
     if imported:
         print(f"[beacon] imported {imported} hits")
+    _bootstrap_build()
     yield
 
 
