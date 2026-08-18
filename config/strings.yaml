@@ -47,6 +47,8 @@ common:
   repo: 仓库
   no_related: 暂无相关文章
   links_title: 更多链接
+  toc: 目录
+  post_nav: 文章导航
 
 footer:
   rights: 保留所有权利

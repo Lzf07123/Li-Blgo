@@ -32,7 +32,7 @@
     {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
   {{ end }}
-  {{ if and .TableOfContents (ge .WordCount 300) }}<nav class="toc" aria-label="目录">{{ .TableOfContents }}</nav>{{ end }}
+  {{ if and .TableOfContents (ge .WordCount 300) }}<nav class="toc" aria-label="{{ $strings.common.toc }}">{{ .TableOfContents }}</nav>{{ end }}
   <div class="article-body">{{ .Content }}</div>
   {{ if .Params.show_skills }}
     <h2 class="section-title">{{ hugo.Data.strings.home.skills_title }}</h2>
@@ -47,7 +47,7 @@
   </div>
   {{ end }}
   {{ if and (eq .Section "posts") (or .PrevInSection .NextInSection) }}
-  <nav class="post-nav" aria-label="文章导航">
+  <nav class="post-nav" aria-label="{{ $strings.common.post_nav }}">
     {{ with .PrevInSection }}
     <a class="post-nav-item" href="{{ .RelPermalink }}">
       <span>{{ $strings.common.prev }}</span>
