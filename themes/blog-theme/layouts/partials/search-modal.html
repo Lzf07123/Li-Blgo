@@ -58,6 +58,14 @@
       });
     }
 
+    function setBackgroundInert(on) {
+      Array.prototype.forEach.call(document.body.children, function (el) {
+        if (el.id !== "search-modal" && "inert" in el) {
+          el.inert = on;
+        }
+      });
+    }
+
     function trapFocus(e) {
       if (e.key !== "Tab") return;
       var focusables = modal.querySelectorAll('button, input, a[href], [tabindex]:not([tabindex="-1"])');
@@ -142,6 +150,7 @@
       modal.hidden = false;
       document.body.classList.add("search-modal-open");
       setSearchExpanded(true);
+      setBackgroundInert(true);
       input.value = "";
       render("");
       input.focus();
@@ -151,6 +160,7 @@
       modal.hidden = true;
       document.body.classList.remove("search-modal-open");
       setSearchExpanded(false);
+      setBackgroundInert(false);
       if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
     }
 
