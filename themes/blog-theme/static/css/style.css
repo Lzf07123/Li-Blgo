@@ -433,6 +433,36 @@ input:focus, select:focus, textarea:focus {
 .meta { color: var(--liblog-muted); font-size: 0.875rem; }
 .meta-sep { margin: 0 6px; color: var(--liblog-border); }
 .tag { margin-left: 8px; color: var(--liblog-secondary); font-size: 0.8rem; }
+.tag-cloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 999px;
+  background: var(--liblog-surface);
+  color: var(--liblog-fg);
+  font-size: 0.9rem;
+  box-shadow: var(--liblog-shadow-sm);
+}
+.tag-chip:hover {
+  border-color: var(--liblog-primary);
+  color: var(--liblog-primary);
+  text-decoration: none;
+}
+.tag-chip-count {
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 .breadcrumb {
   display: flex;
   flex-wrap: wrap;

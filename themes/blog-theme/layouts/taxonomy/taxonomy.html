@@ -1,0 +1,14 @@
+{{ define "main" }}
+{{ $strings := hugo.Data.strings }}
+<h1 class="page-title">{{ .Title }}</h1>
+<div class="tag-cloud">
+  {{ range .Data.Terms.Alphabetical }}
+  <a class="tag-chip" href="{{ .Page.RelPermalink }}">
+    {{ .Page.Title }}
+    <span class="tag-chip-count">{{ .Count }}</span>
+  </a>
+  {{ else }}
+  <p class="search-empty">{{ $strings.common.no_tags }}</p>
+  {{ end }}
+</div>
+{{ end }}
