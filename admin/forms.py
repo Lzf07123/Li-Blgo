@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+import re
 import yaml
 
 
@@ -38,22 +39,23 @@ def parse_config(data: dict, fields: list[dict], form) -> tuple[Optional[dict], 
         elif ftype == "list":
             rows = []
             columns = spec.get("columns", [])
-            idx = 0
-            while True:
+            prefix = f"{name}["
+            pattern = re.compile(rf"^{re.escape(name)}\[(\d+)\]\[[^\]]+\]$")
+            max_idx = -1
+            for key in form.keys():
+                m = pattern.match(str(key))
+                if m:
+                    max_idx = max(max_idx, int(m.group(1)))
+            for idx in range(max_idx + 1):
                 row = {}
-                found = False
                 for col in columns:
                     key = col["key"]
                     raw = form.get(f"{name}[{idx}][{key}]")
                     if raw is None:
                         continue
-                    found = True
                     row[key] = str(raw).strip()
-                if not found:
-                    break
                 if any(row.values()):
                     rows.append(row)
-                idx += 1
             nested_set(data, path, rows)
         elif ftype == "number":
             raw = str(form.get(name, "")).strip()
