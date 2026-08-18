@@ -45,7 +45,7 @@
 | v020 | 性能 | 搜索模态焦点陷阱、焦点恢复、aria-expanded | 完成 | 构建通过；搜索按钮含 aria-controls/expanded，脚本含 Tab 焦点陷阱与 aria 状态同步 |
 | v021 | 性能 | 锚点 scroll-margin-top 防 sticky 遮挡 | 完成 | 构建通过；`scroll-margin-top: calc(var(--header-h) + 12px)` 输出 |
 | v022 | 性能 | text-wrap: balance 标题排版 | 完成 | 构建通过；标题 `text-wrap: balance` 输出，版本号 v44 |
-| v023 | 性能 | reduced-motion 覆盖新增动效 | 计划 | — |
+| v023 | 性能 | reduced-motion 覆盖新增动效 | 完成 | 构建通过；reduce 下 `scroll-behavior:auto` 与全局动效收敛，版本号 v45 |
 | v024 | 性能 | 效果层按需加载：React 仅首页，栏目页 CSS-only | 计划 | — |
 | v025 | 无障碍 | 首页标题层级语义修正 | 计划 | — |
 | v026 | 无障碍 | 搜索模态 dialog 语义与 label 完善 | 计划 | — |

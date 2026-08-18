@@ -36,7 +36,7 @@
 {{ with $brand.favicon }}<link rel="icon" href="{{ . | relURL }}" sizes="any">{{ end }}
 {{ with $brand.logo }}<link rel="apple-touch-icon" href="{{ . | relURL }}">{{ end }}
 <link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=36">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=44">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=45">
 {{ if .IsHome }}
 {{ $website := dict "@context" "https://schema.org" "@type" "WebSite" "name" $brand.name "url" .Site.Home.Permalink }}
 {{ $same := slice }}

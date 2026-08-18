@@ -1013,6 +1013,7 @@ mark {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
