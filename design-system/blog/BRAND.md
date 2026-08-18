@@ -67,6 +67,8 @@
 ## 3. 氛围动效（呼吸感）
 
 - 公开站：首页 full（Canvas + CSS 氛围）；栏目列表/关于/资源 soft 减量；文章详情 0（纯排版）
+- 实现口径（第二轮优化定稿）：React 效果层仅首页加载；栏目/关于/资源为 CSS-only 减量氛围（不加载效果包）；文章详情零动效
+- 打印：独立 `--liblog-print-*` 令牌，白纸黑字，不随主题变化
 - 后台：4 元素 × 透明度 0.5（表格区保持不透明表面）
 - 只动 transform/opacity/background-position；错峰 delay；`prefers-reduced-motion` 单帧；移动端减量
 - Canvas 效果层（FloatingBackground）仅在 full/soft 页面加载，移动端形状上限 6、DPR 上限 2，`prefers-reduced-motion` 时收敛为单帧静态绘制

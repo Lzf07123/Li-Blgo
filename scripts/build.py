@@ -7,12 +7,14 @@
 
 import argparse
 import fcntl
+import json
 import os
 import pathlib
 import re
 import shutil
 import subprocess
 import sys
+import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -148,6 +150,17 @@ def verify_output(dst, expect_absolute_urls=False):
     for rel in required:
         if not (dst / rel).exists():
             errors.append(f"产物缺失: {rel}")
+    search_index = dst / "search" / "index.json"
+    if search_index.exists():
+        try:
+            json.loads(search_index.read_text(encoding="utf-8"))
+        except (ValueError, UnicodeDecodeError) as exc:
+            errors.append(f"search/index.json 不是合法 JSON: {exc}")
+    sitemap = dst / "sitemap.xml"
+    if sitemap.exists():
+        text = sitemap.read_text(encoding="utf-8", errors="replace")
+        if "<urlset" not in text or "<loc>" not in text:
+            errors.append("sitemap.xml 缺少 urlset/loc")
     if expect_absolute_urls:
         for rel in ("index.html", "robots.txt"):
             target = dst / rel
@@ -160,6 +173,7 @@ def verify_output(dst, expect_absolute_urls=False):
 
 def build(args):
     """执行 校验 → 渲染 → 发布 → 清理。"""
+    started = time.time()
     errors = validate_content(ROOT)
     errors += validate_content_links(ROOT)
     if errors:
@@ -181,18 +195,30 @@ def build(args):
         shutil.rmtree(tmp)
     tmp.mkdir()
 
-    run_build(ROOT, tmp, hugo_cmd=hugo_cmd, memory_limit=memory_limit, extra=extra)
-    publish(tmp, dst)
-    verify_errors = verify_output(
-        dst, expect_absolute_urls=bool(os.environ.get("SITE_BASEURL", "").strip())
-    )
-    if verify_errors:
-        for err in verify_errors:
-            print(f"ERROR: {err}", file=sys.stderr)
-        sys.exit(1)
-    if not args.keep_tmp:
-        shutil.rmtree(tmp)
-    print(f"build OK -> {dst}")
+    try:
+        run_build(ROOT, tmp, hugo_cmd=hugo_cmd, memory_limit=memory_limit, extra=extra)
+        publish(tmp, dst)
+        verify_errors = verify_output(
+            dst, expect_absolute_urls=bool(os.environ.get("SITE_BASEURL", "").strip())
+        )
+        if verify_errors:
+            for err in verify_errors:
+                print(f"ERROR: {err}", file=sys.stderr)
+            sys.exit(1)
+        total = sum(p.stat().st_size for p in dst.rglob("*") if p.is_file())
+        count = sum(1 for p in dst.rglob("*") if p.is_file())
+        elapsed = round(time.time() - started, 2)
+        print(
+            f"build OK -> {dst} ({count} files, {total / 1024 / 1024:.2f} MB, {elapsed}s)"
+        )
+    except Exception as exc:  # noqa: BLE001 - 失败统一清理并给出可读退出码
+        if tmp.exists():
+            shutil.rmtree(tmp)
+        print(f"ERROR: {exc}", file=sys.stderr)
+        sys.exit(2)
+    finally:
+        if not args.keep_tmp and tmp.exists():
+            shutil.rmtree(tmp)
 
 
 def main():

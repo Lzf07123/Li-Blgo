@@ -99,20 +99,20 @@
 | v074 | 统计 | 媒体存储占用统计 | 完成 | 随批次提交落地；总数/占用/最大单张 |
 | v075 | 统计 | 重建按钮状态反馈 | 完成 | 随批次提交落地；aria-busy + 禁用防连点 |
 | v076 | 统计 | 后台健康自检页 | 完成 | 随批次提交落地；目录/Hugo/GOMEMLIMIT/SQLite/beacon 检查；111 测试全绿 |
-| v077 | 部署 | build.py 输出校验器 | 计划 | — |
-| v078 | 部署 | build.py 构建报告（文件数/体积/耗时） | 计划 | — |
-| v079 | 部署 | build.py 失败清理与退出码细化 | 计划 | — |
-| v080 | 部署 | nginx 安全头补齐 | 计划 | — |
-| v081 | 部署 | nginx 缓存/压缩参数细化 | 计划 | — |
-| v082 | 部署 | Dockerfile 优化 | 计划 | — |
-| v083 | 部署 | compose 资源限制/日志轮转 | 计划 | — |
-| v084 | 部署 | .env.example 新变量说明 | 计划 | — |
-| v085 | 部署 | README 更新 | 计划 | — |
-| v086 | 部署 | MASTER.md 覆盖审计同步 | 计划 | — |
-| v087 | 部署 | BRAND.md 边界同步 | 计划 | — |
-| v088 | 部署 | 新增 build 校验器测试 | 计划 | — |
-| v089 | 部署 | 新增审计/修订/账号/统计测试 | 计划 | — |
-| v090 | 部署 | 全量回归 + 容器真实构建证据 | 计划 | — |
+| v077 | 部署 | build.py 输出校验器（JSON/XML 有效性） | 完成 | verify_output 校验 search/index.json 与 sitemap.xml，含测试 |
+| v078 | 部署 | build.py 构建报告（文件数/体积/耗时） | 完成 | `build OK -> … (N files, X MB, Ts)` 报告 |
+| v079 | 部署 | build.py 失败清理与退出码细化 | 完成 | 异常统一清理 .build-tmp 并退出码 2，含测试 |
+| v080 | 部署 | nginx 安全头补齐 | 完成 | Permissions-Policy + HTTPS 模板 HSTS；`nginx -t` 通过 |
+| v081 | 部署 | nginx 缓存参数细化 | 完成 | search/index.json 5m、/img/ 7d；`nginx -t` 通过 |
+| v082 | 部署 | Dockerfile 优化 | 完成 | tzdata、TZ/LANG/PIP 检查变量 |
+| v083 | 部署 | compose 资源限制/日志轮转 | 完成 | nginx 128m/admin 512m+2cpus、json-file 10m×3 |
+| v084 | 部署 | .env.example 新变量说明 | 完成 | REVISION_MAX 已入模板（随账号批次提交） |
+| v085 | 部署 | README 更新 | 完成 | 新特性清单同步 |
+| v086 | 部署 | MASTER.md 覆盖审计同步 | 完成 | 封面/标签/体检/修订/账号/日志/健康/统计入组件与覆盖表 |
+| v087 | 部署 | BRAND.md 边界同步 | 完成 | CSS-only 栏目氛围与打印令牌口径 |
+| v088 | 部署 | 新增 build 校验器测试 | 完成 | JSON/sitemap/失败清理用例（随 v077/v079） |
+| v089 | 部署 | 新增审计/修订/账号/统计测试 | 完成 | test_audit/test_revisions/test_account/test_stats（113 测试全绿） |
+| v090 | 部署 | 全量回归 + 容器真实构建证据 | 完成 | 113 测试全绿；容器 Hugo 0.165.0 构建 356 页 408ms，产物 17MB/533 文件，verify_output 空错误 |
 | v091 | 回归 | 公开站 375px 移动端走查 | 计划 | — |
 | v092 | 回归 | 公开站深色模式走查 | 计划 | — |
 | v093 | 回归 | 后台移动端走查 | 计划 | — |

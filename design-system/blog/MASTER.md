@@ -74,6 +74,14 @@
 | search-page | 全站弹出式搜索（Fuse.js 7 本地文件 + 构建期 JSON 索引，导航/404 均可唤起，Ctrl/Cmd+K 快捷打开，零服务端、零外链） |
 | list-filters | 列表页搜索/状态筛选/分页（50 条/页）与空状态引导 |
 | structured-config | 品牌/文案/首页/资料结构化表单：数字、勾选、技能/链接行编辑，不再手写 YAML |
+| post-cover | 文章封面图：文章卡/详情/OG/JSON-LD 全链路，编辑页可选择媒体 |
+| tag-management | 标签管理：计数、重命名、合并、删除，操作后自动重建 |
+| content-audit | 内容体检：内部链接/图片缺失、空正文、缺摘要、重复与超长标题 |
+| revisions | 文章修订历史：每次保存快照，可查看与恢复，默认保留 50 份 |
+| account-settings | 账号设置：用户名/密码修改、OIDC 绑定/解绑、会话管理 |
+| audit-log | 操作日志：登录与内容操作审计（SQLite） |
+| health-check | 健康自检：目录/Hugo/GOMEMLIMIT/SQLite/beacon 检查 |
+| stats-filter | 访问统计：日期筛选、按月/年分组、CSV 导出、7 日趋势 |
 | beacon-ingest | nginx empty_gif 匿名日志 → admin 启动导入 stats 表 |
 | react-effects | React + motion 效果运行时（web/ 工程，esbuild 打包为 effects-react.js，约 90KB gzip）：FloatingBackground Canvas、Aurora、TechAmbience（网格+光点）、BlurText、CountUp；仅 full/soft 页面加载，文章页零 React |
 
@@ -134,10 +142,13 @@
 | 兄弟项目徽章 | projects frontmatter | 项目 |
 | 首页精选/数量/开关 | homepage.yaml | 首页设置 |
 | 文章全字段 | posts Markdown | 文章 |
+| 文章封面图 | posts frontmatter `cover` | 文章编辑（封面选择） |
 | 项目卡全字段 | projects Markdown | 项目 |
 | 时间线节点 | timeline Markdown | 时间线 |
 | 关于我长文 | about.md | 关于我 |
 | 资源条目 | resources.md | 资源 |
+| 标签 | posts frontmatter `tags` | 标签管理（重命名/合并/删除） |
+| 操作日志/会话/健康 | data/blog.db + 环境 | 系统栏目（操作日志/账号设置/健康检查） |
 | 媒体图片（Logo/正文插图） | blog-media 命名卷（容器内 static/img，公开 /img/） | 媒体库（上传后重建公开站） |
 | 文章正文预览 | 编辑器正文 | 编辑页"生成预览"（Hugo 渲染） |
 

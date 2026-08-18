@@ -36,14 +36,17 @@ RUN if [ "${APT_MIRROR}" != "deb.debian.org" ]; then \
       && sed -i "s|http://security.debian.org|http://${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources; \
     fi \
     && apt-get update -o Acquire::Retries=3 \
-    && apt-get install -y --no-install-recommends ca-certificates \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata \
     && groupadd --gid 1000 app \
     && useradd --uid 1000 --gid 1000 --create-home --shell /usr/sbin/nologin app \
     && rm -rf /var/lib/apt/lists/*
 
 ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TZ=Asia/Shanghai \
+    LANG=C.UTF-8
 
 COPY --from=builder /opt/venv /opt/venv
 COPY --from=builder /usr/local/bin/hugo /usr/local/bin/hugo

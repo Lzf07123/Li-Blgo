@@ -5,7 +5,7 @@ import types
 import unittest
 from unittest import mock
 
-from scripts.build import publish, validate_content, validate_content_links, verify_output
+from scripts.build import build, publish, validate_content, validate_content_links, verify_output
 
 
 class TestBuild(unittest.TestCase):
@@ -75,6 +75,35 @@ class TestBuild(unittest.TestCase):
             (out / "index.html").write_text("<html></html>", encoding="utf-8")
             errors = verify_output(out, expect_absolute_urls=True)
             self.assertFalse(any("example.com" in e for e in errors))
+
+    def test_verify_output_checks_json_and_sitemap(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = pathlib.Path(d)
+            (out / "index.html").write_text("<html></html>", encoding="utf-8")
+            (out / "index.xml").write_text("<rss></rss>", encoding="utf-8")
+            (out / "robots.txt").write_text("User-agent: *", encoding="utf-8")
+            (out / "llms.txt").write_text("# site", encoding="utf-8")
+            (out / "404.html").write_text("404", encoding="utf-8")
+            (out / "search").mkdir()
+            (out / "search" / "index.json").write_text("[broken", encoding="utf-8")
+            (out / "sitemap.xml").write_text("<xml/>", encoding="utf-8")
+            errors = verify_output(out)
+            self.assertTrue(any("合法 JSON" in e for e in errors))
+            self.assertTrue(any("urlset" in e for e in errors))
+
+    def test_build_failure_cleans_tmp_and_exits_2(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            with mock.patch("scripts.build.ROOT", root), mock.patch(
+                "scripts.build.run_build", side_effect=RuntimeError("boom")
+            ):
+                args = types.SimpleNamespace(
+                    preview=False, full=False, keep_tmp=False
+                )
+                with self.assertRaises(SystemExit) as cm:
+                    build(args)
+            self.assertEqual(cm.exception.code, 2)
+            self.assertFalse((root / ".build-tmp").exists())
 
 
 class TestBootstrapBuild(unittest.TestCase):
