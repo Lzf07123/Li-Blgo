@@ -44,19 +44,36 @@ def beacon_page(uri: str) -> Optional[str]:
 
 
 def import_beacon_log(path: Optional[str] = None) -> int:
-    """解析 beacon 日志并写入 stats；成功后清空日志。返回导入行数。"""
+    """解析 beacon 日志并写入 stats；admin 只读日志，用 data 卷偏移去重。
+
+    beacon 卷由 nginx 写入，admin 不再要求写权限；卷可写时仍尽力清空日志。
+    返回导入行数。
+    """
     log_path = pathlib.Path(path or settings.beacon_log)
     if not log_path.exists():
         return 0
+    state_path = pathlib.Path(settings.db_path).with_name("beacon_import.offset")
     try:
-        with log_path.open("a", encoding="utf-8"):
-            pass
+        offset = int(state_path.read_text(encoding="utf-8").strip() or "0")
+    except (OSError, ValueError):
+        offset = 0
+    try:
+        size = log_path.stat().st_size
     except OSError as exc:
-        print(f"[beacon] 跳过导入：beacon 日志不可写（{exc}）")
+        print(f"[beacon] 跳过导入：beacon 日志不可读（{exc}）")
         return 0
-    text = log_path.read_text(encoding="utf-8", errors="replace")
-    if not text.strip():
+    if size < offset:
+        offset = 0  # 日志被截断/轮转：从头导入剩余内容
+    try:
+        with log_path.open("rb") as fh:
+            fh.seek(offset)
+            raw = fh.read()
+    except OSError as exc:
+        print(f"[beacon] 跳过导入：beacon 日志不可读（{exc}）")
         return 0
+    if not raw:
+        return 0
+    text = raw.decode("utf-8", errors="replace")
     rows = []
     for line in text.splitlines():
         if "|" not in line:
@@ -77,8 +94,14 @@ def import_beacon_log(path: Optional[str] = None) -> int:
     )
     conn.commit()
     conn.close()
+    new_offset = offset + len(raw)
+    try:
+        state_path.write_text(str(new_offset), encoding="utf-8")
+    except OSError as exc:
+        print(f"[beacon] warning: 已导入但无法记录偏移（{exc}）")
     try:
         log_path.write_text("", encoding="utf-8")
-    except OSError as exc:
-        print(f"[beacon] warning: 已导入但无法清空日志（{exc}）")
+        state_path.write_text("0", encoding="utf-8")
+    except OSError:
+        pass  # 卷不可写时保留日志，偏移量已防止重复导入
     return len(rows)

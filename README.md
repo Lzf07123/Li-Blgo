@@ -53,11 +53,7 @@ docker run --rm --entrypoint cp -v "$PWD/data:/from:ro" -v liblog_blog-data:/to 
 docker run --rm --entrypoint cp -v "$PWD/media:/from:ro" -v liblog_blog-media:/to python:3.12-slim -a /from/. /to/
 ```
 
-如果是从旧 root 镜像升级，beacon 命名卷也需一次性授权给 UID 1000（卷名以 `docker volume ls` 实际为准，例如 `liblog_beacon-log`）：
-
-```bash
-docker run --rm --user root -v liblog_beacon-log:/beacon --entrypoint chown liblog-admin:latest -R 1000:1000 /beacon
-```
+beacon 打点日志由 nginx 写入命名卷；admin 启动时只读导入，导入偏移状态存 `data/` 卷，不需要对 beacon 卷有写权限。
 
 备份与恢复：后台“备份”栏目可下载完整站点 ZIP，也可上传备份 ZIP 恢复（恢复前自动在 `data/restore-backups/` 生成安全备份，恢复后需重新登录）。首次建站时，设置向导第 1 步也支持直接上传备份 ZIP 恢复建站。
 

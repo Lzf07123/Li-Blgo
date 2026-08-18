@@ -74,6 +74,35 @@ class TestBeaconImport(unittest.TestCase):
         )
         self.assertEqual(settings.beacon_log.read_text(encoding="utf-8"), "")
 
+    def test_import_reads_readonly_log_without_duplicates(self):
+        line = "2026-08-18T10:00:00+08:00|/api/beacon?p=%2fposts%2fa%2f\n"
+        settings.beacon_log.write_text(line, encoding="utf-8")
+        settings.beacon_log.chmod(0o444)
+        self.assertEqual(import_beacon_log(), 1)
+        # 卷不可写时不清空日志，偏移量去重，二次导入应为 0
+        self.assertEqual(import_beacon_log(), 0)
+        self.assertEqual(settings.beacon_log.read_text(encoding="utf-8"), line)
+        conn = connect()
+        rows = conn.execute(
+            "SELECT views FROM stats WHERE path = '/posts/a/'"
+        ).fetchall()
+        conn.close()
+        self.assertEqual([dict(r) for r in rows], [{"views": 1}])
+        settings.beacon_log.chmod(0o644)
+
+    def test_import_handles_truncated_log_reset(self):
+        settings.beacon_log.write_text(
+            "2026-08-18T10:00:00+08:00|/api/beacon?p=%2fposts%2fb%2f\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(import_beacon_log(), 1)
+        # 模拟 nginx 轮转后写入新行：偏移越界应自动重置
+        settings.beacon_log.write_text(
+            "2026-08-18T11:00:00+08:00|/api/beacon?p=%2fposts%2fc%2f\n",
+            encoding="utf-8",
+        )
+        self.assertEqual(import_beacon_log(), 1)
+
 
 class TestStatsNormalization(unittest.TestCase):
     def setUp(self):
