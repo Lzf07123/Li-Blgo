@@ -14,3 +14,4 @@ output/
 .preview-out/
 bin/
 .hugo_build.lock
+content/posts/untitled.md
