@@ -40,10 +40,17 @@ Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 
 
 部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
 
-admin 容器以 UID 1000 非 root 运行；Linux 主机需保证 `content/ config/ output/ data/ media` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
+admin 容器以 UID 1000 非 root 运行；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`），自动继承 UID 1000 所有权，宿主机无需创建目录；`output/` 为 bind 挂载，Linux 主机需保证 `content/ config/ output/` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
 
 ```bash
-sudo chown -R 1000:1000 content config output data media
+sudo chown -R 1000:1000 content config output
+```
+
+旧 bind 挂载部署迁移到命名卷（一次性，`data/` 与 `media/` 有数据时执行）：
+
+```bash
+docker run --rm --entrypoint cp -v "$PWD/data:/from:ro" -v liblog_blog-data:/to python:3.12-slim -a /from/. /to/
+docker run --rm --entrypoint cp -v "$PWD/media:/from:ro" -v liblog_blog-media:/to python:3.12-slim -a /from/. /to/
 ```
 
 如果是从旧 root 镜像升级，beacon 命名卷也需一次性授权给 UID 1000（卷名以 `docker volume ls` 实际为准，例如 `liblog_beacon-log`）：

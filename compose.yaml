@@ -32,11 +32,13 @@ services:
     volumes:
       - ./content:/app/content
       - ./config:/app/config
+      - blog-data:/app/data
       - ./output:/app/output
-      - ./data:/app/data
-      - ./media:/app/themes/blog-theme/static/img
+      - blog-media:/app/themes/blog-theme/static/img
       - beacon-log:/app/beacon
     restart: "no"
 
 volumes:
   beacon-log:
+  blog-data:
+  blog-media:

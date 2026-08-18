@@ -88,9 +88,9 @@
 
 **React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。
 
-**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；媒体上传目录为仓库外 `./media`（Docker 自动创建，容器内映射到 `themes/blog-theme/static/img`，公开路径 `/img/`），上传图片持久化、容器重建不丢失；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
+**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权，无需宿主机目录；媒体容器内映射 `themes/blog-theme/static/img`，公开路径 `/img/`），上传图片持久化、容器重建不丢失；`output/` 为 bind 挂载；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
 
-**镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 从仓库 `bin/hugo/` COPY 并校验 Hugo v0.165.0（不联网）、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，以 UID 1000 非 root 运行，内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。Linux 主机需保证 `content/ config/ output/ data/ media` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）。
+**镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 从仓库 `bin/hugo/` COPY 并校验 Hugo v0.165.0（不联网）、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，以 UID 1000 非 root 运行，内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。Linux 主机需保证 `content/ config/ output/` 对 UID 1000 可写（`data/ media/` 为命名卷，macOS Docker Desktop 通常无需处理）。
 
 **后台预览 iframe：** nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN`（覆盖全站 DENY），允许后台页面在后台内嵌预览；`client_max_body_size 100m` 支持备份 ZIP 上传（媒体单文件仍由应用层限 5MB）。
 
@@ -135,7 +135,7 @@
 | 时间线节点 | timeline Markdown | 时间线 |
 | 关于我长文 | about.md | 关于我 |
 | 资源条目 | resources.md | 资源 |
-| 媒体图片（Logo/正文插图） | media/（容器内 static/img，公开 /img/） | 媒体库（上传后重建公开站） |
+| 媒体图片（Logo/正文插图） | blog-media 命名卷（容器内 static/img，公开 /img/） | 媒体库（上传后重建公开站） |
 | 文章正文预览 | 编辑器正文 | 编辑页"生成预览"（Hugo 渲染） |
 
 验收：逐页对照本表，任何可见内容必须能在后台找到编辑入口；模板零硬编码可见文案。
