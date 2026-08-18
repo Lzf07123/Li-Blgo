@@ -758,3 +758,79 @@ textarea.is-dragover {
   .stat-bar-row { grid-template-columns: 1fr 1fr 40px; }
   .editor-actions { padding: 10px 0; }
 }
+
+/* ---------- 后台徽章与标签（类型化重构） ---------- */
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 2px 10px 2px 8px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 999px;
+  background: var(--liblog-surface-2);
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+.admin-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
+}
+.admin-badge--published {
+  background: var(--liblog-success-soft);
+  color: var(--liblog-success);
+  border-color: var(--liblog-success);
+}
+.admin-badge--published::before {
+  content: "✓";
+  width: auto;
+  height: auto;
+  background: none;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.admin-badge--draft {
+  background: var(--liblog-warning-soft);
+  color: var(--liblog-warning);
+  border-color: var(--liblog-warning);
+}
+.admin-badge--draft::before { background: var(--liblog-warning); }
+.admin-badge--active {
+  background: var(--liblog-secondary-soft);
+  color: var(--liblog-secondary);
+  border-color: var(--liblog-secondary);
+}
+.admin-badge--active::before { background: var(--liblog-secondary); }
+.admin-badge--danger {
+  background: var(--liblog-destructive-soft);
+  color: var(--liblog-destructive);
+  border-color: var(--liblog-destructive);
+}
+.admin-badge--danger::before { background: var(--liblog-destructive); }
+.admin-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.admin-tag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 1px 8px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 999px;
+  background: var(--liblog-surface);
+  color: var(--liblog-secondary);
+  font-size: 0.7rem;
+  font-weight: 500;
+  line-height: 1.3;
+}

@@ -50,6 +50,11 @@ async def admin_headers(request: Request, call_next):
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
 STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
+ADMIN_BADGE_VARIANTS = {
+    "published": "admin-badge--published",
+    "draft": "admin-badge--draft",
+    "active": "admin-badge--active",
+}
 
 settings.preview_root.mkdir(parents=True, exist_ok=True)
 app.mount(
@@ -394,7 +399,7 @@ def dashboard(request: Request):
             "date": p["date"],
             "status": p["status"],
             "status_label": STATUS_LABELS.get(p["status"], p["status"]),
-            "status_class": "badge-warning" if p["status"] == "draft" else "badge-success",
+                "status_class": ADMIN_BADGE_VARIANTS.get(p["status"], "admin-badge--muted"),
             "actions": [{"label": "编辑", "href": ap(f"/posts/{p['slug']}/edit")}],
         }
         for p in recent_posts
@@ -688,11 +693,11 @@ def section_list(
             {
                 "title": item["title"],
                 "title_href": ap(f"/{section}/{item['slug']}/edit"),
-                "title_meta": ", ".join(item.get("tags", [])[:3]) if item.get("tags") else "",
+                "title_tags": item.get("tags", [])[:3],
                 "date": item["date"],
                 "status": item["status"],
                 "status_label": STATUS_LABELS.get(item["status"], item["status"]),
-                "status_class": "badge-warning" if item["status"] == "draft" else "badge-success",
+                "status_class": ADMIN_BADGE_VARIANTS.get(item["status"], "admin-badge--muted"),
                 "actions": actions,
             }
         )
