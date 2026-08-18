@@ -5,7 +5,7 @@
     {{ if or (hasPrefix . "/") (strings.Contains . ".") }}
     <img class="badge-readme-img" src="{{ . | relURL }}" alt="" aria-hidden="true">
     {{ else }}
-    <span class="badge-readme-icon" style="--badge-icon: url('/img/badges/{{ . }}.svg')" aria-hidden="true"></span>
+    <span class="badge-readme-icon" style="--badge-icon: url('/assets/badges/{{ . }}.svg')" aria-hidden="true"></span>
     {{ end }}
   {{ end }}
   {{ if .href }}<a class="badge-readme-link" href="{{ .href }}">{{ $label }}</a>{{ else }}<span class="badge-readme-label">{{ $label }}</span>{{ end }}

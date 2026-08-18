@@ -53,7 +53,7 @@
 | 12 | 焦点环 | 浅 #25786D / 深 #7FD4C6，2px 描边 + 2px offset |
 | 13 | 字体栈 | Inter → ui-sans-serif/system → PingFang SC / Hiragino Sans GB / 微软雅黑；零远程加载 |
 | 14 | 可选标题字体 | 暂不引入（保持最低占用） |
-| 15 | Logo / favicon | 留空变量；后期上传至 `themes/blog-theme/static/img/`；512×512 透明底 WebP + favicon.webp；未上传时用品牌色文字占位 |
+| 15 | Logo / favicon | 留空变量；上传至媒体库 `media/`（公开路径 `/img/`）；品牌内置资源放 `themes/blog-theme/static/assets/brand/`；512×512 透明底 WebP + favicon.webp；未上传时用品牌色文字占位 |
 | 16 | 令牌前缀 | `--liblog-*` |
 | 17 | 主题存储键 | liblog-theme（公开站跟随系统，无切换按钮；后台可切换） |
 | 18 | slogan / 备案 | 只存 config/brand.yaml；备案上线前留空，禁止假占位号 |

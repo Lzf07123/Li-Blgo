@@ -34,7 +34,7 @@ services:
       - ./config:/app/config
       - ./output:/app/output
       - ./data:/app/data
-      - ./themes/blog-theme/static/img:/app/themes/blog-theme/static/img
+      - ./media:/app/themes/blog-theme/static/img
       - beacon-log:/app/beacon
     restart: "no"
 

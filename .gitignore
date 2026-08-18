@@ -7,6 +7,7 @@ node_modules/
 .env
 data/
 output/
+media/
 .pytest_cache/
 *.log
 .build-tmp/
@@ -15,6 +16,7 @@ output/
 bin/*
 !bin/hugo/
 !bin/hugo/*
+themes/blog-theme/static/img/
 .hugo_build.lock
 # 文章内容不入 git（保留本地工作区与栏目索引）
 content/posts/*

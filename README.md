@@ -40,10 +40,10 @@ Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 
 
 部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
 
-admin 容器以 UID 1000 非 root 运行；Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
+admin 容器以 UID 1000 非 root 运行；Linux 主机需保证 `content/ config/ output/ data/ media` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
 
 ```bash
-sudo chown -R 1000:1000 content config output data themes/blog-theme/static/img
+sudo chown -R 1000:1000 content config output data media
 ```
 
 如果是从旧 root 镜像升级，beacon 命名卷也需一次性授权给 UID 1000（卷名以 `docker volume ls` 实际为准，例如 `liblog_beacon-log`）：
@@ -69,4 +69,4 @@ web/        # React 效果层源码（esbuild 打包）
 
 - 公开站：徽章本地生成（README 风格技能徽章使用官方品牌色 + 本地 SVG 图标），禁止 shields.io 外链
 - 本 README：按 Li&About 规范使用 shields.io 官方色整块徽章
-- 站点图标：Simple Icons（CC0），已本地化至 `themes/blog-theme/static/img/badges/`
+- 站点图标：Simple Icons（CC0），已本地化至 `themes/blog-theme/static/assets/badges/`

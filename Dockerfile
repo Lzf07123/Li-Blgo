@@ -57,6 +57,7 @@ COPY --chown=app:app content/ content/
 COPY --chown=app:app hugo.toml requirements.txt ./
 
 RUN mkdir -p /app/beacon /app/data /app/output /app/.preview-out /app/.build-tmp \
+    /app/themes/blog-theme/static/img \
     && chown -R app:app /app \
     && hugo version
 
