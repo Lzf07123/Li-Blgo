@@ -43,7 +43,7 @@
 | v018 | 性能 | nginx HTML no-cache、静态资源长缓存策略 | 完成 | `nginx -t` 语法通过；HTML expires 0，静态资源 7d |
 | v019 | 性能 | nginx sendfile/tcp_nopush/gzip 参数细化 | 完成 | `nginx -t` 通过；新增 server_tokens off、charset、sendfile/tcp 参数、gzip 等级与代理压缩 |
 | v020 | 性能 | 搜索模态焦点陷阱、焦点恢复、aria-expanded | 完成 | 构建通过；搜索按钮含 aria-controls/expanded，脚本含 Tab 焦点陷阱与 aria 状态同步 |
-| v021 | 性能 | 锚点 scroll-margin-top 防 sticky 遮挡 | 计划 | — |
+| v021 | 性能 | 锚点 scroll-margin-top 防 sticky 遮挡 | 完成 | 构建通过；`scroll-margin-top: calc(var(--header-h) + 12px)` 输出 |
 | v022 | 性能 | text-wrap: balance 标题排版 | 计划 | — |
 | v023 | 性能 | reduced-motion 覆盖新增动效 | 计划 | — |
 | v024 | 性能 | 效果层按需加载：React 仅首页，栏目页 CSS-only | 计划 | — |

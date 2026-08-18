@@ -38,6 +38,7 @@ a:hover { color: var(--liblog-primary-hover); }
 }
 main:focus { outline: none; }
 ::selection { background: var(--liblog-primary); color: var(--liblog-primary-fg); }
+[id] { scroll-margin-top: calc(var(--header-h) + 12px); }
 
 /* ---------- 跳转链接 ---------- */
 .skip-link {
