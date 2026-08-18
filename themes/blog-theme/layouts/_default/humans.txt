@@ -1,0 +1,10 @@
+/* TEAM */
+Name: {{ hugo.Data.profile.name }}
+Role: {{ hugo.Data.profile.identity }}
+Focus: {{ hugo.Data.profile.direction }}
+
+/* SITE */
+Site: {{ hugo.Data.brand.name }}
+Tagline: {{ hugo.Data.brand.tagline }}
+Language: zh-CN
+Generated: Hugo 0.165.0 static build (no runtime renderer)

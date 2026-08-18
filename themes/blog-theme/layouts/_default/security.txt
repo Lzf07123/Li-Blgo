@@ -1,0 +1,7 @@
+{{ $contact := "" }}
+{{ range hugo.Data.profile.links }}{{ if and (not $contact) (strings.HasPrefix .href "http") }}{{ $contact = .href }}{{ end }}{{ end }}
+Contact: {{ $contact }}
+Expires: 2027-08-19T00:00:00+08:00
+Preferred-Languages: zh-CN, en
+Canonical: {{ .Site.Home.Permalink }}security.txt
+Policy: {{ $contact }}/security

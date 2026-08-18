@@ -31,7 +31,7 @@
 | v006 | SEO | WebSite JSON-LD 补 sameAs（profile links） | 完成 | 首页 WebSite JSON-LD 含 GitHub sameAs，JSON 校验通过 |
 | v007 | SEO | 自定义 robots.txt（含 Sitemap）+ [sitemap] 配置 | 完成 | 相对 baseURL 无 Sitemap 行；绝对域名下输出 `Sitemap: https://blog.example.cn/sitemap.xml`，sitemap 33KB 全量 |
 | v008 | SEO | llms.txt 输出格式与模板 | 完成 | Hugo 构建通过；llms.txt 含站点信息/栏目/最新文章（待 v009 消除 humans/security 缺模板告警） |
-| v009 | SEO | security.txt 与 humans.txt | 计划 | — |
+| v009 | SEO | security.txt 与 humans.txt | 完成 | 构建 0 警告；/security.txt 含 Contact/Expires/Policy（来自 profile 链接），/humans.txt 含作者与站点信息 |
 | v010 | SEO | 404 页 robots noindex、移除误导性 canonical | 计划 | — |
 | v011 | SEO | 列表/标签/分页页 title 与 description 细化 | 计划 | — |
 | v012 | SEO | OG 图片绝对地址与 alt | 计划 | — |
