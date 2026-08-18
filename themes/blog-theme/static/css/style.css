@@ -1031,6 +1031,11 @@ mark {
   .badge-row { gap: 6px; }
   .search-input { max-width: 100%; }
 }
+@media (max-width: 480px) {
+  .post-cover { height: 140px; }
+  .article-cover img { max-height: 240px; }
+  .hero { min-height: calc(100svh - var(--header-h) - 24px); }
+}
 /* ---------- 打印：正文干净排版，隐藏导航/氛围/打点 ---------- */
 @media print {
   body {
