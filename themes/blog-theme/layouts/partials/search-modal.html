@@ -46,6 +46,7 @@
     var empty = document.getElementById("search-modal-empty");
     var emptyText = document.getElementById("search-empty-text");
     var STRINGS = {{ hugo.Data.strings.home | jsonify }};
+    var COMMON = {{ hugo.Data.strings.common | jsonify }};
     var fuse = null;
     var items = [];
     var activeIndex = -1;
@@ -136,8 +137,16 @@
         var snippet = document.createElement("span");
         snippet.className = "search-item-snippet";
         snippet.appendChild(highlight(r.item.summary || "", q));
+        var meta = document.createElement("span");
+        meta.className = "search-item-meta";
+        var metaParts = [];
+        if (r.item.date) metaParts.push(r.item.date);
+        if (r.item.readingTime) metaParts.push(r.item.readingTime + " " + COMMON.reading_time);
+        if (r.item.tags && r.item.tags.length) metaParts.push(r.item.tags.slice(0, 3).join(" · "));
+        meta.textContent = metaParts.join(" · ");
         a.appendChild(title);
         a.appendChild(snippet);
+        if (metaParts.length) a.appendChild(meta);
         li.appendChild(a);
         li.addEventListener("mouseenter", function () { setActive(Array.prototype.indexOf.call(list.children, li)); });
         list.appendChild(li);

@@ -842,6 +842,10 @@ input:focus, select:focus, textarea:focus {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+.search-item-meta {
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+}
 .search-empty-state {
   display: flex;
   flex-direction: column;
