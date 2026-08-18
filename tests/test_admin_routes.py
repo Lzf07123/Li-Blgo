@@ -244,6 +244,25 @@ class AdminRoutesTest(unittest.TestCase):
         fm, _ = store.read_markdown("posts", "cover-post")
         self.assertEqual(fm["cover"], "/img/2026/08/cover.webp")
 
+    def test_posts_list_groups_rows_by_year(self):
+        store.write_markdown(
+            "posts", "old-post",
+            {"title": "旧文", "date": "2025-03-01", "status": "published"},
+            "正文",
+        )
+        store.write_markdown(
+            "posts", "new-post",
+            {"title": "新文", "date": "2026-08-18", "status": "published"},
+            "正文",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts?sort=date&order=desc")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("table-group-row", r.text)
+            self.assertIn("2026", r.text)
+            self.assertIn("2025", r.text)
+
     def test_logout_post_requires_csrf(self):
         with TestClient(app) as client:
             csrf = self._login(client)

@@ -306,6 +306,17 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .table-shell tbody tr:last-child td {
   border-bottom: none;
 }
+/* v51 分组行：年份分区，弱化分隔 */
+.table-group-row td {
+  padding: 10px 12px 4px;
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.table-group-row td {
+  border-bottom: 0;
+}
 /* v8 斑马纹：偶数行浅底 */
 .table-shell--striped tbody tr:nth-child(even) {
   background: var(--liblog-surface-2);

@@ -1056,7 +1056,13 @@ def section_list(
         {"key": "actions", "label": "操作", "type": "actions"},
     ]
     rows = []
+    group_year = None
     for item in page_items:
+        if section == "posts":
+            year = str(item.get("date") or "")[:4]
+            if year != group_year:
+                group_year = year
+                rows.append({"__group": year or "未标注"})
         actions = [
             {"label": "编辑", "href": ap(f"/{section}/{item['slug']}/edit")},
             {"label": "查看", "href": f"/{section}/{item['slug']}/", "external": True},

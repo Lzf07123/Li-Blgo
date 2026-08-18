@@ -19,6 +19,11 @@
     </thead>
     <tbody>
     {% for row in table.rows %}
+      {% if row.get("__group") %}
+      <tr class="table-group-row">
+        <td colspan="{{ table.columns|length }}">{{ row["__group"] }}</td>
+      </tr>
+      {% else %}
       <tr>
       {% for col in table.columns %}
         {% set align_class = ' table-col-right' if col.type == 'number' or col.align == 'right' else '' %}
@@ -60,6 +65,7 @@
         {% endif %}
       {% endfor %}
       </tr>
+      {% endif %}
     {% else %}
       <tr class="table-empty-row">
         <td colspan="{{ table.columns|length }}">{{ table.empty or '暂无数据' }}</td>
