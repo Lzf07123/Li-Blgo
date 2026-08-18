@@ -49,6 +49,7 @@ common:
   links_title: 更多链接
   toc: 目录
   post_nav: 文章导航
+  timeline_nav: 时间线导航
   no_tags: 还没有标签，发布文章后自动生成
 
 footer:

@@ -51,8 +51,10 @@
     {{ range . }}<a class="badge badge-primary" href="{{ .href }}" target="_blank" rel="noopener">{{ .label }}</a>{{ end }}
   </div>
   {{ end }}
-  {{ if and (eq .Section "posts") (or .PrevInSection .NextInSection) }}
-  <nav class="post-nav" aria-label="{{ $strings.common.post_nav }}">
+  {{ if and (or (eq .Section "posts") (eq .Section "timeline")) (or .PrevInSection .NextInSection) }}
+  {{ $nav_label := $strings.common.post_nav }}
+  {{ if eq .Section "timeline" }}{{ $nav_label = $strings.common.timeline_nav }}{{ end }}
+  <nav class="post-nav" aria-label="{{ $nav_label }}">
     {{ with .PrevInSection }}
     <a class="post-nav-item" href="{{ .RelPermalink }}">
       <span>{{ $strings.common.prev }}</span>
