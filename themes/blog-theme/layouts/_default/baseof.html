@@ -3,6 +3,7 @@
 <head>{{ partial "head.html" . }}</head>
 {{ $density := partial "density.html" . }}
 <body data-ambient="{{ $density }}">
+  {{ if eq $density "css" }}{{ partial "css-ambient.html" . }}{{ end }}
   <a class="skip-link" href="#main">{{ hugo.Data.strings.common.skip_to_content }}</a>
   {{ partial "header.html" . }}
   <main id="main" class="page-shell" tabindex="-1">{{ block "main" . }}{{ end }}</main>

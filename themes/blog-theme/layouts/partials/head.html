@@ -72,7 +72,7 @@
 </script>
 {{ end }}
 {{ $density := partial "density.html" . }}
-{{ if ne $density "none" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
+{{ if eq $density "full" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
 <link rel="stylesheet" href="{{ "css/katex.min.css" | relURL }}">
 <script defer src="{{ "js/katex.min.js" | relURL }}"></script>

@@ -5,7 +5,7 @@ import BlurText from "./BlurText.jsx";
 import HeroFX from "./HeroFX.jsx";
 
 const density = document.body.dataset.ambient || "none";
-if (density !== "none") {
+if (density === "full") {
   const host = document.createElement("div");
   host.id = "ambient-root";
   document.body.prepend(host);
