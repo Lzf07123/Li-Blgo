@@ -1049,7 +1049,10 @@ def section_list(
         params.update(over)
         return query_url(base, **params)
 
-    columns = [
+    columns = []
+    if section == "posts":
+        columns.append({"key": "select", "label": "选择", "type": "select"})
+    columns += [
         {"key": "title", "label": "标题", "type": "link", "sortable": True},
         {"key": "date", "label": "日期", "type": "text", "sortable": True},
         {"key": "status", "label": "状态", "type": "badge", "sortable": section != "timeline"},
@@ -1096,6 +1099,8 @@ def section_list(
             )
         rows.append(
             {
+                "slug": item["slug"],
+                "select": item["slug"],
                 "title": item["title"],
                 "title_href": ap(f"/{section}/{item['slug']}/edit"),
                 "title_tags": (
@@ -1152,6 +1157,49 @@ def section_list(
     )
 
 
+@app.post(ap("/posts/bulk"))
+def posts_bulk(
+    request: Request,
+    action: str = Form(""),
+    slugs: list[str] = Form(default=[]),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/posts?error=会话失效"), status_code=303)
+    if action not in ("publish", "draft", "pin", "unpin", "delete"):
+        return RedirectResponse(ap("/posts?error=批量操作不合法"), status_code=303)
+    changed = 0
+    for slug in slugs[:200]:
+        if not store.SLUG_RE.match(slug):
+            continue
+        try:
+            if action == "delete":
+                store.delete_markdown("posts", slug)
+            else:
+                old, body = store.read_markdown("posts", slug)
+                if action == "publish":
+                    old["status"] = "published"
+                elif action == "draft":
+                    old["status"] = "draft"
+                elif action == "pin":
+                    old["pinned"] = True
+                elif action == "unpin":
+                    old["pinned"] = False
+                store.write_markdown("posts", slug, old, body)
+            changed += 1
+        except (ValueError, FileNotFoundError):
+            continue
+    if not changed:
+        return RedirectResponse(ap("/posts?error=没有可执行的文章"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/posts?error=批量操作后构建失败"), status_code=303)
+    return RedirectResponse(
+        ap(f"/posts?ok=已批量处理 {changed} 篇并重建（{elapsed}s）"), status_code=303
+    )
+
+
 @app.get(ap("/{section}/new"), response_class=HTMLResponse)
 def section_new(request: Request, section: str):
     require_login(request)
@@ -1165,6 +1213,7 @@ def section_new(request: Request, section: str):
             "slug": "",
             "label": SECTIONS[section]["label"],
             "fields": _edit_fields(section, {}),
+            "all_tags": store.all_tags(),
             "media_items": media_store.list_media()[:20],
             "preview_path": "",
         },
@@ -1189,6 +1238,7 @@ def section_edit(request: Request, section: str):
             "slug": slug,
             "label": SECTIONS[section]["label"],
             "fields": _edit_fields(section, fm),
+            "all_tags": store.all_tags(),
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}" if SECTIONS[section]["single"] else "",
@@ -1213,6 +1263,7 @@ def section_slug_edit(request: Request, section: str, slug: str):
             "slug": slug,
             "label": SECTIONS[section]["label"],
             "fields": _edit_fields(section, fm),
+            "all_tags": store.all_tags(),
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}/{slug}",

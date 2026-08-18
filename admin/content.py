@@ -109,6 +109,14 @@ def list_markdown(
     return items
 
 
+def all_tags() -> list[str]:
+    """聚合文章栏目现有标签，供编辑器自动补全。"""
+    tags: set[str] = set()
+    for item in list_markdown("posts"):
+        tags.update(str(t) for t in (item.get("tags") or []))
+    return sorted(tags)
+
+
 def read_markdown(section: str, slug: str) -> tuple[dict, str]:
     if not SLUG_RE.match(slug):
         raise ValueError("bad slug")

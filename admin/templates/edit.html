@@ -13,6 +13,11 @@
 </nav>
 <h1>{{ label }}{% if slug %}: {{ slug }}{% endif %}</h1>
 {% if error %}<p class="flash flash--error" role="alert">{{ error }}</p>{% endif %}
+<p id="draft-restore" class="flash" role="status" hidden>
+  检测到未保存的草稿
+  <button id="draft-restore-btn" type="button" class="btn-link">恢复</button>
+  <button id="draft-discard-btn" type="button" class="btn-link">丢弃</button>
+</p>
 <div class="editor-layout">
   <div class="editor-main">
     <form id="edit-form" method="post" action="/{{ admin_path }}/{{ section }}/save">
@@ -37,10 +42,15 @@
           {% elif ftype == "textarea" %}
             <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
           {% else %}
-            <input type="text" name="{{ name }}" value="{{ value }}">
+            <input type="text" name="{{ name }}" value="{{ value }}"{% if name == "tags" and section == "posts" %} list="tag-options"{% endif %}>
           {% endif %}
         </label>
       {% endfor %}
+      {% if section == "posts" and all_tags %}
+      <datalist id="tag-options">
+        {% for t in all_tags %}<option value="{{ t }}"></option>{% endfor %}
+      </datalist>
+      {% endif %}
       <label>正文 Markdown
         <div class="editor-toolbar">
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="bold" title="加粗">B</button>
@@ -51,6 +61,7 @@
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="quote" title="引用">引用</button>
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="list" title="列表">列表</button>
           <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
+          <button type="button" id="editor-fullscreen" class="btn btn-sm btn-secondary">全屏</button>
           <span id="body-count" class="editor-count"></span>
           <span id="upload-progress-inline" class="upload-progress-inline" hidden><i id="upload-progress-inline-bar" class="upload-progress-bar"></i></span>
         </div>
@@ -110,6 +121,57 @@
     var count = document.getElementById("body-count");
     var dialog = document.getElementById("image-dialog");
     var CSRF = "{{ csrf }}";
+    var DRAFT_KEY = "liblog-draft:" + "{{ section }}" + ":" + ("{{ slug }}" || "__new__");
+    var slugInput = form.querySelector('input[name="new_slug"]');
+    var titleInput = form.querySelector('input[name="title"]');
+    var slugAuto = false;
+    if (slugInput && titleInput) {
+      titleInput.addEventListener("input", function () {
+        if (slugInput.value && !slugAuto) return;
+        var s = titleInput.value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64);
+        if (s) {
+          slugInput.value = s;
+          slugAuto = true;
+        }
+      });
+      slugInput.addEventListener("input", function () { slugAuto = false; });
+    }
+
+    function saveDraft() {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        body: body.value,
+        title: titleInput ? titleInput.value : "",
+        at: Date.now()
+      }));
+    }
+
+    var savedDraft = null;
+    try { savedDraft = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null"); } catch (err) {}
+    var banner = document.getElementById("draft-restore");
+    if (savedDraft && savedDraft.body && savedDraft.body !== body.value) {
+      banner.hidden = false;
+    }
+    document.getElementById("draft-restore-btn").addEventListener("click", function () {
+      if (!savedDraft) return;
+      body.value = savedDraft.body;
+      var titleInput = form.querySelector('input[name="title"]');
+      if (titleInput && savedDraft.title) titleInput.value = savedDraft.title;
+      updateCount();
+      banner.hidden = true;
+      localStorage.removeItem(DRAFT_KEY);
+    });
+    document.getElementById("draft-discard-btn").addEventListener("click", function () {
+      localStorage.removeItem(DRAFT_KEY);
+      banner.hidden = true;
+    });
+    var draftTimer = null;
+    body.addEventListener("input", function () {
+      window.clearTimeout(draftTimer);
+      draftTimer = window.setTimeout(saveDraft, 500);
+    });
+    form.addEventListener("submit", function () {
+      localStorage.removeItem(DRAFT_KEY);
+    });
 
     function updateCount() {
       var text = body.value;
@@ -157,6 +219,14 @@
         var save = form.querySelector('button[value="save_stay"]');
         if (save) save.click();
       }
+      if (document.activeElement !== body) return;
+      var mod = e.metaKey || e.ctrlKey;
+      if (!mod) return;
+      var key = e.key.toLowerCase();
+      if (key === "b") { e.preventDefault(); wrapSelection("**", "**", "加粗文字"); }
+      if (key === "i") { e.preventDefault(); wrapSelection("*", "*", "斜体文字"); }
+      if (key === "k") { e.preventDefault(); wrapSelection("[", "](https://)", "链接文字"); }
+      if (e.shiftKey && key === "x") { e.preventDefault(); wrapSelection("`", "`", "code"); }
     });
 
     ["dragover", "dragenter"].forEach(function (name) {
@@ -213,6 +283,12 @@
 
     document.getElementById("insert-image").addEventListener("click", function () {
       dialog.showModal();
+    });
+    var fullscreenBtn = document.getElementById("editor-fullscreen");
+    fullscreenBtn.addEventListener("click", function () {
+      var on = document.body.classList.toggle("editor-fullscreen");
+      fullscreenBtn.textContent = on ? "退出全屏" : "全屏";
+      body.focus();
     });
     document.querySelectorAll(".media-pick").forEach(function (btn) {
       btn.addEventListener("click", function () {

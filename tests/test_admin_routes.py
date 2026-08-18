@@ -263,6 +263,39 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertIn("2026", r.text)
             self.assertIn("2025", r.text)
 
+    def test_posts_bulk_publish_and_delete(self):
+        store.write_markdown(
+            "posts", "bulk-a",
+            {"title": "A", "date": "2026-08-18", "status": "draft"},
+            "正文",
+        )
+        store.write_markdown(
+            "posts", "bulk-b",
+            {"title": "B", "date": "2026-08-18", "status": "draft"},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/bulk",
+                data={"_csrf": csrf, "action": "publish", "slugs": ["bulk-a", "bulk-b"]},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertEqual(
+                store.read_markdown("posts", "bulk-a")[0]["status"], "published"
+            )
+            r = client.post(
+                "/admin/posts/bulk",
+                data={"_csrf": csrf, "action": "delete", "slugs": ["bulk-a"]},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertFalse((settings.content_root / "posts" / "bulk-a.md").exists())
+
     def test_logout_post_requires_csrf(self):
         with TestClient(app) as client:
             csrf = self._login(client)

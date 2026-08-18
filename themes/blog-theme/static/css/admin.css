@@ -359,6 +359,23 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   white-space: nowrap;
   text-align: right;
 }
+.table-col-select { width: 44px; }
+.table-col-select input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--liblog-primary);
+}
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+.bulk-count {
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+}
 .table-col-actions .btn-link,
 .table-col-actions form {
   margin-left: 12px;
@@ -960,6 +977,24 @@ label .custom-select { display: block; }
 textarea.is-dragover {
   border-color: var(--liblog-primary);
   box-shadow: 0 0 0 3px var(--liblog-primary-soft);
+}
+body.editor-fullscreen .admin-sidebar,
+body.editor-fullscreen .editor-preview,
+body.editor-fullscreen .admin-breadcrumb,
+body.editor-fullscreen .admin-main > h1,
+body.editor-fullscreen .flash {
+  display: none;
+}
+body.editor-fullscreen .editor-main {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  padding: 24px;
+  background: var(--liblog-bg);
+  overflow-y: auto;
+}
+body.editor-fullscreen #body {
+  min-height: calc(100vh - 260px);
 }
 .table-title-meta {
   display: block;

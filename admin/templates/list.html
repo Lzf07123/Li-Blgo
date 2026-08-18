@@ -35,12 +35,46 @@
   <input type="hidden" name="sort" value="{{ sort }}">
   <input type="hidden" name="order" value="{{ order }}">
   <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
-  {% if q or status or sort != "date" or order != "desc" or per_page != 50 %}
+{% if q or status or sort != "date" or order != "desc" or per_page != 50 %}
   <a class="btn-link" href="/{{ admin_path }}/{{ section }}">清除</a>
   {% endif %}
 </form>
+{% if section == "posts" %}
+<form id="bulk-form" class="bulk-bar" method="post" action="/{{ admin_path }}/posts/bulk">
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <select name="action" aria-label="批量操作" data-custom-dropdown>
+    <option value="publish">批量发布</option>
+    <option value="draft">批量转草稿</option>
+    <option value="pin">批量置顶</option>
+    <option value="unpin">批量取消置顶</option>
+    <option value="delete">批量删除</option>
+  </select>
+  <button type="submit" class="btn btn-secondary btn-sm">执行</button>
+  <span id="bulk-count" class="bulk-count">已选 0 篇</span>
+</form>
+{% endif %}
 {% include "partials/table.html" %}
 <script>
+  {% if section == "posts" %}
+  (function () {
+    var checks = document.querySelectorAll(".bulk-check");
+    var count = document.getElementById("bulk-count");
+    var form = document.getElementById("bulk-form");
+    function update() {
+      var n = document.querySelectorAll(".bulk-check:checked").length;
+      count.textContent = "已选 " + n + " 篇";
+    }
+    checks.forEach(function (cb) { cb.addEventListener("change", update); });
+    form.addEventListener("submit", function (e) {
+      var action = form.querySelector('select[name="action"]').value;
+      var n = document.querySelectorAll(".bulk-check:checked").length;
+      if (!n) { e.preventDefault(); return; }
+      if (action === "delete" && !confirm("确定删除选中的 " + n + " 篇文章？删除后立即重建公开站。")) {
+        e.preventDefault();
+      }
+    });
+  })();
+  {% endif %}
   document.addEventListener("keydown", function (e) {
     if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) {
       var q = document.getElementById("q");

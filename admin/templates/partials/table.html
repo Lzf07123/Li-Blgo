@@ -27,7 +27,11 @@
       <tr>
       {% for col in table.columns %}
         {% set align_class = ' table-col-right' if col.type == 'number' or col.align == 'right' else '' %}
-        {% if col.type == 'link' %}
+        {% if col.type == 'select' %}
+        <td class="table-col-{{ col.key }}" data-label="{{ col.label }}">
+          <input type="checkbox" class="bulk-check" name="slugs" value="{{ row[col.key] }}">
+        </td>
+        {% elif col.type == 'link' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
           <a href="{{ row[col.key ~ '_href'] }}"{% if row.get(col.key ~ '_external') %} target="_blank" rel="noopener"{% endif %}>{{ row[col.key] }}</a>
           {% if row.get(col.key ~ '_tags') %}
