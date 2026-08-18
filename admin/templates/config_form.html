@@ -24,9 +24,10 @@
           </thead>
           <tbody id="rows-{{ field.name }}">
             {% for row in field.value %}
+            {% set row_index = loop.index0 %}
             <tr>
               {% for col in field.columns %}
-              <td><input type="{{ col.get('input', 'text') }}" name="{{ field.name }}[{{ loop.index0 }}][{{ col.key }}]" value="{{ row.get(col.key, '') }}"></td>
+              <td><input type="{{ col.get('input', 'text') }}" name="{{ field.name }}[{{ row_index }}][{{ col.key }}]" value="{{ row.get(col.key, '') }}"></td>
               {% endfor %}
               <td><button type="button" class="btn-link danger list-remove">删除</button></td>
             </tr>
@@ -75,7 +76,12 @@
         var field = btn.dataset.field;
         var columns = JSON.parse(btn.dataset.columns);
         var tbody = document.getElementById("rows-" + field);
-        var idx = tbody.rows.length;
+        var maxIdx = -1;
+        tbody.querySelectorAll("input").forEach(function (inp) {
+          var m = inp.name.match(/\[(\d+)\]\[/);
+          if (m) { maxIdx = Math.max(maxIdx, parseInt(m[1], 10)); }
+        });
+        var idx = maxIdx + 1;
         var tr = document.createElement("tr");
         columns.forEach(function (col) {
           var td = document.createElement("td");

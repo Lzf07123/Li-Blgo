@@ -216,6 +216,23 @@ class AdminRoutesTest(unittest.TestCase):
             location = urllib.parse.unquote(r.headers.get("location", ""))
             self.assertIn("不可写", location)
 
+    def test_profile_form_uses_row_indexed_input_names(self):
+        (settings.config_root / "profile.yaml").write_text(
+            "name: T\n"
+            "skills:\n"
+            "- name: A\n  icon: a\n"
+            "- name: B\n  icon: b\n",
+            encoding="utf-8",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/config/profile")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('name="skills[0][name]"', r.text)
+            self.assertIn('name="skills[1][name]"', r.text)
+            self.assertIn('name="skills[0][icon]"', r.text)
+            self.assertNotIn('name="skills[2][name]"', r.text)
+
     def test_rewrite_preview_html_rewrites_assets(self):
         html = (
             '<link href="/css/style.css">'
