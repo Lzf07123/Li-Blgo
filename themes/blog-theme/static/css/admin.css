@@ -186,8 +186,9 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 
 /* ---------- 列表与筛选 ---------- */
 .list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-.list-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
+.list-filters { display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; margin: 16px 0; }
 .list-filters input[type="search"] { width: 240px; }
+.list-filters input[type="search"] { flex: 0 1 240px; min-width: 0; }
 .list-filters label { margin: 0; }
 
 /* ============ 后台表格组件（v1–v50 迭代） ============ */
@@ -501,6 +502,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 }
 /* v47 表单筛选：小屏时搜索框占满一行 */
 @media (max-width: 768px) {
+  .list-filters { flex-wrap: wrap; }
   .list-filters input[type="search"] {
     width: 100%;
   }

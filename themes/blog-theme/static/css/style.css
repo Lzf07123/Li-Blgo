@@ -149,11 +149,12 @@ main:focus { outline: none; }
 .footer-inner {
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px 20px;
   justify-content: center;
   align-items: center;
 }
+.footer-inner > * { white-space: nowrap; }
 .footer-copyright { margin: 0; }
 .footer-beian { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .footer-beian a { color: var(--liblog-muted); }
