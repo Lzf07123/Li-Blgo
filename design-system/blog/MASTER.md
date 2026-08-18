@@ -84,13 +84,13 @@
 
 **开源实践 50 轮优化（2026-08-18）：** 后台补 Markdown 工具栏、Ctrl+S、拖拽上传、快捷发布/转草稿、CSV 导出、构建时间、TOP5 看板、媒体按月分组、面包屑、返回顶部与安全响应头；前端补 OG/Twitter/JSON-LD/canonical/RSS、图片懒加载、外链安全、阅读进度、相关文章、标签页、搜索高亮、返回顶部；逐条记录见 `OPTIMIZATION-50.md`。
 
-**P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP/Hugo 全源加速变量 + checksum 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
+**P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP 加速变量 + 仓库内置 Hugo 二进制 SHA256 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
 
 **React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。
 
-**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；媒体目录 `./themes/blog-theme/static/img` 需 bind 挂载（上传图片持久化，容器重建不丢失）；Hugo 二进制按 `TARGETARCH` 自动下载（URL 变量留空即自动拼装）；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）。
+**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；媒体目录 `./themes/blog-theme/static/img` 需 bind 挂载（上传图片持久化，容器重建不丢失）；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
 
-**镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 下载并校验 Hugo v0.165.0、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，以 UID 1000 非 root 运行，内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）。
+**镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 从仓库 `bin/hugo/` COPY 并校验 Hugo v0.165.0（不联网）、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，以 UID 1000 非 root 运行，内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）。
 
 **后台预览 iframe：** nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN`（覆盖全站 DENY），允许后台页面在后台内嵌预览；`client_max_body_size 100m` 支持备份 ZIP 上传（媒体单文件仍由应用层限 5MB）。
 
@@ -99,7 +99,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | validator | 阶段 0：frontmatter/内部链接/图片存在性静态校验 |
-| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc --minify` 构建到 `.build-tmp/`；`SITE_BASEURL` 注入真实域名（禁止 example.com 占位）；Hugo 为固定版本二进制（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum，禁止第三方 Hugo 镜像 |
+| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc --minify` 构建到 `.build-tmp/`；`SITE_BASEURL` 注入真实域名（禁止 example.com 占位）；Hugo 为固定版本二进制（v0.165.0），随仓库提交于 `bin/hugo/`，admin 镜像构建期 COPY + 校验 checksum，禁止第三方 Hugo 镜像 |
 | publisher | 阶段 2：产物抽检通过后原子切换/增量同步到 `output/` |
 | cleaner | 阶段 3：清理临时目录与 Hugo 缓存 |
 | preview | 后台预览：`hugo --buildDrafts` 临时输出，与线上同一渲染器 |

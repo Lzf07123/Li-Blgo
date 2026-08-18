@@ -1,35 +1,25 @@
 # Li&Blog admin 镜像（多阶段构建，运行期非 root）
-# 软件源加速变量（构建时 --build-arg 覆盖）：
+# 软件源与镜像变量（构建时 --build-arg 覆盖）：
+#   DOCKER_MIRROR_PREFIX Docker Hub 镜像名前缀，如 docker.m.daocloud.io/（须以 / 结尾；留空=官方源）
 #   APT_MIRROR          apt 镜像主机，如 mirrors.tuna.tsinghua.edu.cn / mirrors.aliyun.com
 #   PIP_INDEX_URL       pip 镜像，如 https://pypi.tuna.tsinghua.edu.cn/simple
-#   HUGO_DOWNLOAD_URL   Hugo 二进制完整下载地址（可套 GH 加速前缀）
-#   HUGO_CHECKSUM_URL   checksums 文件完整地址（与 Hugo 下载同源加速）
+# Hugo 二进制（v0.165.0）随仓库提交于 bin/hugo/，构建期按 TARGETARCH COPY + SHA256 校验，不联网下载
 
-FROM python:3.12-slim AS builder
+ARG DOCKER_MIRROR_PREFIX=
+FROM ${DOCKER_MIRROR_PREFIX}python:3.12-slim AS builder
 
-ARG APT_MIRROR=deb.debian.org
 ARG PIP_INDEX_URL=https://pypi.org/simple
 ARG TARGETARCH
 ARG HUGO_VERSION=0.165.0
-ARG HUGO_DOWNLOAD_URL=
-ARG HUGO_CHECKSUM_URL=
 
-RUN if [ "${APT_MIRROR}" != "deb.debian.org" ]; then \
-      sed -i "s|http://deb.debian.org|http://${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources \
-      && sed -i "s|http://security.debian.org|http://${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources; \
-    fi \
-    && apt-get update -o Acquire::Retries=3 \
-    && apt-get install -y --no-install-recommends curl ca-certificates \
-    && if [ -z "${HUGO_DOWNLOAD_URL}" ]; then HUGO_DOWNLOAD_URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-${TARGETARCH}.tar.gz"; fi \
-    && if [ -z "${HUGO_CHECKSUM_URL}" ]; then HUGO_CHECKSUM_URL="https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_${HUGO_VERSION}_checksums.txt"; fi \
-    && curl -fsSL "${HUGO_DOWNLOAD_URL}" -o /tmp/hugo.tgz \
-    && curl -fsSL "${HUGO_CHECKSUM_URL}" -o /tmp/checksums.txt \
-    && grep "hugo_extended_${HUGO_VERSION}_linux-${TARGETARCH}.tar.gz" /tmp/checksums.txt | awk '{print $1 "  /tmp/hugo.tgz"}' | sha256sum -c - \
-    && tar -xzf /tmp/hugo.tgz -C /usr/local/bin hugo \
-    && chmod +x /usr/local/bin/hugo \
-    && rm -f /tmp/hugo.tgz /tmp/checksums.txt \
-    && apt-get purge -y curl && apt-get autoremove -y \
-    && rm -rf /var/lib/apt/lists/*
+COPY bin/hugo/hugo_${HUGO_VERSION}_linux-${TARGETARCH} /usr/local/bin/
+COPY bin/hugo/SHA256SUMS /usr/local/bin/SHA256SUMS
+RUN cd /usr/local/bin \
+    && grep "hugo_${HUGO_VERSION}_linux-${TARGETARCH}" SHA256SUMS | sha256sum -c - \
+    && mv "hugo_${HUGO_VERSION}_linux-${TARGETARCH}" hugo \
+    && chmod +x hugo \
+    && rm SHA256SUMS \
+    && ./hugo version
 
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
@@ -37,7 +27,7 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -i "${PIP_INDEX_URL}" -r /tmp/requirements.txt \
     && rm -f /tmp/requirements.txt
 
-FROM python:3.12-slim AS runtime
+FROM ${DOCKER_MIRROR_PREFIX}python:3.12-slim AS runtime
 
 ARG APT_MIRROR=deb.debian.org
 

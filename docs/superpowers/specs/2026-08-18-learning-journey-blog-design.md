@@ -64,7 +64,7 @@ flowchart LR
 要点：
 
 - `GOMEMLIMIT` 显式限制 Hugo 进程内存；`HUGO_NUMWORKERMULTIPLIER` 降低并行度进一步压低峰值
-- Hugo 二进制为固定版本（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum；禁止第三方 Hugo 镜像；构建在容器内执行，不依赖宿主机工具链
+- Hugo 二进制为固定版本（v0.165.0），随仓库提交于 `bin/hugo/`（linux amd64/arm64，含 SHA256 校验），admin 镜像 Dockerfile 按 `TARGETARCH` COPY 并校验，构建不联网；禁止第三方 Hugo 镜像；构建在容器内执行，不依赖宿主机工具链
 - Hugo 原生产出分页列表、标签/归档、RSS、sitemap、搜索 JSON（模板生成），无需自研聚合器
 - **保存单篇 = 全量 Hugo 构建（1–3 秒）**，无需自研增量；"全部重建"同样秒级
 - 可选 `--renderSegments`（home/list/page/taxonomy 分开渲染）供极端小内存场景进一步分段
@@ -248,9 +248,9 @@ services:
 
 环境变量（.env，不进 git）：`LIPASS_ISSUER`、`LIPASS_CLIENT_ID`、`LIPASS_CLIENT_SECRET`、`LIPASS_REDIRECT_URI`、`ADMIN_PATH`、`ADMIN_SESSION_SECRET` 等；模板见 `.env.example`。
 
-软件源加速变量（构建期 `--build-arg`）：`APT_MIRROR`、`PIP_INDEX_URL`、`HUGO_DOWNLOAD_URL`、`HUGO_CHECKSUM_URL`——apt/pip/Hugo 下载全部可走国内镜像或 GH 加速前缀，默认官方源。
+软件源加速变量（构建期 `--build-arg`）：`APT_MIRROR`、`PIP_INDEX_URL`——apt/pip 下载可走国内镜像，默认官方源；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 镜像前缀变量加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）；Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`，构建不联网下载。
 
-镜像结构：多阶段构建（builder 下载并校验 Hugo + 安装 venv 依赖；runtime 只保留 venv/Hugo/ca-certificates），运行期以 UID 1000 非 root 执行，内置 `/healthz` 健康检查；`content/ config/ output/ data/ themes/blog-theme/static/img` 用仓库 bind 挂载，Linux 主机需保证目录对 UID 1000 可写。
+镜像结构：多阶段构建（builder 从仓库 `bin/hugo/` COPY 并校验 Hugo + 安装 venv 依赖；runtime 只保留 venv/Hugo/ca-certificates），运行期以 UID 1000 非 root 执行，内置 `/healthz` 健康检查；`content/ config/ output/ data/ themes/blog-theme/static/img` 用仓库 bind 挂载，Linux 主机需保证目录对 UID 1000 可写。
 
 媒体库删除：删除图片时同步扫描 content Markdown（正文图片语法、HTML img、Hugo figure 短代码、frontmatter cover 等）与 config YAML，清空引用该图片的地址后再触发重建。
 

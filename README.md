@@ -34,6 +34,10 @@ docker compose --profile admin up -d
 
 默认公开站端口 80；如需自定义端口，在 `.env` 中设置 `HTTP_PORT` / `HTTPS_PORT`。
 
+Docker Hub 基础镜像拉取加速：在 `.env` 设置 `DOCKER_MIRROR_PREFIX`（如 `docker.m.daocloud.io/`，必须以 `/` 结尾；留空为官方源），nginx 与 admin 基础镜像都会套用该前缀。
+
+Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 SHA256 校验），容器构建直接 COPY 并校验，不联网下载。
+
 部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
 
 admin 容器以 UID 1000 非 root 运行；Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
