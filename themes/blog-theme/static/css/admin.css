@@ -1001,6 +1001,14 @@ label .custom-select { display: block; }
   .list-filters input[type="search"] { width: 100%; }
   .list-filters { align-items: stretch; }
 }
+@media (max-width: 480px) {
+  .admin-main { padding: 16px 12px 40px; }
+  .stat-cards { gap: 8px; }
+  .stat-card { min-width: calc(50% - 4px); padding: 14px 8px; }
+  .editor-actions .btn { flex: 1 1 100%; }
+  .list-head { align-items: flex-start; flex-direction: column; }
+  .list-actions { width: 100%; justify-content: flex-start; }
+}
 @media (max-width: 820px) {
   .auth-shell, .auth-shell--wide { grid-template-columns: 1fr; max-height: none; }
   .auth-aside { padding: 24px; }
