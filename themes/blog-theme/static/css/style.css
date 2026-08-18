@@ -951,6 +951,59 @@ mark {
   .badge-row { gap: 6px; }
   .search-input { max-width: 100%; }
 }
+/* ---------- 打印：正文干净排版，隐藏导航/氛围/打点 ---------- */
+@media print {
+  body {
+    background: var(--liblog-print-bg);
+    color: var(--liblog-print-fg);
+  }
+  .site-header,
+  .site-footer,
+  .search-modal,
+  .reading-progress,
+  .ambient,
+  .back-top,
+  .to-top,
+  .hero::before,
+  .flow-line,
+  .site-footer img[src*="beacon"] {
+    display: none !important;
+  }
+  .page-shell {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .card,
+  .project-card,
+  .post-card,
+  .journey-panel,
+  .post-nav-item,
+  .toc {
+    border: 0;
+    background: none;
+    box-shadow: none;
+  }
+  .article-body {
+    max-width: none;
+  }
+  .article-body pre,
+  .article-body table,
+  .article-body blockquote,
+  .post-nav,
+  .related-posts {
+    break-inside: avoid;
+  }
+  a {
+    color: var(--liblog-print-fg);
+  }
+  .article-body a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: var(--liblog-muted);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;

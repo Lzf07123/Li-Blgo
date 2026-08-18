@@ -64,6 +64,10 @@
     #7fd4c6
   );
 
+  /* 打印（白纸黑字，不随主题变化） */
+  --liblog-print-bg: #ffffff;
+  --liblog-print-fg: #000000;
+
   /* 科技光效层（CSS-only，低浓度） */
   --liblog-tech-grid-line: rgba(47, 127, 116, 0.09);
   --liblog-tech-grid-accent: rgba(127, 212, 198, 0.22);
