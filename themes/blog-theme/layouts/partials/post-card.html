@@ -1,15 +1,20 @@
 {{ $strings := hugo.Data.strings }}
+{{ $p := . }}
+{{ $level := 2 }}
+{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ end }}
 <article class="post-card">
-  <h3>
-    {{ if .Params.pinned }}<span class="badge badge-pinned">{{ $strings.common.pinned }}</span>{{ end }}
-    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
-  </h3>
+  {{ if eq $level 3 }}<h3>
+  {{ else }}<h2>
+  {{ end }}
+    {{ if $p.Params.pinned }}<span class="badge badge-pinned">{{ $strings.common.pinned }}</span>{{ end }}
+    <a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a>
+  {{ if eq $level 3 }}</h3>{{ else }}</h2>{{ end }}
   <p class="meta">
-    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
-    {{ if .ReadingTime }}<span class="meta-sep">·</span><span>{{ .ReadingTime }} {{ $strings.common.reading_time }}</span>{{ end }}
-    {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
+    <time datetime="{{ $p.Date.Format "2006-01-02" }}">{{ $p.Date.Format "2006-01-02" }}</time>
+    {{ if $p.ReadingTime }}<span class="meta-sep">·</span><span>{{ $p.ReadingTime }} {{ $strings.common.reading_time }}</span>{{ end }}
+    {{ with $p.Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
   {{ $summary := "" }}
-  {{ with .Params.summary }}{{ $summary = . }}{{ else }}{{ $summary = .Summary | plainify }}{{ end }}
+  {{ with $p.Params.summary }}{{ $summary = . }}{{ else }}{{ $summary = $p.Summary | plainify }}{{ end }}
   {{ with $summary }}<p class="post-summary">{{ . | truncate 90 "…" }}</p>{{ end }}
 </article>

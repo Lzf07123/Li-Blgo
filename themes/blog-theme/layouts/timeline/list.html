@@ -6,7 +6,7 @@
     <div class="timeline-node">
       <time class="timeline-date">{{ .Date.Format "2006-01" }}</time>
       <div class="timeline-body">
-        <h3>{{ .Title }}</h3>
+        <h2>{{ .Title }}</h2>
         {{ with .Params.kind }}<p class="meta">{{ . }}</p>{{ end }}
         {{ with .Summary }}<p>{{ . }}</p>{{ end }}
       </div>

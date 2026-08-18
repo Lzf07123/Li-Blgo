@@ -67,7 +67,7 @@
   <nav class="related-posts" aria-label="{{ $strings.home.related_title }}">
     <h2 class="section-title">{{ $strings.home.related_title }}</h2>
     <div class="post-list">
-      {{ range $related }}{{ partial "post-card.html" . }}{{ end }}
+      {{ range $related }}{{ partial "post-card.html" (dict "page" . "level" 3) }}{{ end }}
     </div>
   </nav>
   {{ end }}

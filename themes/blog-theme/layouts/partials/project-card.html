@@ -1,11 +1,15 @@
 {{ $strings := hugo.Data.strings }}
 {{ $tech_colors := hugo.Data.tech }}
+{{ $p := . }}
+{{ $level := 2 }}
+{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ end }}
 <article class="project-card">
-  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-  <p class="project-summary">{{ .Params.summary }}</p>
+  {{ if eq $level 3 }}<h3><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h3>
+  {{ else }}<h2><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h2>{{ end }}
+  <p class="project-summary">{{ $p.Params.summary }}</p>
   <div class="badge-row">
-    {{ range .Params.tech }}{{ partial "badge.html" (dict "label" . "href" "" "color" (index $tech_colors . | default "")) }}{{ end }}
+    {{ range $p.Params.tech }}{{ partial "badge.html" (dict "label" . "href" "" "color" (index $tech_colors . | default "")) }}{{ end }}
   </div>
-  {{ with .Params.repo }}<p class="project-repo"><a class="btn btn-secondary btn-sm" href="{{ . }}" target="_blank" rel="noopener">{{ $strings.common.repo }}</a></p>{{ end }}
-  <p class="meta">{{ $strings.common.status_label }}：{{ .Params.status }}</p>
+  {{ with $p.Params.repo }}<p class="project-repo"><a class="btn btn-secondary btn-sm" href="{{ . }}" target="_blank" rel="noopener">{{ $strings.common.repo }}</a></p>{{ end }}
+  <p class="meta">{{ $strings.common.status_label }}：{{ $p.Params.status }}</p>
 </article>
