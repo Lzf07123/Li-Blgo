@@ -729,6 +729,27 @@ input:focus, select:focus, textarea:focus {
 }
 .article-body code { background: var(--liblog-surface-2); border-radius: 4px; padding: 2px 5px; font-size: 0.875em; }
 .article-body pre code, .article-body .highlight code { background: none; padding: 0; }
+/* Chroma 自适应高亮（类名由 Hugo noClasses=false 输出） */
+.chroma .c, .chroma .c1, .chroma .cm, .chroma .cs {
+  color: var(--liblog-code-comment);
+  font-style: italic;
+}
+.chroma .k, .chroma .kc, .chroma .kd, .chroma .kn, .chroma .kr, .chroma .kt {
+  color: var(--liblog-code-keyword);
+}
+.chroma .s, .chroma .s1, .chroma .s2, .chroma .sb, .chroma .sc,
+.chroma .sd, .chroma .se, .chroma .sh, .chroma .si, .chroma .sx {
+  color: var(--liblog-code-string);
+}
+.chroma .m, .chroma .mf, .chroma .mh, .chroma .mi, .chroma .mo {
+  color: var(--liblog-code-number);
+}
+.chroma .nf, .chroma .nx, .chroma .nb { color: var(--liblog-code-func); }
+.chroma .na, .chroma .nc { color: var(--liblog-code-type); }
+.chroma .ln {
+  color: var(--liblog-code-lineno);
+  user-select: none;
+}
 .article-body table { border-collapse: collapse; width: 100%; margin: 16px 0; contain: layout style; }
 .article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
 .article-body th { background: var(--liblog-surface-2); }

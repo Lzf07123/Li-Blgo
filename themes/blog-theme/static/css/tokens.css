@@ -68,6 +68,15 @@
   --liblog-print-bg: #ffffff;
   --liblog-print-fg: #000000;
 
+  /* 代码高亮（浅色） */
+  --liblog-code-comment: #64736c;
+  --liblog-code-keyword: #2f678f;
+  --liblog-code-string: #2a7c52;
+  --liblog-code-number: #9a5c05;
+  --liblog-code-func: #51488f;
+  --liblog-code-type: #557546;
+  --liblog-code-lineno: #64736c;
+
   /* 科技光效层（CSS-only，低浓度） */
   --liblog-tech-grid-line: rgba(47, 127, 116, 0.09);
   --liblog-tech-grid-accent: rgba(127, 212, 198, 0.22);
@@ -180,4 +189,13 @@
   --liblog-warning-soft-fg: #78350f;
   --liblog-destructive-soft-solid: #fdeeee;
   --liblog-destructive-soft-fg: #7f1d1d;
+
+  /* 代码高亮（深色） */
+  --liblog-code-comment: #b8c0c7;
+  --liblog-code-keyword: #a8d4f0;
+  --liblog-code-string: #86d6ac;
+  --liblog-code-number: #ead48e;
+  --liblog-code-func: #b0a8de;
+  --liblog-code-type: #b0c79e;
+  --liblog-code-lineno: #b8c0c7;
 }
