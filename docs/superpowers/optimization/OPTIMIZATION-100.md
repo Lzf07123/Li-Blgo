@@ -40,7 +40,7 @@
 | v015 | 性能 | 站点 Logo fetchpriority=high + eager + width/height | 完成 | 首页输出 `loading=eager fetchpriority=high width=1265 height=1265` |
 | v016 | 性能 | 首页区块 content-visibility 优化 | 完成 | 构建通过；style.css 含 `content-visibility: auto` 与 `contain-intrinsic-size` |
 | v017 | 性能 | 表格/长列表 contain 优化 | 完成 | 构建通过；style.css 含 2 处 `contain: layout style`，版本号 v42 |
-| v018 | 性能 | nginx HTML no-cache、静态资源长缓存策略 | 计划 | — |
+| v018 | 性能 | nginx HTML no-cache、静态资源长缓存策略 | 完成 | `nginx -t` 语法通过；HTML expires 0，静态资源 7d |
 | v019 | 性能 | nginx sendfile/tcp_nopush/gzip 参数细化 | 计划 | — |
 | v020 | 性能 | 搜索模态焦点陷阱、焦点恢复、aria-expanded | 计划 | — |
 | v021 | 性能 | 锚点 scroll-margin-top 防 sticky 遮挡 | 计划 | — |
