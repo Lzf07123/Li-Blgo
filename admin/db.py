@@ -34,6 +34,13 @@ CREATE TABLE IF NOT EXISTS stats (
   views INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (path, day)
 );
+CREATE TABLE IF NOT EXISTS audit_log (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  at INTEGER NOT NULL,
+  kind TEXT NOT NULL,
+  detail TEXT NOT NULL,
+  ip TEXT NOT NULL DEFAULT ''
+);
 """
 
 
@@ -105,4 +112,30 @@ def create_admin(conn, username: str, password_hash: str) -> None:
 
 def set_oidc_sub(conn, sub: str) -> None:
     conn.execute("UPDATE admin_account SET oidc_sub = ? WHERE id = 1", (sub,))
+    conn.commit()
+
+
+def update_admin(
+    conn, username: Optional[str] = None, password_hash: Optional[str] = None
+) -> None:
+    if username:
+        conn.execute("UPDATE admin_account SET username = ? WHERE id = 1", (username,))
+    if password_hash:
+        conn.execute(
+            "UPDATE admin_account SET password_hash = ? WHERE id = 1", (password_hash,)
+        )
+    conn.commit()
+
+
+def clear_oidc_sub(conn) -> None:
+    conn.execute("UPDATE admin_account SET oidc_sub = NULL WHERE id = 1")
+    conn.execute("DELETE FROM sessions WHERE kind = 'oidc'")
+    conn.commit()
+
+
+def record_audit(conn, kind: str, detail: str, ip: str = "") -> None:
+    conn.execute(
+        "INSERT INTO audit_log (at, kind, detail, ip) VALUES (?, ?, ?, ?)",
+        (int(time.time()), kind, detail, ip),
+    )
     conn.commit()

@@ -767,6 +767,26 @@ label .custom-select { display: block; }
   white-space: pre-wrap;
   word-break: break-word;
 }
+.session-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.session-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 10px;
+  background: var(--liblog-surface-2);
+}
+.session-list form { margin: 0; }
 
 /* ---------- 插入图片对话框 ---------- */
 .media-dialog {

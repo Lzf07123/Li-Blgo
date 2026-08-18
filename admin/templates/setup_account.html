@@ -41,11 +41,29 @@
       <form method="post" action="/{{ admin_path }}/setup/account" class="auth-form">
         <input type="hidden" name="_csrf" value="{{ csrf }}">
         <label>用户名（至少 3 位）<input type="text" name="username" autocomplete="username" required></label>
-        <label>密码（至少 8 位）<input type="password" name="password" autocomplete="new-password" required></label>
-        <label>确认密码<input type="password" name="confirm" autocomplete="new-password" required></label>
+        <label>密码（至少 8 位）<input id="setup-pw" type="password" name="password" autocomplete="new-password" required></label>
+        <label>确认密码<input id="setup-pw2" type="password" name="confirm" autocomplete="new-password" required></label>
+        <p id="setup-pw-hint" class="field-help" role="status"></p>
         <button type="submit" class="btn btn-block">创建并继续</button>
       </form>
     </section>
   </main>
+  <script>
+    (function () {
+      var pw = document.getElementById("setup-pw");
+      var pw2 = document.getElementById("setup-pw2");
+      var hint = document.getElementById("setup-pw-hint");
+      function update() {
+        var msgs = [];
+        if (pw.value && pw.value.length < 8) msgs.push("密码至少 8 位");
+        if (pw.value && !/[A-Z]/.test(pw.value)) msgs.push("建议包含大写字母");
+        if (pw.value && !/[0-9]/.test(pw.value)) msgs.push("建议包含数字");
+        if (pw.value && pw2.value && pw.value !== pw2.value) msgs.push("两次密码不一致");
+        hint.textContent = msgs.join("；");
+      }
+      pw.addEventListener("input", update);
+      pw2.addEventListener("input", update);
+    })();
+  </script>
 </body>
 </html>

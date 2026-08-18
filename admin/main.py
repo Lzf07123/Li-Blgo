@@ -35,7 +35,15 @@ from admin import (
 )
 from admin.ingest import import_beacon_log
 from admin.config import ROOT, settings
-from admin.db import connect, create_admin, get_admin, init_db
+from admin.db import (
+    clear_oidc_sub,
+    connect,
+    create_admin,
+    get_admin,
+    init_db,
+    record_audit,
+    update_admin,
+)
 from admin.session import COOKIE, create_session, delete_session, get_session
 from admin.uploads import read_limited
 
@@ -92,6 +100,12 @@ async def admin_headers(request: Request, call_next):
     if request.url.path.startswith(f"/{settings.admin_path}/"):
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Robots-Tag"] = "noindex"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "SAMEORIGIN"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["Permissions-Policy"] = (
+            "geolocation=(), microphone=(), camera=(), payment=()"
+        )
     return response
 
 
@@ -103,6 +117,7 @@ def healthz():
 
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
+DUMMY_HASH = security.hash_password("dummy-timing-equalizer")
 STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
 ADMIN_BADGE_VARIANTS = {
     "published": "admin-badge--published",
@@ -128,6 +143,7 @@ ADMIN_NAV = [
             {"label": "文案", "path": "/config/strings", "icon": "text"},
             {"label": "首页", "path": "/config/homepage", "icon": "home"},
             {"label": "资料", "path": "/config/profile", "icon": "card"},
+            {"label": "账号", "path": "/settings/account", "icon": "user"},
         ],
     },
     {
@@ -135,6 +151,7 @@ ADMIN_NAV = [
         "items": [
             {"label": "媒体库", "path": "/media", "icon": "image"},
             {"label": "统计", "path": "/stats", "icon": "chart"},
+            {"label": "操作日志", "path": "/logs", "icon": "text"},
             {"label": "内容体检", "path": "/audit", "icon": "card"},
             {"label": "备份", "path": "/backup", "icon": "archive"},
         ],
@@ -197,6 +214,15 @@ def client_ip(request: Request) -> str:
     if forwarded:
         return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
+
+
+def _audit(kind: str, detail: str) -> None:
+    try:
+        conn = connect()
+        record_audit(conn, kind, detail)
+        conn.close()
+    except Exception:
+        pass
 
 
 def current_session(request: Request) -> Optional[dict]:
@@ -298,14 +324,34 @@ def login_submit(
         return render(request, "login.html", {"error": "会话失效，请重试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     if len(password) > 1024:
         return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    if not rate.allow(f"ip:{client_ip(request)}", 30, 60):
+        conn = connect()
+        record_audit(conn, "login_limited", "global ip limit", client_ip(request))
+        conn.close()
+        return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     key = f"{client_ip(request)}:{username}"
     if not rate.allow(key, 5, 60):
+        conn = connect()
+        record_audit(conn, "login_limited", f"username={username}", client_ip(request))
+        conn.close()
         return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     conn = connect()
     admin = get_admin(conn)
     conn.close()
-    if admin is None or not security.verify_password(password, admin["password_hash"]):
+    if admin is None:
+        security.verify_password(password, DUMMY_HASH)
+        conn = connect()
+        record_audit(conn, "login_fail", f"username={username}", client_ip(request))
+        conn.close()
         return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    if not security.verify_password(password, admin["password_hash"]):
+        conn = connect()
+        record_audit(conn, "login_fail", f"username={username}", client_ip(request))
+        conn.close()
+        return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    conn = connect()
+    record_audit(conn, "login_ok", f"username={username}", client_ip(request))
+    conn.close()
     session_id = create_session("local")
     response = RedirectResponse(ap("/"), status_code=303)
     response.set_cookie(
@@ -748,6 +794,7 @@ async def media_upload(
     try:
         data = await read_limited(file, media_store.MAX_SIZE)
         p = media_store.save_upload(file.filename or "", data)
+        _audit("media_upload", p.relative_to(media_store.MEDIA_ROOT).as_posix())
     except ValueError as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
     result, elapsed = build.run_full()
@@ -767,6 +814,7 @@ def media_delete(request: Request, path: str = Form(""), csrf_token: str = Form(
         cleaned_cfg = store.clear_config_image_refs(path)
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
+    _audit("media_delete", path)
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/media?error=已删除但构建失败"), status_code=303)
@@ -815,6 +863,7 @@ def post_status(
         old, body = store.read_markdown("posts", slug)
         old["status"] = status
         store.write_markdown("posts", slug, old, body)
+        _audit("post_status", f"{slug}={status}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
     result, elapsed = build.run_full()
@@ -836,6 +885,7 @@ def post_pin(
         old, body = store.read_markdown("posts", slug)
         old["pinned"] = not old.get("pinned", False)
         store.write_markdown("posts", slug, old, body)
+        _audit("post_pin", f"{slug}={'置顶' if old['pinned'] else '取消置顶'}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
     result, elapsed = build.run_full()
@@ -920,6 +970,54 @@ def audit_page(request: Request):
     )
 
 
+@app.get(ap("/logs"), response_class=HTMLResponse)
+def logs_page(request: Request):
+    require_login(request)
+    conn = connect()
+    rows = conn.execute(
+        "SELECT at, kind, detail, ip FROM audit_log ORDER BY id DESC LIMIT 200"
+    ).fetchall()
+    conn.close()
+    columns = [
+        {"key": "at", "label": "时间", "type": "text"},
+        {"key": "kind", "label": "事件", "type": "badge"},
+        {"key": "detail", "label": "详情", "type": "text"},
+        {"key": "ip", "label": "来源", "type": "text"},
+    ]
+    table = {
+        "caption": "操作日志",
+        "columns": columns,
+        "rows": [
+            {
+                "at": datetime.datetime.fromtimestamp(r["at"]).strftime("%Y-%m-%d %H:%M:%S"),
+                "kind": r["kind"],
+                "kind_label": {
+                    "login_ok": "登录成功",
+                    "login_fail": "登录失败",
+                    "login_limited": "登录限速",
+                    "password_changed": "修改密码",
+                    "session_revoked": "撤销会话",
+                }.get(r["kind"], r["kind"]),
+                "kind_class": (
+                    "admin-badge--published"
+                    if r["kind"] == "login_ok"
+                    else (
+                        "admin-badge--danger"
+                        if r["kind"] in ("login_fail", "login_limited")
+                        else "admin-badge--muted"
+                    )
+                ),
+                "detail": r["detail"],
+                "ip": r["ip"],
+            }
+            for r in rows
+        ],
+        "empty": "暂无日志",
+        "striped": True,
+    }
+    return render(request, "logs.html", {"table": table})
+
+
 def _tag_counts() -> list[dict]:
     counts: dict[str, int] = {}
     for item in store.list_markdown("posts"):
@@ -976,6 +1074,7 @@ def tags_apply(
         changed += 1
     if not changed:
         return RedirectResponse(ap("/tags?error=没有文章使用该标签"), status_code=303)
+    _audit("tags_apply", f"{action}:{old_tag}->{new_tag or '删除'}")
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/tags?error=标签更新后构建失败"), status_code=303)
@@ -1319,6 +1418,7 @@ def posts_bulk(
             continue
     if not changed:
         return RedirectResponse(ap("/posts?error=没有可执行的文章"), status_code=303)
+    _audit("posts_bulk", f"{action}:{changed}")
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/posts?error=批量操作后构建失败"), status_code=303)
@@ -1515,6 +1615,7 @@ def section_save(
                 fm.update({"title": title, "date": date, "kind": kind, "summary": summary})
             store.write_markdown(section, slug, fm, body)
             revisions.save_revision(section, slug, fm, body)
+            _audit("content_save", f"{section}/{slug}")
             if old_slug and old_slug != slug:
                 try:
                     store.delete_markdown(section, old_slug)
@@ -1591,6 +1692,7 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
         return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
     try:
         store.delete_markdown(section, slug)
+        _audit("content_delete", f"{section}/{slug}")
     except ValueError:
         return RedirectResponse(ap(f"/{section}?error=非法标识"), status_code=303)
     result, elapsed = build.run_full()
@@ -1773,3 +1875,115 @@ async def config_save(request: Request, name: str, csrf_token: str = Form("", al
             status_code=303,
         )
     return after_build_redirect(f"/config/{name}")
+
+
+@app.get(ap("/settings/account"), response_class=HTMLResponse)
+def account_page(request: Request):
+    require_login(request)
+    conn = connect()
+    admin = get_admin(conn)
+    current_id = (current_session(request) or {}).get("id")
+    session_rows = conn.execute(
+        "SELECT id, kind, created_at, expires_at FROM sessions ORDER BY created_at DESC LIMIT 20"
+    ).fetchall()
+    conn.close()
+    sessions_ctx = [
+        {
+            "id": r["id"],
+            "kind": "本地" if r["kind"] == "local" else ("OIDC" if r["kind"] == "oidc" else "匿名"),
+            "created": datetime.datetime.fromtimestamp(r["created_at"]).strftime("%Y-%m-%d %H:%M"),
+            "expires": datetime.datetime.fromtimestamp(r["expires_at"]).strftime("%Y-%m-%d %H:%M"),
+            "current": r["id"] == current_id,
+        }
+        for r in session_rows
+    ]
+    return render(
+        request,
+        "account.html",
+        {
+            "username": admin["username"] if admin else "",
+            "bound": bool(admin and admin["oidc_sub"]),
+            "oidc_enabled": oidc.enabled(),
+            "callback_uri": settings.lipass_redirect_uri or "(部署后按实际域名填写)",
+            "sessions": sessions_ctx,
+        },
+    )
+
+
+@app.post(ap("/settings/account"))
+def account_save(
+    request: Request,
+    current_password: str = Form(""),
+    new_username: str = Form(""),
+    new_password: str = Form(""),
+    confirm: str = Form(""),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/settings/account?error=会话失效"), status_code=303)
+    conn = connect()
+    admin = get_admin(conn)
+    if admin is None or not security.verify_password(current_password, admin["password_hash"]):
+        conn.close()
+        return RedirectResponse(ap("/settings/account?error=当前密码不正确"), status_code=303)
+    username = new_username.strip()
+    if len(username) < 3:
+        conn.close()
+        return RedirectResponse(ap("/settings/account?error=用户名至少 3 位"), status_code=303)
+    password_hash = None
+    if new_password:
+        if len(new_password) < 8 or len(new_password) > 1024:
+            conn.close()
+            return RedirectResponse(ap("/settings/account?error=新密码需 8-1024 位"), status_code=303)
+        if new_password != confirm:
+            conn.close()
+            return RedirectResponse(ap("/settings/account?error=两次新密码不一致"), status_code=303)
+        password_hash = security.hash_password(new_password)
+    update_admin(conn, username=username, password_hash=password_hash)
+    current_id = (current_session(request) or {}).get("id")
+    if password_hash:
+        conn.execute("DELETE FROM sessions WHERE id != ?", (current_id,))
+    conn.commit()
+    conn.close()
+    if password_hash:
+        _audit("password_changed", "管理员密码已修改")
+    return RedirectResponse(ap("/settings/account?ok=账号设置已更新"), status_code=303)
+
+
+@app.post(ap("/settings/account/oidc/bind"))
+def account_oidc_bind(request: Request, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/settings/account?error=会话失效"), status_code=303)
+    try:
+        return oidc.authorize_start(request, "settings_bind")
+    except Exception:
+        return RedirectResponse(ap("/settings/account?error=OIDC未配置或启动失败"), status_code=303)
+
+
+@app.post(ap("/settings/account/oidc/unbind"))
+def account_oidc_unbind(request: Request, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/settings/account?error=会话失效"), status_code=303)
+    conn = connect()
+    clear_oidc_sub(conn)
+    conn.close()
+    return RedirectResponse(ap("/settings/account?ok=已解绑 OIDC"), status_code=303)
+
+
+@app.post(ap("/settings/account/sessions/{session_id}/revoke"))
+def account_session_revoke(
+    request: Request, session_id: str, csrf_token: str = Form("", alias="_csrf")
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/settings/account?error=会话失效"), status_code=303)
+    current_id = (current_session(request) or {}).get("id")
+    if session_id == current_id:
+        return RedirectResponse(ap("/settings/account?error=不能撤销当前会话"), status_code=303)
+    delete_session(session_id)
+    _audit("session_revoked", f"session={session_id[:8]}…")
+    return RedirectResponse(ap("/settings/account?ok=已撤销会话"), status_code=303)
+
