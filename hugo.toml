@@ -31,6 +31,20 @@ home = ["HTML", "RSS", "LLMS", "Security", "Humans"]
   changefreq = "weekly"
   priority = 0.5
 
+[related]
+  includeNewer = true
+  threshold = 80
+  toLower = true
+
+[[related.indices]]
+  name = "tags"
+  cardinalityThreshold = 3
+  weight = 80
+
+[[related.indices]]
+  name = "date"
+  weight = 20
+
 [outputFormats.Search]
 mediaType = "application/json"
 baseName = "index"
