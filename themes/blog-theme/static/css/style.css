@@ -171,6 +171,18 @@ main:focus { outline: none; }
   flex: none;
   color: var(--liblog-muted);
 }
+.beian-icon svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+.beian-icon-img {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 3px;
+}
 .beian-link:hover .beian-icon { color: var(--liblog-primary); }
 .beian-text { white-space: nowrap; }
 

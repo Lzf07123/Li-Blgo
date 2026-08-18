@@ -6,13 +6,21 @@
     <div class="footer-beian">
       {{ with $brand.icp }}
       <a class="beian-link" href="{{ $brand.icp_url }}" rel="nofollow">
-        <span class="beian-icon" aria-hidden="true">{{ $brand.icp_icon | safeHTML }}</span>
+        <span class="beian-icon" aria-hidden="true">
+          {{ if or (hasPrefix $brand.icp_icon "/") (strings.Contains $brand.icp_icon ".") }}
+          <img class="beian-icon-img" src="{{ $brand.icp_icon | relURL }}" alt="">
+          {{ else if hasPrefix $brand.icp_icon "<svg" }}{{ $brand.icp_icon | safeHTML }}{{ end }}
+        </span>
         <span class="beian-text">{{ . }}</span>
       </a>
       {{ end }}
       {{ with $brand.police }}
       <a class="beian-link" href="{{ $brand.police_url }}" rel="nofollow">
-        <span class="beian-icon" aria-hidden="true">{{ $brand.police_icon | safeHTML }}</span>
+        <span class="beian-icon" aria-hidden="true">
+          {{ if or (hasPrefix $brand.police_icon "/") (strings.Contains $brand.police_icon ".") }}
+          <img class="beian-icon-img" src="{{ $brand.police_icon | relURL }}" alt="">
+          {{ else if hasPrefix $brand.police_icon "<svg" }}{{ $brand.police_icon | safeHTML }}{{ end }}
+        </span>
         <span class="beian-text">{{ if not (strings.Contains . $footer.police_label) }}{{ $footer.police_label }} {{ end }}{{ . }}</span>
       </a>
       {{ end }}
