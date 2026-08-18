@@ -27,6 +27,10 @@ style = "friendly"
 [outputs]
 home = ["HTML", "RSS"]
 
+[sitemap]
+  changefreq = "weekly"
+  priority = 0.5
+
 [outputFormats.Search]
 mediaType = "application/json"
 baseName = "index"

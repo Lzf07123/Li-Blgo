@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+{{ if hasPrefix .Site.BaseURL "http" }}Sitemap: {{ .Site.BaseURL }}sitemap.xml
+{{ end }}
