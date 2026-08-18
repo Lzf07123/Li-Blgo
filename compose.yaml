@@ -12,6 +12,8 @@ services:
 
   admin:
     profiles: ["admin"]
+    # 镜像内以 UID 1000 非 root 运行；仓库 bind 挂载目录需对 UID 1000 可写
+    init: true
     build:
       context: .
       args:

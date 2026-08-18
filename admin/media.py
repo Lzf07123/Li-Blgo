@@ -20,6 +20,7 @@ ALLOWED_EXT = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif"}
 MAX_SIZE = 5 * 1024 * 1024
 MAX_DIMENSION = 1600
 OPTIMIZE_BYTES = 1_500_000
+MAX_PIXELS = 50_000_000
 MEDIA_ROOT = Path(
     os.getenv("MEDIA_ROOT", str(ROOT / "themes" / "blog-theme" / "static" / "img"))
 )
@@ -62,9 +63,12 @@ def _optimize_image(data: bytes) -> bytes:
     """过大/过重的静态图片自动缩放到 MAX_DIMENSION 内并优化体积。"""
     try:
         img = Image.open(io.BytesIO(data))
-        img.load()
     except UnidentifiedImageError:
         raise ValueError("无法识别的图片文件")
+    width, height = img.size
+    if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
+        raise ValueError("图片尺寸过大")
+    img.load()
     fmt = (img.format or "").upper()
     if getattr(img, "is_animated", False):
         return data
@@ -118,6 +122,8 @@ def delete_media(rel: str) -> None:
     p = safe_media_path(rel)
     if not p.is_file():
         raise FileNotFoundError("文件不存在")
+    if p.suffix.lower() not in ALLOWED_EXT:
+        raise ValueError("仅支持删除媒体图片")
     p.unlink()
     for d in sorted(p.parents, key=lambda x: len(x.parts), reverse=True):
         if d == MEDIA_ROOT:

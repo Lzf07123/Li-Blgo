@@ -1,57 +1,122 @@
 /* 后台样式：只使用 --liblog-* 令牌 */
 .admin-body { background: var(--liblog-bg); color: var(--liblog-fg); min-height: 100vh; }
 
-/* ---------- 页头与导航 ---------- */
-.admin-header {
+/* ---------- 侧边栏布局与导航 ---------- */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr);
+  min-height: 100vh;
+}
+.admin-sidebar {
   position: sticky;
   top: 0;
-  z-index: 40;
-  padding: 12px 32px;
-  background: var(--liblog-surface);
-  border-bottom: 1px solid var(--liblog-border);
-  box-shadow: var(--liblog-shadow-sm);
-}
-.admin-header-top {
+  height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 20px 16px 16px;
+  background: var(--liblog-surface);
+  border-right: 1px solid var(--liblog-border);
+  overflow-y: auto;
 }
-.admin-brand { font-weight: 800; color: var(--liblog-primary); }
-.admin-header-actions { display: flex; align-items: center; gap: 8px; }
-.admin-nav {
+.admin-sidebar-head { margin-bottom: 16px; }
+.admin-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--liblog-primary);
+}
+.admin-brand-mark {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--liblog-primary-soft);
+  color: var(--liblog-primary);
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.admin-sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
   font-size: 0.9rem;
 }
-.admin-nav-group {
+.admin-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.admin-nav-group-label {
+  margin: 0 0 4px 10px;
   color: var(--liblog-muted);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
-  padding-left: 10px;
-  border-left: 2px solid var(--liblog-border);
-  margin-left: 6px;
+  letter-spacing: 0.08em;
 }
-.admin-nav a {
-  display: inline-flex;
+.admin-nav-link {
+  display: flex;
   align-items: center;
-  min-height: 36px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  gap: 10px;
+  min-height: 38px;
+  padding: 7px 10px;
+  border-radius: 10px;
   color: var(--liblog-fg);
+  text-decoration: none;
 }
-.admin-nav a:hover { background: var(--liblog-surface-2); text-decoration: none; }
-.admin-nav a.active {
+.admin-nav-logout-btn {
+  width: 100%;
+  background: none;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.admin-nav-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--liblog-muted);
+}
+.admin-nav-link:hover {
+  background: var(--liblog-surface-2);
+  color: var(--liblog-fg);
+  text-decoration: none;
+}
+.admin-nav-link:hover .admin-nav-icon { color: var(--liblog-primary); }
+.admin-nav-link.active {
   background: var(--liblog-primary-soft);
   color: var(--liblog-primary);
   font-weight: 600;
 }
-.admin-main { width: 100%; max-width: 1200px; margin: 0 auto; padding: 28px 32px 64px; }
+.admin-nav-link.active .admin-nav-icon { color: var(--liblog-primary); }
+.admin-nav-link:focus-visible {
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: 2px;
+}
+.admin-sidebar-foot {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--liblog-border);
+}
+.admin-sidebar-foot .admin-nav-link { color: var(--liblog-muted); }
+.admin-sidebar-foot .admin-nav-link:hover {
+  background: var(--liblog-destructive-soft);
+  color: var(--liblog-destructive);
+}
+.admin-sidebar-foot .admin-nav-link:hover .admin-nav-icon { color: var(--liblog-destructive); }
+.admin-main { min-width: 0; width: 100%; max-width: 1200px; padding: 28px 40px 64px; }
+.svg-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
 
 /* ---------- 认证页（登录 / 设置向导） ---------- */
 .auth-page {
@@ -186,6 +251,8 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 
 /* ---------- 列表与筛选 ---------- */
 .list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.list-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.list-head > .list-actions { margin-left: auto; }
 .list-filters { display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; margin: 16px 0; }
 .list-filters input[type="search"] { width: 240px; }
 .list-filters input[type="search"] { flex: 0 1 240px; min-width: 0; }
@@ -607,6 +674,82 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   background: var(--liblog-surface);
 }
 .upload-box small { color: var(--liblog-muted); }
+
+/* 上传进度组件（内置设计：令牌配色 + 进度条） */
+.upload-progress-panel {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+  background: var(--liblog-surface);
+}
+.upload-progress-overview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.upload-progress-overview .upload-progress { flex: 1; }
+.upload-file-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.upload-file {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(120px, 220px) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 10px;
+  background: var(--liblog-surface-2);
+}
+.upload-file-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-file-size { color: var(--liblog-muted); font-size: 0.75rem; white-space: nowrap; }
+.upload-progress {
+  display: block;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--liblog-border);
+  overflow: hidden;
+}
+.upload-progress-bar {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--liblog-primary);
+  transition: width var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.upload-status { color: var(--liblog-muted); font-size: 0.8rem; white-space: nowrap; }
+.upload-status.is-done { color: var(--liblog-success); }
+.upload-status.is-error { color: var(--liblog-destructive); }
+.upload-progress-inline {
+  display: inline-block;
+  width: 90px;
+  height: 6px;
+  vertical-align: middle;
+  border-radius: 999px;
+  background: var(--liblog-surface-2);
+  overflow: hidden;
+}
+.table-thumb {
+  width: 64px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+  background: var(--liblog-surface-2);
+}
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -642,13 +785,41 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   .editor-layout { grid-template-columns: 1fr; }
   .editor-preview { position: static; }
   .preview-frame { height: 480px; min-height: 0; }
-  .admin-nav { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
-  .admin-nav-group { flex: none; }
+  .admin-layout { display: block; }
+  .admin-sidebar {
+    position: sticky;
+    top: 0;
+    height: auto;
+    max-height: none;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--liblog-border);
+    gap: 0;
+  }
+  .admin-sidebar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .admin-sidebar-actions { margin-top: 0; }
+  .admin-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .admin-nav-group { flex: none; flex-direction: row; gap: 6px; }
+  .admin-nav-group-label { display: none; }
+  .admin-nav-link { white-space: nowrap; min-height: 36px; padding: 6px 10px; }
+  .admin-sidebar-foot { margin-top: 0; padding-top: 8px; border-top: 0; }
+  .admin-sidebar-foot .admin-nav-link { margin-left: auto; }
 }
 @media (max-width: 768px) {
-  .admin-header { flex-direction: column; align-items: stretch; padding: 10px 16px; }
   .admin-main { padding: 20px 16px 48px; }
-  .admin-header-top { margin-bottom: 8px; }
   .table-shell:not(.table-shell--cards) { display: block; overflow-x: auto; }
   .stat-card { min-width: calc(50% - 8px); }
   .media-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
@@ -849,3 +1020,112 @@ textarea.is-dragover {
   font-weight: 500;
   line-height: 1.3;
 }
+.admin-tag--pinned {
+  background: var(--liblog-warning-soft);
+  color: var(--liblog-warning);
+  border-color: var(--liblog-warning);
+  font-weight: 700;
+}
+
+/* ---------- 后台视觉全量补齐 ---------- */
+.admin-main h1 {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  line-height: 1.3;
+}
+.admin-main h2 {
+  margin: 26px 0 10px;
+  font-size: 1.15rem;
+  line-height: 1.4;
+}
+.admin-main h3 {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+.admin-main p { margin: 10px 0; }
+.admin-main code {
+  padding: 2px 6px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 6px;
+  background: var(--liblog-surface-2);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.85em;
+}
+.admin-main pre {
+  padding: 12px 14px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 10px;
+  background: var(--liblog-surface-2);
+  overflow-x: auto;
+}
+.admin-card {
+  padding: 20px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 16px;
+  background: var(--liblog-surface);
+  box-shadow: var(--liblog-shadow-sm);
+}
+.admin-card + .admin-card,
+.admin-card + .form-actions { margin-top: 16px; }
+.flash--error {
+  background: var(--liblog-destructive-soft);
+  color: var(--liblog-destructive);
+}
+.admin-main input[type="checkbox"],
+.admin-main input[type="radio"],
+.auth-form input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  accent-color: var(--liblog-primary);
+}
+.admin-main label:has(> input[type="checkbox"]),
+.admin-main label:has(> input[type="radio"]),
+.auth-form label:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 14px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 8px;
+  background: var(--liblog-surface-2);
+  color: var(--liblog-fg);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--liblog-primary-soft);
+  color: var(--liblog-primary);
+}
+.upload-box input[type="file"] { flex: 1; min-width: 220px; }
+.auth-form input[type="file"] { padding: 8px 0; }
+.admin-main hr {
+  margin: 18px 0;
+  border: 0;
+  border-top: 1px solid var(--liblog-border);
+}
+.import-errors {
+  margin: 10px 0 0;
+  padding: 10px 14px 10px 30px;
+  border: 1px solid var(--liblog-destructive);
+  border-radius: 10px;
+  background: var(--liblog-destructive-soft);
+  color: var(--liblog-destructive);
+  font-size: 0.85rem;
+}
+.import-errors li { margin: 2px 0; }
+.import-source {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+}
+.import-source legend { font-weight: 700; padding: 0 6px; }
+.import-source-pane { margin-top: 10px; }
+.import-source-pane[hidden] { display: none; }

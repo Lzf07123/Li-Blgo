@@ -1,7 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  {% if section in ["posts", "projects", "timeline"] %}
+  <a href="/{{ admin_path }}/{{ section }}">{{ label }}</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">{{ slug or "新建" }}</span>
+  {% else %}
+  <span aria-current="page">{{ label }}</span>
+  {% endif %}
+</nav>
 <h1>{{ label }}{% if slug %}: {{ slug }}{% endif %}</h1>
-{% if error %}<p class="flash">{{ error }}</p>{% endif %}
+{% if error %}<p class="flash flash--error" role="alert">{{ error }}</p>{% endif %}
 <div class="editor-layout">
   <div class="editor-main">
     <form id="edit-form" method="post" action="/{{ admin_path }}/{{ section }}/save">
@@ -21,6 +32,8 @@
               <option value="{{ option }}" {% if option == value %}selected{% endif %}>{{ option }}</option>
               {% endfor %}
             </select>
+          {% elif ftype == "checkbox" %}
+            <input type="checkbox" name="{{ name }}" value="1" {% if value %}checked{% endif %}>
           {% elif ftype == "textarea" %}
             <textarea name="{{ name }}" rows="3">{{ value }}</textarea>
           {% else %}
@@ -39,6 +52,7 @@
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="list" title="列表">列表</button>
           <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
           <span id="body-count" class="editor-count"></span>
+          <span id="upload-progress-inline" class="upload-progress-inline" hidden><i id="upload-progress-inline-bar" class="upload-progress-bar"></i></span>
         </div>
         <small class="field-help">支持把图片直接拖进正文，会自动上传并插入。</small>
         <textarea id="body" name="body" rows="24" class="mono">{{ body or "" }}</textarea>
@@ -160,21 +174,41 @@
     body.addEventListener("drop", function (e) {
       var file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
       if (!file) return;
+      var progressWrap = document.getElementById("upload-progress-inline");
+      var progressBar = document.getElementById("upload-progress-inline-bar");
+      progressWrap.hidden = false;
+      progressBar.style.width = "0%";
       var data = new FormData();
       data.append("_csrf", CSRF);
       data.append("file", file);
-      count.textContent = "正在上传图片…";
-      fetch("/{{ admin_path }}/media/upload-json", { method: "POST", body: data })
-        .then(function (r) { return r.json(); })
-        .then(function (res) {
-          if (res.url) {
-            insertAtCursor("![](" + res.url + ")\n");
-            count.textContent = "图片已插入";
-          } else {
-            count.textContent = res.error || "上传失败";
-          }
-        })
-        .catch(function () { count.textContent = "上传失败"; });
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/{{ admin_path }}/media/upload-json");
+      xhr.upload.onprogress = function (ev) {
+        if (!ev.lengthComputable) return;
+        var pct = Math.round(ev.loaded * 100 / ev.total);
+        progressBar.style.width = pct + "%";
+        count.textContent = "上传中 " + pct + "%";
+      };
+      xhr.onload = function () {
+        var res = {};
+        try { res = JSON.parse(xhr.responseText); } catch (err) {}
+        if (xhr.status === 200 && res.url) {
+          insertAtCursor("![](" + res.url + ")\n");
+          progressBar.style.width = "100%";
+          count.textContent = "图片已插入";
+        } else {
+          count.textContent = res.error || "上传失败";
+        }
+        setTimeout(function () {
+          progressWrap.hidden = true;
+          progressBar.style.width = "0%";
+        }, 1200);
+      };
+      xhr.onerror = function () {
+        count.textContent = "上传失败";
+        progressWrap.hidden = true;
+      };
+      xhr.send(data);
     });
 
     document.getElementById("insert-image").addEventListener("click", function () {

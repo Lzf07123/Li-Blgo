@@ -1,6 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 {% set edit_url = '/' + admin_path + '/' + section + '/edit' if not slug else '/' + admin_path + '/' + section + '/' + slug + '/edit' %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <a href="{{ edit_url }}">编辑</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">预览</span>
+</nav>
 <h1>预览</h1>
 {% if exists %}
   <div class="form-actions">

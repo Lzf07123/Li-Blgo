@@ -4,13 +4,13 @@ slug: liblog
 tagline: 一次记录，见证每一步成长
 promise: 每一篇都是真实足迹，每次回顾都有迹可循
 persona: 安静的同行者
-logo: ''
-favicon: ''
-copyright: © {year} 黎智锋
+logo: /img/2026/08/img-5813-09f98e.jpeg
+favicon: /img/2026/08/img-5813-09f98e.jpeg
+copyright: © {year} LI&Blog
 icp: 粤ICP备2026008710号-1
 icp_url: https://beian.miit.gov.cn/
-icp_icon: '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 1.5 13 3v4c0 3.2-2 5.8-5 7.5C5 12.8 3 10.2 3 7V3l5-1.5z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 5.6l.7 1.4 1.5.2-1.1 1 .3 1.5-1.4-.7-1.4.7.3-1.5-1.1-1 1.5-.2L8 5.6z" fill="currentColor"/></svg>'
+icp_icon: /img/2026/08/icp-9ff73f.webp
 police: 粤公网安备44010402003600号
 police_url: https://www.beian.gov.cn/
-police_icon: '<svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><path d="M8 1.5 13 3v4c0 3.2-2 5.8-5 7.5C5 12.8 3 10.2 3 7V3l5-1.5z" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 5.5l.8 1.7 1.9.2-1.4 1.3.4 1.8L8 9.8l-1.7 1.2.4-1.8L5.3 7.4l1.9-.2L8 5.5z" fill="currentColor"/></svg>'
+police_icon: /img/2026/08/police-599497.webp
 theme_key: liblog-theme

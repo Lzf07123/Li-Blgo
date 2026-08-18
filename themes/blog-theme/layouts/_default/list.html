@@ -2,7 +2,10 @@
 <h1 class="page-title">{{ .Title }}</h1>
 {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
 <div class="post-list">
-  {{ range .Paginator.Pages }}{{ partial "post-card.html" . }}{{ end }}
+  {{ $pinned := where .Paginator.Pages "Params.pinned" true }}
+  {{ $normal := where .Paginator.Pages "Params.pinned" "ne" true }}
+  {{ range $pinned.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
+  {{ range $normal.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
 </div>
 {{ template "_internal/pagination.html" . }}
 

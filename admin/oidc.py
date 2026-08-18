@@ -54,7 +54,7 @@ def authorize_start(request: Request, flow: str) -> RedirectResponse:
 
 def _check_at_hash(access_token: str, at_hash: Optional[str]) -> bool:
     if not at_hash:
-        return True
+        return False
     digest = hashlib.sha256(access_token.encode("utf-8")).digest()[:16]
     return base64.urlsafe_b64encode(digest).rstrip(b"=").decode() == at_hash
 
@@ -66,7 +66,7 @@ async def handle_callback(request: Request):
     token = await client.authorize_access_token(request)
     claims = client.parse_id_token(request, token)
     access_token = token.get("access_token", "")
-    if not _check_at_hash(access_token, claims.get("at_hash")):
+    if not access_token or not _check_at_hash(access_token, claims.get("at_hash")):
         raise ValueError("at_hash 校验失败")
     metadata = await client.load_server_metadata()
     async with httpx.AsyncClient() as hx:
@@ -78,6 +78,9 @@ async def handle_callback(request: Request):
         resp.raise_for_status()
         userinfo = resp.json()
     sub = userinfo["sub"]
+    id_sub = claims.get("sub")
+    if not id_sub or id_sub != sub:
+        raise ValueError("userinfo sub 与 id_token sub 不一致")
     sid = claims.get("sid")
 
     conn = connect()
@@ -94,6 +97,24 @@ async def handle_callback(request: Request):
         return "denied", sub, None, sid
     session_id = create_session("oidc", sub=sub, sid=sid)
     return "ok", sub, session_id, sid
+
+
+def _jti_seen(jti: str, exp: int) -> bool:
+    """记录并检查回程登出 jti；已存在时返回 True（防重放）。"""
+    conn = connect()
+    try:
+        row = conn.execute("SELECT 1 FROM jti_cache WHERE jti = ?", (jti,)).fetchone()
+        if row:
+            return True
+        now = int(time.time())
+        conn.execute("DELETE FROM jti_cache WHERE exp < ?", (now,))
+        conn.execute(
+            "INSERT OR IGNORE INTO jti_cache (jti, exp) VALUES (?, ?)", (jti, exp)
+        )
+        conn.commit()
+        return False
+    finally:
+        conn.close()
 
 
 async def backchannel_logout(request: Request) -> bool:
@@ -123,9 +144,8 @@ async def backchannel_logout(request: Request) -> bool:
     )
     if not valid:
         return False
-    conn = connect()
-    conn.execute("INSERT OR IGNORE INTO jti_cache (jti, exp) VALUES (?, ?)", (claims["jti"], claims["exp"]))
-    conn.commit()
-    conn.close()
+    if _jti_seen(claims["jti"], claims["exp"]):
+        # 已处理过的登出通知：直接确认，避免重复下线新会话
+        return True
     delete_by_oidc(claims.get("sub", ""), claims.get("sid", ""))
     return True

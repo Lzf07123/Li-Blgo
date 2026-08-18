@@ -1,1 +1,7 @@
-<img src="{{ .Destination | safeURL }}" alt="{{ .Text }}" loading="lazy" decoding="async">
+{{ $dest := .Destination }}
+{{ $allowed := or (hasPrefix $dest "http://") (hasPrefix $dest "https://") (hasPrefix $dest "/") (hasPrefix $dest "./") (hasPrefix $dest "../") (hasPrefix $dest "data:image/") }}
+{{ if $allowed }}
+<img src="{{ $dest | safeURL }}" alt="{{ .Text }}" loading="lazy" decoding="async">
+{{ else }}
+<span>[图片地址被过滤]</span>
+{{ end }}

@@ -10,6 +10,7 @@ output/
 .pytest_cache/
 *.log
 .build-tmp/
+.build.lock
 .preview-out/
 bin/
 .hugo_build.lock

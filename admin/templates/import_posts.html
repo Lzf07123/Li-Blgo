@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <a href="/{{ admin_path }}/posts">文章</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">批量导入</span>
+</nav>
+<div class="list-head">
+  <h1>批量导入文章</h1>
+  <a class="btn btn-ghost" href="/{{ admin_path }}/posts">返回文章</a>
+</div>
+{% if flash %}<p class="flash" role="status">{{ flash }}</p>{% endif %}
+{% if result %}
+<div class="admin-card">
+  <h2>导入结果</h2>
+  <p>导入 {{ result.imported }} 篇，跳过 {{ result.skipped }} 篇，失败 {{ result.errors|length }} 个文件{% if build_elapsed %}（重建 {{ build_elapsed }}s）{% endif %}。</p>
+  {% if result.files %}
+  <div class="table-shell-wrap">
+    <table class="table-shell table-shell--cards">
+      <thead>
+        <tr>
+          <th scope="col">文件</th>
+          <th scope="col">标识</th>
+          <th scope="col">标题</th>
+          <th scope="col">日期</th>
+          <th scope="col">标签</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in result.files %}
+        <tr>
+          <td data-label="文件">{{ f.filename }}</td>
+          <td data-label="标识"><code>{{ f.slug }}</code></td>
+          <td data-label="标题">{{ f.title }}</td>
+          <td data-label="日期">{{ f.date }}</td>
+          <td data-label="标签">{{ f.tags|join("、") or "—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  {% if result.errors %}
+  <ul class="import-errors">
+    {% for err in result.errors[:20] %}
+    <li>{{ err }}</li>
+    {% endfor %}
+    {% if result.errors|length > 20 %}<li>… 还有 {{ result.errors|length - 20 }} 条错误未显示</li>{% endif %}
+  </ul>
+  {% endif %}
+  {% if result.imported %}
+  <div class="form-actions">
+    <a class="btn" href="/{{ admin_path }}/posts">返回文章列表</a>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+<div class="admin-card">
+<p class="field-help">支持一次选择多个 .md/.markdown 文件、直接选择整个文件夹（自动遍历所有子文件夹），或上传包含 Markdown 的 .zip。已存在的 slug 默认跳过，勾选“覆盖同名”会覆盖；导入完成后统一重建一次。</p>
+<form method="post" action="/{{ admin_path }}/posts/import" enctype="multipart/form-data" data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <fieldset class="import-source">
+    <legend>导入来源（二选一）</legend>
+    <label><input type="radio" name="source_mode" value="files" checked> Markdown / ZIP 文件</label>
+    <label><input type="radio" name="source_mode" value="folder"> 选择文件夹（自动遍历子文件夹）</label>
+    <div id="source-files" class="import-source-pane">
+      <label>Markdown / ZIP 文件
+        <input type="file" name="files" multiple accept=".md,.markdown,.zip" required>
+      </label>
+    </div>
+    <div id="source-folder" class="import-source-pane" hidden>
+      <label>选择文件夹
+        <input type="file" name="files" webkitdirectory>
+      </label>
+    </div>
+  </fieldset>
+  <label><input type="checkbox" name="overwrite" value="1"> 覆盖同名文章</label>
+  <div class="form-actions">
+    <button type="submit" class="btn">导入并重建</button>
+  </div>
+</form>
+<script>
+  (function () {
+    var radios = document.querySelectorAll('input[name="source_mode"]');
+    var panes = {
+      files: document.getElementById("source-files"),
+      folder: document.getElementById("source-folder")
+    };
+    function sync() {
+      var checked = document.querySelector('input[name="source_mode"]:checked');
+      if (!checked) return;
+      var mode = checked.value;
+      panes.files.hidden = mode !== "files";
+      panes.folder.hidden = mode !== "folder";
+      var activeInput = panes[mode].querySelector('input[type="file"]');
+      var otherInput = panes[mode === "files" ? "folder" : "files"].querySelector('input[type="file"]');
+      otherInput.value = "";
+      activeInput.required = true;
+      otherInput.required = false;
+    }
+    radios.forEach(function (radio) {
+      radio.addEventListener("change", sync);
+    });
+    sync();
+  })();
+</script>
+</div>
+{% endblock %}

@@ -10,7 +10,7 @@
       <input id="search-modal-input" class="search-modal-input" type="search"
              placeholder="{{ $strings.home.search_placeholder }}" autocomplete="off"
              aria-label="{{ $strings.common.search_label }}">
-      <button type="button" class="search-modal-close" data-close-search aria-label="关闭">
+      <button type="button" class="search-modal-close" data-close-search aria-label="{{ $strings.common.close }}">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -29,9 +29,9 @@
       </div>
     </div>
     <div class="search-modal-hints">
-      <span><kbd>Esc</kbd> 关闭</span>
-      <span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
-      <span><kbd>Enter</kbd> 打开</span>
+      <span><kbd>Esc</kbd> {{ $strings.common.close }}</span>
+      <span><kbd>↑</kbd><kbd>↓</kbd> {{ $strings.common.search_select }}</span>
+      <span><kbd>Enter</kbd> {{ $strings.common.search_open }}</span>
     </div>
   </div>
 </div>
@@ -49,6 +49,19 @@
     var items = [];
     var activeIndex = -1;
     var lastTrigger = null;
+    var indexPromise = null;
+
+    function ensureIndex() {
+      if (!indexPromise) {
+        indexPromise = fetch("/search/index.json")
+          .then(function (r) { return r.json(); })
+          .then(function (posts) {
+            fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
+          })
+          .catch(function () { indexPromise = null; });
+      }
+      return indexPromise;
+    }
 
     function setActive(index) {
       activeIndex = index;
@@ -109,6 +122,7 @@
       input.value = "";
       render("");
       input.focus();
+      ensureIndex();
     }
     function close() {
       modal.hidden = true;
@@ -132,12 +146,6 @@
       if (e.key === "ArrowUp") { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
       if (e.key === "Enter" && activeIndex >= 0 && items[activeIndex]) { window.location.href = items[activeIndex].href; }
     });
-
-    fetch("/search/index.json")
-      .then(function (r) { return r.json(); })
-      .then(function (posts) {
-        fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
-      });
 
     input.addEventListener("input", function () { render(input.value.trim()); });
   })();

@@ -4,6 +4,8 @@
 {{ $home := hugo.Data.homepage }}
 {{ $strings := hugo.Data.strings }}
 {{ $posts := where .Site.RegularPages "Section" "posts" }}
+{{ $pinnedPosts := where $posts "Params.pinned" true }}
+{{ $normalPosts := where $posts "Params.pinned" "ne" true }}
 {{ $projects := where .Site.RegularPages "Section" "projects" }}
 {{ $timeline := where .Site.RegularPages "Section" "timeline" }}
 
@@ -60,7 +62,13 @@
 <section class="section">
   <h2 class="section-title">{{ $strings.home.latest_title }}</h2>
   <div class="post-list">
-    {{ range first (int $home.posts.latest_count) $posts }}
+    {{ $count := int $home.posts.latest_count }}
+    {{ $pinnedShown := first $count $pinnedPosts.ByDate.Reverse }}
+    {{ range $pinnedShown }}
+      {{ partial "post-card.html" . }}
+    {{ end }}
+    {{ $normalShown := first (sub $count (len $pinnedShown)) $normalPosts.ByDate.Reverse }}
+    {{ range $normalShown }}
       {{ partial "post-card.html" . }}
     {{ end }}
   </div>

@@ -1,8 +1,13 @@
 ---
 title: 本站是怎么搭的：架构与构建流程
-date: 2026-08-18
-tags: [Hugo, FastAPI, Docker]
+date: '2026-08-18'
+status: published
+tags:
+- Hugo
+- FastAPI
+- Docker
 summary: 介绍本站的技术选型与构建流程：Hugo 分段构建、FastAPI 后台、Docker Compose profiles 与匿名统计。
+pinned: true
 ---
 
 本站是一个学习历程博客，核心约束是：公开站零交互入口、符合个人备案标准、低占用高性能。围绕这三条，技术选型如下：

@@ -15,28 +15,16 @@
   <button type="submit" class="btn btn-sm">上传</button>
   <small>支持多选；png / jpg / webp / gif / avif，单张 ≤ 5MB；尺寸或体积过大时自动压缩到 1600px 内。上传后需保存文章或手动重建才会出现在公开站。</small>
 </form>
+<div id="upload-progress" class="upload-progress-panel" hidden>
+  <div class="upload-progress-overview">
+    <span id="upload-summary" class="upload-status">准备上传</span>
+    <span id="upload-overall" class="upload-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="upload-overall-bar" class="upload-progress-bar"></i></span>
+  </div>
+  <ul id="upload-file-list" class="upload-file-list"></ul>
+</div>
 {% for group in groups %}
 <h2 class="media-month">{{ group.month }}</h2>
-<div class="media-grid">
-  {% for m in group.files %}
-  <figure class="media-item">
-    <img src="/{{ admin_path }}/static/img/{{ m.rel }}" alt="{{ m.rel }}" loading="lazy">
-    <figcaption>
-      <code>{{ m.rel }}</code>
-      <small>{{ m.size }} 字节</small>
-      <div class="row-actions">
-        <a class="btn-link" href="/{{ admin_path }}/static/img/{{ m.rel }}" target="_blank" rel="noopener">查看</a>
-        <button type="button" class="btn-link media-copy" data-url="{{ m.url }}">复制路径</button>
-        <form method="post" action="/{{ admin_path }}/media/delete" onsubmit="return confirm('确定删除 {{ m.rel }}？删除后会重建公开站。')">
-          <input type="hidden" name="_csrf" value="{{ csrf }}">
-          <input type="hidden" name="path" value="{{ m.rel }}">
-          <button type="submit" class="btn-link danger">删除</button>
-        </form>
-      </div>
-    </figcaption>
-  </figure>
-  {% endfor %}
-</div>
+{% with table = group.table %}{% include "partials/table.html" %}{% endwith %}
 {% else %}
 <p class="flash">还没有图片。上传后会出现在公开站 /img/ 路径。</p>
 {% endfor %}
@@ -44,37 +32,142 @@
   (function () {
     var form = document.getElementById("upload-form");
     var csrf = form.querySelector('input[name="_csrf"]').value;
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var files = form.querySelector('input[type="file"]').files;
-      if (!files.length) return;
-      var pending = Array.prototype.slice.call(files);
-      var done = 0;
-      var failed = 0;
-      pending.forEach(function (file) {
+    var input = form.querySelector('input[type="file"]');
+    var submitBtn = form.querySelector('button[type="submit"]');
+    var panel = document.getElementById("upload-progress");
+    var list = document.getElementById("upload-file-list");
+    var summary = document.getElementById("upload-summary");
+    var overall = document.getElementById("upload-overall");
+    var overallBar = document.getElementById("upload-overall-bar");
+    var rows = [];
+
+    function fmtSize(bytes) {
+      if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB";
+      if (bytes >= 1024) return Math.round(bytes / 1024) + " KB";
+      return bytes + " B";
+    }
+
+    function addFileRow(file) {
+      var li = document.createElement("li");
+      li.className = "upload-file";
+      var name = document.createElement("span");
+      name.className = "upload-file-name";
+      name.textContent = file.name;
+      name.title = file.name;
+      var size = document.createElement("span");
+      size.className = "upload-file-size";
+      size.textContent = fmtSize(file.size);
+      var track = document.createElement("span");
+      track.className = "upload-progress";
+      track.setAttribute("role", "progressbar");
+      track.setAttribute("aria-valuemin", "0");
+      track.setAttribute("aria-valuemax", "100");
+      track.setAttribute("aria-valuenow", "0");
+      var bar = document.createElement("i");
+      bar.className = "upload-progress-bar";
+      track.appendChild(bar);
+      var status = document.createElement("span");
+      status.className = "upload-status";
+      status.textContent = "等待上传";
+      li.appendChild(name);
+      li.appendChild(size);
+      li.appendChild(track);
+      li.appendChild(status);
+      list.appendChild(li);
+      var row = { bar: bar, track: track, status: status, loaded: 0 };
+      rows.push(row);
+      return row;
+    }
+
+    function updateOverall() {
+      var loaded = 0;
+      rows.forEach(function (r) { loaded += r.loaded; });
+      var total = rows.reduce(function (s, r) { return s + r.total; }, 0);
+      var pct = total ? Math.round(loaded * 100 / total) : 0;
+      overallBar.style.width = pct + "%";
+      overall.setAttribute("aria-valuenow", pct);
+      summary.textContent = "上传中 " + pct + "%";
+    }
+
+    function uploadFile(file, row) {
+      return new Promise(function (resolve) {
+        var xhr = new XMLHttpRequest();
         var data = new FormData();
         data.append("_csrf", csrf);
         data.append("file", file);
-        fetch("/{{ admin_path }}/media/upload-json", { method: "POST", body: data })
-          .then(function (r) { return r.json(); })
-          .then(function (res) {
-            done += 1;
-            if (res.error) failed += 1;
-            if (done === pending.length) {
-              alert(failed ? "部分上传失败" : "上传完成");
-              location.reload();
-            }
-          })
-          .catch(function () {
-            done += 1;
-            failed += 1;
-            if (done === pending.length) {
-              alert("部分上传失败");
-              location.reload();
-            }
-          });
+        xhr.open("POST", "/{{ admin_path }}/media/upload-json");
+        xhr.upload.onprogress = function (e) {
+          if (!e.lengthComputable) return;
+          row.loaded = e.loaded;
+          var pct = Math.round(e.loaded * 100 / e.total);
+          row.bar.style.width = pct + "%";
+          row.track.setAttribute("aria-valuenow", pct);
+          row.status.textContent = "上传中 " + pct + "%";
+          updateOverall();
+        };
+        xhr.onload = function () {
+          var res = {};
+          try { res = JSON.parse(xhr.responseText); } catch (err) {}
+          if (xhr.status === 200 && res.url) {
+            row.loaded = row.total;
+            row.bar.style.width = "100%";
+            row.track.setAttribute("aria-valuenow", "100");
+            row.status.textContent = "成功";
+            row.status.classList.add("is-done");
+            updateOverall();
+            resolve(true);
+          } else {
+            row.status.textContent = res.error || "上传失败";
+            row.status.classList.add("is-error");
+            resolve(false);
+          }
+        };
+        xhr.onerror = function () {
+          row.status.textContent = "上传失败";
+          row.status.classList.add("is-error");
+          resolve(false);
+        };
+        xhr.send(data);
+      });
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var files = input.files;
+      if (!files.length) return;
+      rows = [];
+      list.innerHTML = "";
+      panel.hidden = false;
+      overallBar.style.width = "0%";
+      overall.setAttribute("aria-valuenow", "0");
+      summary.textContent = "准备上传";
+      summary.classList.remove("is-done", "is-error");
+      submitBtn.disabled = true;
+      var pending = Array.prototype.slice.call(files);
+      pending.forEach(function (file) {
+        var row = addFileRow(file);
+        row.total = file.size;
+      });
+      var done = 0;
+      var failed = 0;
+      pending.forEach(function (file, idx) {
+        uploadFile(file, rows[idx]).then(function (ok) {
+          done += 1;
+          if (!ok) failed += 1;
+          if (done === pending.length) {
+            overallBar.style.width = "100%";
+            overall.setAttribute("aria-valuenow", "100");
+            summary.textContent = failed ? "部分上传失败" : "上传完成";
+            summary.classList.toggle("is-error", failed > 0);
+            summary.classList.toggle("is-done", failed === 0);
+            submitBtn.textContent = "上传";
+            submitBtn.disabled = false;
+            setTimeout(function () { location.reload(); }, 800);
+          }
+        });
       });
     });
+
     document.querySelectorAll(".media-copy").forEach(function (btn) {
       btn.addEventListener("click", function () {
         var url = btn.dataset.url;

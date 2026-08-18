@@ -7,10 +7,15 @@
 </nav>
 <div class="list-head">
   <h1>{{ label }}（{{ total }}）</h1>
-  {% if section in ["posts", "projects", "timeline"] %}
-  <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
-  {% endif %}
-  <a class="btn btn-sm btn-ghost" href="/{{ section }}/" target="_blank" rel="noopener">查看公开页</a>
+  <div class="list-actions">
+    {% if section in ["posts", "projects", "timeline"] %}
+    <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
+    {% endif %}
+    {% if section == "posts" %}
+    <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/import">批量导入</a>
+    {% endif %}
+    <a class="btn btn-sm btn-ghost" href="/{{ section }}/" target="_blank" rel="noopener">查看公开页</a>
+  </div>
 </div>
 <form class="list-filters" method="get" action="/{{ admin_path }}/{{ section }}">
   <label class="visually-hidden" for="q">搜索标题、标识或标签</label>

@@ -62,7 +62,11 @@
 | table-shell | 统一后台表格组件（`admin/templates/partials/table.html`）：列表/最近文章/统计共用；支持服务端排序、分页、空状态、移动端卡片化；50 轮迭代记录见 `TABLE-COMPONENT.md` |
 | markdown-editor | 文本区 + 服务端预览 |
 | editor-preview | 编辑器右侧 Hugo 实时预览（分栏 iframe，保存后由 Hugo 渲染） |
-| media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越；过大/过重图片自动缩放到 1600px 内并优化体积（Pillow，动图跳过），上传即重建 |
+| media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越；过大/过重图片自动缩放到 1600px 内并优化体积（Pillow，动图跳过），上传即重建；删除时同步清理 content Markdown（正文与 frontmatter）和 config YAML 中的引用地址；列表复用内置 table-shell 组件，上传带令牌风进度条与文件列表 |
+| upload-progress | 上传进度组件：XHR 实时进度（总体 + 单文件），进度条/状态全部走 `--liblog-*` 令牌，媒体库与编辑器拖拽上传共用 |
+| batch-import | 文章批量导入：多选 .md/.markdown、直接选择整个文件夹（`webkitdirectory` 自动遍历子文件夹）或上传 ZIP（路径/大小/数量校验），自动读取元数据（frontmatter title/date/tags，无 frontmatter 时从首个 # 标题与 YYYY-MM-DD 文件名推断），slug 自动规范化（中文/大写/空格兼容，`_index` 等系统文件跳过，非 Markdown 报错），同名默认跳过可覆盖，导入后合并一次重建并在结果卡片展示每个文件的元数据与失败明细；导入/恢复上限由 `IMPORT_MAX_FILES`、`IMPORT_MAX_FILE_BYTES`、`IMPORT_MAX_ZIP_BYTES`、`RESTORE_MAX_FILES`、`RESTORE_MAX_BYTES` 环境变量配置 |
+| pinned-posts | 文章置顶：后台编辑表单复选框 + 列表“置顶/取消置顶”操作，置顶文章在后台列表、公开站首页与文章列表优先展示，卡片带“置顶”徽章（文案走 strings.yaml） |
+| site-backup | 站点备份/恢复：下载 ZIP（content/config/媒体/data.blog.db 一致性快照/hugo.toml）；后台可从 ZIP 恢复（恢复前自动生成安全备份，覆盖后清除旧会话）；首次建站设置向导支持直接上传备份恢复 |
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
 | admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |
@@ -76,6 +80,8 @@
 
 **易用性迭代（2026-08-18）：** 后台编辑器分栏 Hugo 预览（保存后原地生成，不离开编辑页）、媒体库上传/插入图片、列表搜索与分页、首页/资料配置改为结构化表单、保存可选择留在本页、后台深浅色与分组导航；公开站补面包屑、阅读时间、上一篇/下一篇、搜索页结果计数与摘要、404 页、跳转到正文；25 项单元测试 + TestClient 端到端流程验证。
 
+**后台视觉全量补齐（2026-08-18）：** 全页面统一标题/卡片/面包屑/错误提示（flash--error）、代码与分隔线样式；文件选择与复选控件令牌化（accent-color + file-selector-button）；媒体库并入 table-shell；统计/编辑/预览/OIDC 绑定页补齐面包屑与卡片容器；桌面与移动端无横向溢出。
+
 **开源实践 50 轮优化（2026-08-18）：** 后台补 Markdown 工具栏、Ctrl+S、拖拽上传、快捷发布/转草稿、CSV 导出、构建时间、TOP5 看板、媒体按月分组、面包屑、返回顶部与安全响应头；前端补 OG/Twitter/JSON-LD/canonical/RSS、图片懒加载、外链安全、阅读进度、相关文章、标签页、搜索高亮、返回顶部；逐条记录见 `OPTIMIZATION-50.md`。
 
 **P3/P4 已实现（2026-08-18）：** admin 基础镜像（APT/PIP/Hugo 全源加速变量 + checksum 校验）、nginx 静态直出/后台反代/beacon 匿名打点、Fuse.js 本地搜索页、compose bind 挂载 + profiles；公开站所有模板走 baseof（页头/页脚/打点齐全）。
@@ -84,14 +90,16 @@
 
 **容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷）；媒体目录 `./themes/blog-theme/static/img` 需 bind 挂载（上传图片持久化，容器重建不丢失）；Hugo 二进制按 `TARGETARCH` 自动下载（URL 变量留空即自动拼装）；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）。
 
-**后台预览 iframe：** nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN`（覆盖全站 DENY），允许后台页面在后台内嵌预览；`client_max_body_size 8m` 支持媒体上传。
+**镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 下载并校验 Hugo v0.165.0、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，以 UID 1000 非 root 运行，内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）。
+
+**后台预览 iframe：** nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN`（覆盖全站 DENY），允许后台页面在后台内嵌预览；`client_max_body_size 100m` 支持备份 ZIP 上传（媒体单文件仍由应用层限 5MB）。
 
 ### 构建编排（Hugo 分段）
 
 | 组件 | 说明 |
 | --- | --- |
 | validator | 阶段 0：frontmatter/内部链接/图片存在性静态校验 |
-| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc` 构建到 `.build-tmp/`；Hugo 为固定版本二进制（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum，禁止第三方 Hugo 镜像 |
+| hugo-build | 阶段 1：`GOMEMLIMIT=256MiB HUGO_NUMWORKERMULTIPLIER=0.5 hugo --gc --minify` 构建到 `.build-tmp/`；`SITE_BASEURL` 注入真实域名（禁止 example.com 占位）；Hugo 为固定版本二进制（v0.165.0），由 admin 镜像 Dockerfile 下载并校验 checksum，禁止第三方 Hugo 镜像 |
 | publisher | 阶段 2：产物抽检通过后原子切换/增量同步到 `output/` |
 | cleaner | 阶段 3：清理临时目录与 Hugo 缓存 |
 | preview | 后台预览：`hugo --buildDrafts` 临时输出，与线上同一渲染器 |
@@ -103,7 +111,8 @@
 | 页面类型 | 氛围浓度 | 关键约束 |
 | --- | --- | --- |
 | 首页 | 4 | 个人信息 Hero（姓名/身份/方向/目标 + 技能徽章同栏）、历程速览、项目卡、最新文章；无任何输入组件 |
-| 文章/时间线/项目/关于/资源 | 0 | 纯排版；正文对比度 ≥ 4.5:1 |
+| 文章详情 | 0 | 纯排版；正文对比度 ≥ 4.5:1；零 React 效果 |
+| 栏目列表/关于/资源 | soft | 氛围减量；Canvas 动画移动端限 6 个形状；reduced-motion 单帧 |
 | 后台 | 4×0.5 | 表格区不透明；飘动元素不侵入表内文字 |
 | Setup/登录 | 4×0.5 | 居中卡片 + 顶部品牌 + 底部备案 |
 
@@ -150,6 +159,8 @@
 - [ ] 后台预览与线上构建共用 Hugo 渲染器
 
 **P1 实测（2026-08-18，37 页，Hugo 0.165.0 extended / macOS arm64）：** 构建耗时约 15ms，峰值 RSS ≈ 55.6MB（`GOMEMLIMIT=256MiB`），首页含 4 兄弟项目徽章与最新文章，搜索索引 3 条，无占位符残留。
+
+**安全审查实测（2026-08-18，354 页，Hugo 0.165.0 extended / macOS arm64）：** 全量构建 140ms、峰值 RSS ≈ 140MB（`GOMEMLIMIT=256MiB`），`--minify` 后输出 15MB；修复预览鉴权、beacon 路径注入、OIDC 回程登出 jti 防重放、IP 白名单、slug 重命名残留、上传/导入流式限流、构建并发锁等，66 项单元测试 + 新增回归测试全部通过。
 
 ## 6. 文件映射（模板 → 本博客）
 

@@ -6,6 +6,7 @@
 """
 
 import argparse
+import fcntl
 import os
 import pathlib
 import shutil
@@ -35,8 +36,12 @@ def run_build(root, dst, hugo_cmd="hugo", memory_limit="256MiB", extra=()):
     env = dict(os.environ)
     env.setdefault("GOMEMLIMIT", memory_limit)
     env.setdefault("HUGO_NUMWORKERMULTIPLIER", "0.5")
+    extra = list(extra)
+    site_baseurl = os.environ.get("SITE_BASEURL", "").strip()
+    if site_baseurl:
+        extra += ["--baseURL", site_baseurl]
     subprocess.run(
-        [hugo_cmd, "--gc", "--destination", str(dst), *extra],
+        [hugo_cmd, "--gc", "--minify", "--destination", str(dst), *extra],
         cwd=root,
         env=env,
         check=True,
@@ -73,13 +78,8 @@ def publish(src, dst):
                 pass
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Li&Blog 分段构建编排")
-    parser.add_argument("--full", action="store_true", help="全量构建并发布到 output/")
-    parser.add_argument("--preview", action="store_true", help="构建草稿到 .preview-out/")
-    parser.add_argument("--keep-tmp", action="store_true", help="保留临时目录（调试）")
-    args = parser.parse_args()
-
+def build(args):
+    """执行 校验 → 渲染 → 发布 → 清理。"""
     errors = validate_content(ROOT)
     if errors:
         for err in errors:
@@ -89,7 +89,12 @@ def main():
     hugo_cmd = os.environ.get("HUGO_BIN", "hugo")
     memory_limit = os.environ.get("GOMEMLIMIT", "256MiB")
     extra = ("--buildDrafts",) if args.preview else ()
-    dst = ROOT / ("output" if not args.preview else ".preview-out")
+    dst = ROOT / (".preview-out" if args.preview else "output")
+    if args.full and not os.environ.get("SITE_BASEURL", "").strip():
+        print(
+            "WARNING: SITE_BASEURL 未设置，canonical/OG/RSS 将使用相对 baseURL；部署前必须配置真实域名",
+            file=sys.stderr,
+        )
     tmp = ROOT / ".build-tmp"
     if tmp.exists():
         shutil.rmtree(tmp)
@@ -100,6 +105,19 @@ def main():
     if not args.keep_tmp:
         shutil.rmtree(tmp)
     print(f"build OK -> {dst}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Li&Blog 分段构建编排")
+    parser.add_argument("--full", action="store_true", help="全量构建并发布到 output/")
+    parser.add_argument("--preview", action="store_true", help="构建草稿到 .preview-out/")
+    parser.add_argument("--keep-tmp", action="store_true", help="保留临时目录（调试）")
+    args = parser.parse_args()
+
+    lock_path = ROOT / ".build.lock"
+    with lock_path.open("a+", encoding="utf-8") as lock_file:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        build(args)
 
 
 if __name__ == "__main__":

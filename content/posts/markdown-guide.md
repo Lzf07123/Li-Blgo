@@ -1,7 +1,10 @@
 ---
 title: 本站支持哪些 Markdown 语法
-date: 2026-08-18
-tags: [Markdown, Hugo]
+date: '2026-08-18'
+status: published
+tags:
+- Markdown
+- Hugo
 summary: 本站的 Markdown 能力清单：GFM 表格、任务列表、代码高亮、提示块、脚注等。
 ---
 

@@ -1,6 +1,9 @@
 {{ $strings := hugo.Data.strings }}
 <article class="post-card">
-  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+  <h3>
+    {{ if .Params.pinned }}<span class="badge badge-pinned">{{ $strings.common.pinned }}</span>{{ end }}
+    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+  </h3>
   <p class="meta">
     <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
     {{ if .ReadingTime }}<span class="meta-sep">·</span><span>{{ .ReadingTime }} {{ $strings.common.reading_time }}</span>{{ end }}

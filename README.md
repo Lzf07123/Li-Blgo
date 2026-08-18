@@ -34,6 +34,22 @@ docker compose --profile admin up -d
 
 默认公开站端口 80；如需自定义端口，在 `.env` 中设置 `HTTP_PORT` / `HTTPS_PORT`。
 
+部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
+
+admin 容器以 UID 1000 非 root 运行；Linux 主机需保证 `content/ config/ output/ data/ themes/blog-theme/static/img` 对 UID 1000 可写（macOS Docker Desktop 通常无需处理）：
+
+```bash
+sudo chown -R 1000:1000 content config output data themes/blog-theme/static/img
+```
+
+如果是从旧 root 镜像升级，beacon 命名卷也需一次性授权给 UID 1000（卷名以 `docker volume ls` 实际为准，例如 `liblog_beacon-log`）：
+
+```bash
+docker run --rm --user root -v liblog_beacon-log:/beacon --entrypoint chown liblog-admin:latest -R 1000:1000 /beacon
+```
+
+备份与恢复：后台“备份”栏目可下载完整站点 ZIP，也可上传备份 ZIP 恢复（恢复前自动在 `data/restore-backups/` 生成安全备份，恢复后需重新登录）。首次建站时，设置向导第 1 步也支持直接上传备份 ZIP 恢复建站。
+
 ## 目录结构
 
 ```text

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">站点备份</span>
+</nav>
+<div class="list-head">
+  <h1>站点备份</h1>
+</div>
+<p class="field-help">备份包含 content/、config/、媒体图片（themes/blog-theme/static/img）、data/blog.db 与 hugo.toml，打包为一个 ZIP。备份内含后台数据库，请妥善保管，不要公开分享。</p>
+<a class="btn" href="/{{ admin_path }}/backup/download">下载备份 ZIP</a>
+<div class="admin-card">
+<h2>从备份恢复</h2>
+<p class="field-help">上传备份 ZIP 会覆盖 content/、config/、媒体图片、data/blog.db 与 hugo.toml；恢复前会自动在 data/restore-backups/ 生成一份当前站点安全备份，恢复后会清除旧登录会话。</p>
+<form method="post" action="/{{ admin_path }}/backup/restore" enctype="multipart/form-data" data-busy>
+  <input type="hidden" name="_csrf" value="{{ csrf }}">
+  <label>备份 ZIP
+    <input type="file" name="file" accept=".zip" required>
+  </label>
+  <label><input type="checkbox" name="confirm" value="1" required> 我确认会用备份覆盖当前站点数据</label>
+  <div class="form-actions">
+    <button type="submit" class="btn btn-secondary">恢复并重建</button>
+  </div>
+</form>
+</div>
+{% endblock %}

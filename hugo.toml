@@ -1,4 +1,6 @@
-baseURL = "https://blog.example.com/"
+# 禁止占位域名：本地/未配置时使用相对 baseURL；
+# 部署时由 scripts/build.py 通过 SITE_BASEURL 环境变量注入真实域名
+baseURL = "/"
 title = "Li&Blog"
 theme = "blog-theme"
 dataDir = "config"

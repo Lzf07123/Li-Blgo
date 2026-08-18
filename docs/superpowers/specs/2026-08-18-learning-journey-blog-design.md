@@ -165,6 +165,8 @@ config/
 
 保存即触发重建；批量操作合并为一次重建；后台提供"全部重建"按钮。
 
+工具：文章支持批量导入（多选 Markdown 或 ZIP，校验 frontmatter/slug，同名默认跳过、可覆盖，导入完成后合并一次重建）；系统提供站点备份下载（content/、config/、媒体图片、data/blog.db 一致性快照、hugo.toml 打包为 ZIP）与后台恢复（上传 ZIP，恢复前自动生成安全备份到 data/restore-backups/，覆盖内容/配置/媒体/数据库后清除旧会话）；首次建站时设置向导可直接从备份 ZIP 恢复建站，备份含管理员账号则跳转登录，否则继续创建管理员。
+
 ### 后台安全
 
 - 秘密路径 `/admin` + 强密码 + 登录限速 + 可选 IP 白名单
@@ -247,6 +249,10 @@ services:
 环境变量（.env，不进 git）：`LIPASS_ISSUER`、`LIPASS_CLIENT_ID`、`LIPASS_CLIENT_SECRET`、`LIPASS_REDIRECT_URI`、`ADMIN_PATH`、`ADMIN_SESSION_SECRET` 等；模板见 `.env.example`。
 
 软件源加速变量（构建期 `--build-arg`）：`APT_MIRROR`、`PIP_INDEX_URL`、`HUGO_DOWNLOAD_URL`、`HUGO_CHECKSUM_URL`——apt/pip/Hugo 下载全部可走国内镜像或 GH 加速前缀，默认官方源。
+
+镜像结构：多阶段构建（builder 下载并校验 Hugo + 安装 venv 依赖；runtime 只保留 venv/Hugo/ca-certificates），运行期以 UID 1000 非 root 执行，内置 `/healthz` 健康检查；`content/ config/ output/ data/ themes/blog-theme/static/img` 用仓库 bind 挂载，Linux 主机需保证目录对 UID 1000 可写。
+
+媒体库删除：删除图片时同步扫描 content Markdown（正文图片语法、HTML img、Hugo figure 短代码、frontmatter cover 等）与 config YAML，清空引用该图片的地址后再触发重建。
 
 ## 12. 性能预算
 

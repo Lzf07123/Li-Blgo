@@ -4,20 +4,37 @@ import datetime
 from contextlib import asynccontextmanager
 from math import ceil
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode
 
 import yaml
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    RedirectResponse,
+    Response,
+)
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
-from admin import build, content as store, forms, media as media_store, oidc, security
+from admin import (
+    backup as backup_store,
+    build,
+    content as store,
+    forms,
+    importer,
+    media as media_store,
+    oidc,
+    restore as restore_store,
+    security,
+)
 from admin.ingest import import_beacon_log
 from admin.config import ROOT, settings
 from admin.db import connect, create_admin, get_admin, init_db
 from admin.session import COOKIE, create_session, delete_session, get_session
+from admin.uploads import read_limited
 
 
 @asynccontextmanager
@@ -42,11 +59,22 @@ app.add_middleware(
 
 @app.middleware("http")
 async def admin_headers(request: Request, call_next):
+    if request.url.path.startswith(f"/{settings.admin_path}/") and settings.ip_whitelist:
+        if client_ip(request) not in settings.ip_whitelist:
+            return Response("403 Forbidden", status_code=403)
     response = await call_next(request)
     if request.url.path.startswith(f"/{settings.admin_path}/"):
         response.headers["Cache-Control"] = "no-store"
         response.headers["X-Robots-Tag"] = "noindex"
     return response
+
+
+@app.get("/healthz")
+def healthz():
+    """容器健康检查：不经过后台鉴权，仅容器网络内可达。"""
+    return {"status": "ok"}
+
+
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
 STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
@@ -55,13 +83,37 @@ ADMIN_BADGE_VARIANTS = {
     "draft": "admin-badge--draft",
     "active": "admin-badge--active",
 }
+ADMIN_NAV = [
+    {
+        "label": "内容",
+        "items": [
+            {"label": "文章", "path": "/posts", "icon": "file"},
+            {"label": "项目", "path": "/projects", "icon": "folder"},
+            {"label": "时间线", "path": "/timeline", "icon": "clock"},
+            {"label": "关于我", "path": "/about", "icon": "user"},
+            {"label": "资源", "path": "/resources", "icon": "book"},
+        ],
+    },
+    {
+        "label": "设置",
+        "items": [
+            {"label": "品牌", "path": "/config/brand", "icon": "palette"},
+            {"label": "文案", "path": "/config/strings", "icon": "text"},
+            {"label": "首页", "path": "/config/homepage", "icon": "home"},
+            {"label": "资料", "path": "/config/profile", "icon": "card"},
+        ],
+    },
+    {
+        "label": "系统",
+        "items": [
+            {"label": "媒体库", "path": "/media", "icon": "image"},
+            {"label": "统计", "path": "/stats", "icon": "chart"},
+            {"label": "备份", "path": "/backup", "icon": "archive"},
+        ],
+    },
+]
 
 settings.preview_root.mkdir(parents=True, exist_ok=True)
-app.mount(
-    f"/{settings.admin_path}/preview-out",
-    StaticFiles(directory=str(settings.preview_root)),
-    name="preview-out",
-)
 app.mount(
     f"/{settings.admin_path}/static",
     StaticFiles(directory=str(ROOT / "themes" / "blog-theme" / "static")),
@@ -71,6 +123,45 @@ app.mount(
 
 def ap(path: str) -> str:
     return f"/{settings.admin_path}{path}"
+
+
+def build_admin_nav(request: Request) -> list[dict]:
+    """后台侧边栏导航：路径前缀匹配当前项，模板只负责渲染。"""
+    current = request.url.path
+    groups = []
+    for group in ADMIN_NAV:
+        items = []
+        for item in group["items"]:
+            base = ap(item["path"])
+            items.append(
+                {
+                    **item,
+                    "active": current == base or current.startswith(base + "/"),
+                }
+            )
+        groups.append({"label": group["label"], "items": items})
+    return groups
+
+
+def display_path(path: str) -> str:
+    """beacon 参数经过 Hugo 与浏览器双重编码，展示层再做一次解码。"""
+    try:
+        return unquote(path)
+    except Exception:
+        return path
+
+
+def safe_stats_href(path: str) -> str:
+    """统计路径只允许站内相对路径，拒绝 javascript:/data: 等 scheme。"""
+    try:
+        decoded = unquote(path)
+    except Exception:
+        return ""
+    if not decoded.startswith("/") or ":" in decoded:
+        return ""
+    if len(decoded) > 512 or any(ord(ch) < 32 or ch.isspace() for ch in decoded):
+        return ""
+    return path
 
 
 def client_ip(request: Request) -> str:
@@ -122,8 +213,10 @@ def render(request: Request, name: str, context: dict) -> HTMLResponse:
     context.setdefault("admin_path", settings.admin_path)
     context.setdefault("csrf", sess["csrf"] if sess else "")
     context.setdefault("status_labels", STATUS_LABELS)
+    context.setdefault("nav_groups", build_admin_nav(request))
     flash = request.query_params.get("ok") or request.query_params.get("error")
     context.setdefault("flash", flash)
+    context.setdefault("flash_type", "error" if request.query_params.get("error") else "ok")
     return templates.TemplateResponse(request, name, context)
 
 
@@ -175,6 +268,8 @@ def login_submit(
 ):
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return render(request, "login.html", {"error": "会话失效，请重试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    if len(password) > 1024:
+        return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     key = f"{client_ip(request)}:{username}"
     if not rate.allow(key, 5, 60):
         return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
@@ -193,8 +288,16 @@ def login_submit(
 
 
 @app.get(ap("/logout"))
-def logout(request: Request):
+def logout_page():
+    """GET 仅作兼容跳转，不执行登出（登出必须 POST + CSRF）。"""
+    return RedirectResponse(ap("/login"), status_code=302)
+
+
+@app.post(ap("/logout"))
+def logout(request: Request, csrf_token: str = Form("", alias="_csrf")):
     sess = current_session(request)
+    if sess and not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/?error=会话失效"), status_code=303)
     if sess:
         delete_session(sess["id"])
     response = RedirectResponse(ap("/login"), status_code=302)
@@ -288,6 +391,40 @@ def setup_basic_submit(
     return RedirectResponse(ap("/setup/account"), status_code=303)
 
 
+@app.post(ap("/setup/restore"))
+async def setup_restore(
+    request: Request,
+    file: UploadFile = File(...),
+    confirm: str = Form(""),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    conn = connect()
+    has_admin = get_admin(conn) is not None
+    conn.close()
+    if has_admin:
+        return RedirectResponse(ap("/"), status_code=302)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/setup/basic?error=会话失效"), status_code=303)
+    if confirm != "1":
+        return RedirectResponse(ap("/setup/basic?error=请先勾选确认覆盖"), status_code=303)
+    try:
+        data = await read_limited(file, settings.restore_max_bytes)
+        restore_store.restore_backup(data, safety=True)
+    except ValueError as exc:
+        return RedirectResponse(ap(f"/setup/basic?error={exc}"), status_code=303)
+    build_result, elapsed = build.run_full()
+    if build_result.returncode != 0:
+        return RedirectResponse(ap("/setup/basic?error=已恢复但构建失败"), status_code=303)
+    conn = connect()
+    has_admin = get_admin(conn) is not None
+    conn.close()
+    if has_admin:
+        return RedirectResponse(
+            ap("/login?ok=备份恢复完成，请使用备份中的管理员账号登录"), status_code=303
+        )
+    return RedirectResponse(ap("/setup/account"), status_code=303)
+
+
 @app.get(ap("/setup/account"), response_class=HTMLResponse)
 def setup_account_page(request: Request):
     conn = connect()
@@ -317,8 +454,8 @@ def setup_account_submit(
     conn.close()
     if has_admin:
         return RedirectResponse(ap("/"), status_code=302)
-    if len(username) < 3 or len(password) < 8:
-        return RedirectResponse(ap("/setup/account?error=用户名至少3位，密码至少8位"), status_code=303)
+    if len(username) < 3 or len(password) < 8 or len(password) > 1024:
+        return RedirectResponse(ap("/setup/account?error=用户名至少3位，密码需8-1024位"), status_code=303)
     if password != confirm:
         return RedirectResponse(ap("/setup/account?error=两次密码不一致"), status_code=303)
     conn = connect()
@@ -349,7 +486,6 @@ def setup_oidc_page(request: Request):
             "callback_uri": settings.lipass_redirect_uri or "(部署后按实际域名填写)",
         },
     )
-    ensure_anon_session(request)
     if getattr(request.state, "new_session_id", None):
         attach_session_cookie(response, request.state.new_session_id)
     return response
@@ -373,6 +509,7 @@ def dashboard(request: Request):
     require_login(request)
     counts = {s: len(store.list_markdown(s)) for s in ("posts", "projects", "timeline")}
     posts = store.list_markdown("posts")
+    posts.sort(key=lambda it: not it.get("pinned", False))
     drafts = [p for p in posts if p.get("status") == "draft"]
     recent_posts = posts[:5]
     conn = connect()
@@ -382,7 +519,7 @@ def dashboard(request: Request):
     index_file = settings.output_root / "index.html"
     if index_file.exists():
         last_build = datetime.datetime.fromtimestamp(index_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
-    top_rows = [dict(r) for r in stats[:5]]
+    top_rows = [{"path": display_path(r["path"]), "views": r["views"]} for r in stats[:5]]
     top_max = max((r["views"] for r in top_rows), default=0)
     for r in top_rows:
         r["pct"] = round(r["views"] * 100 / top_max) if top_max else 0
@@ -405,11 +542,19 @@ def dashboard(request: Request):
         for p in recent_posts
     ]
     stats_columns = [
-        {"key": "path", "label": "路径", "type": "text"},
+        {"key": "path", "label": "路径", "type": "link"},
         {"key": "day", "label": "日期", "type": "text"},
         {"key": "views", "label": "次数", "type": "number"},
     ]
-    stats_rows = [dict(r) for r in stats]
+    stats_rows = [
+        {
+            "path": display_path(r["path"]),
+            "path_href": safe_stats_href(r["path"]),
+            "day": r["day"],
+            "views": r["views"],
+        }
+        for r in stats
+    ]
     return render(
         request,
         "dashboard.html",
@@ -445,14 +590,22 @@ def stats_page(request: Request):
     rows = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 200").fetchall()
     conn.close()
     columns = [
-        {"key": "path", "label": "路径", "type": "text"},
+        {"key": "path", "label": "路径", "type": "link"},
         {"key": "day", "label": "日期", "type": "text"},
         {"key": "views", "label": "次数", "type": "number"},
     ]
     table = {
         "caption": "访问统计",
         "columns": columns,
-        "rows": [dict(r) for r in rows],
+        "rows": [
+            {
+                "path": display_path(r["path"]),
+                "path_href": safe_stats_href(r["path"]),
+                "day": r["day"],
+                "views": r["views"],
+            }
+            for r in rows
+        ],
         "empty": "暂无数据",
         "striped": True,
     }
@@ -483,7 +636,60 @@ def media_page(request: Request, q: str = ""):
     for it in items:
         month = "/".join(it["rel"].split("/")[:2]) if "/" in it["rel"] else "未分类"
         groups.setdefault(month, []).append(it)
-    grouped = [{"month": m, "files": groups[m]} for m in sorted(groups, reverse=True)]
+    media_columns = [
+        {"key": "thumb", "label": "图片", "type": "image"},
+        {"key": "rel", "label": "路径", "type": "link"},
+        {"key": "size", "label": "大小", "type": "text", "align": "right"},
+        {"key": "actions", "label": "操作", "type": "actions"},
+    ]
+
+    def media_rows(files):
+        rows = []
+        for m in files:
+            static_url = f"/{settings.admin_path}/static/img/{m['rel']}"
+            rows.append(
+                {
+                    "thumb": m["rel"],
+                    "thumb_src": static_url,
+                    "rel": m["rel"],
+                    "rel_href": static_url,
+                    "rel_external": True,
+                    "size": f"{m['size'] / 1024:.0f} KB" if m["size"] >= 1024 else f"{m['size']} B",
+                    "actions": [
+                        {"label": "查看", "href": static_url, "external": True},
+                        {
+                            "label": "复制路径",
+                            "button": True,
+                            "class": "media-copy",
+                            "data_url": m["url"],
+                        },
+                        {
+                            "label": "删除",
+                            "href": ap("/media/delete"),
+                            "method": "post",
+                            "name": "path",
+                            "value": m["rel"],
+                            "danger": True,
+                            "confirm": f"确定删除 {m['rel']}？删除后会清理引用并重建公开站。",
+                        },
+                    ],
+                }
+            )
+        return rows
+
+    grouped = [
+        {
+            "month": m,
+            "table": {
+                "caption": f"媒体库 {m}",
+                "columns": media_columns,
+                "rows": media_rows(groups[m]),
+                "empty": "暂无图片",
+                "striped": True,
+            },
+        }
+        for m in sorted(groups, reverse=True)
+    ]
     return render(request, "media.html", {"items": items, "groups": grouped, "q": q})
 
 
@@ -496,8 +702,8 @@ async def media_upload(
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/media?error=会话失效"), status_code=303)
-    data = await file.read()
     try:
+        data = await read_limited(file, media_store.MAX_SIZE)
         p = media_store.save_upload(file.filename or "", data)
     except ValueError as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
@@ -514,12 +720,19 @@ def media_delete(request: Request, path: str = Form(""), csrf_token: str = Form(
         return RedirectResponse(ap("/media?error=会话失效"), status_code=303)
     try:
         media_store.delete_media(path)
+        cleaned_md = store.remove_image_references(path)
+        cleaned_cfg = store.clear_config_image_refs(path)
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/media?error=已删除但构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/media?ok=已删除并重建（{elapsed}s）"), status_code=303)
+    cleaned = len(cleaned_md) + len(cleaned_cfg)
+    if cleaned:
+        msg = f"已删除并清理 {cleaned} 处引用，已重建（{elapsed}s）"
+    else:
+        msg = f"已删除并重建（{elapsed}s）"
+    return RedirectResponse(ap(f"/media?ok={msg}"), status_code=303)
 
 
 @app.post(ap("/media/upload-json"))
@@ -531,7 +744,10 @@ async def media_upload_json(
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return JSONResponse({"error": "会话失效"}, status_code=403)
-    data = await file.read()
+    try:
+        data = await read_limited(file, media_store.MAX_SIZE)
+    except ValueError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
     try:
         p = media_store.save_upload(file.filename or "", data)
     except ValueError as exc:
@@ -564,18 +780,158 @@ def post_status(
     return RedirectResponse(ap(f"/posts?ok=已{('发布' if status == 'published' else '转为草稿')}并重建（{elapsed}s）"), status_code=303)
 
 
+@app.post(ap("/posts/{slug}/pin"))
+def post_pin(
+    request: Request,
+    slug: str,
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/posts?error=会话失效"), status_code=303)
+    try:
+        old, body = store.read_markdown("posts", slug)
+        old["pinned"] = not old.get("pinned", False)
+        store.write_markdown("posts", slug, old, body)
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/posts?error=置顶状态更新后构建失败"), status_code=303)
+    return RedirectResponse(
+        ap(f"/posts?ok=已{('取消置顶' if not old['pinned'] else '置顶')}并重建（{elapsed}s）"), status_code=303
+    )
+
+
 @app.get(ap("/stats/export"))
 def stats_export(request: Request):
     require_login(request)
     conn = connect()
     rows = conn.execute("SELECT path, day, views FROM stats ORDER BY day DESC, views DESC").fetchall()
     conn.close()
+
+    def csv_cell(value) -> str:
+        s = str(value)
+        if s[:1] in ("=", "+", "-", "@", "\t", "\r"):
+            s = "'" + s
+        return '"' + s.replace('"', '""') + '"'
+
     lines = ["path,day,views"]
-    lines += [f'"{r["path"]}",{r["day"]},{r["views"]}' for r in rows]
+    lines += [
+        f'{csv_cell(r["path"])},{csv_cell(r["day"])},{r["views"]}' for r in rows
+    ]
     return Response(
         content="\n".join(lines) + "\n",
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="liblog-stats.csv"'},
+    )
+
+
+# ---------- 文章批量导入 ----------
+
+@app.get(ap("/posts/import"), response_class=HTMLResponse)
+def posts_import_page(request: Request):
+    require_login(request)
+    return render(request, "import_posts.html", {"label": "批量导入文章"})
+
+
+@app.post(ap("/posts/import"))
+async def posts_import_submit(
+    request: Request,
+    files: list[UploadFile] = File(...),
+    overwrite: str = Form(""),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/posts/import?error=会话失效"), status_code=303)
+    if len(files) > settings.import_max_files:
+        return RedirectResponse(ap(f"/posts/import?error=一次最多导入 {settings.import_max_files} 个文件"), status_code=303)
+    entries = []
+    unsupported = []
+    total_read = 0
+    try:
+        for f in files:
+            name = f.filename or "untitled.md"
+            if name.lower().endswith(".zip"):
+                data = await read_limited(f, settings.import_max_zip_bytes)
+                total_read += len(data)
+                if total_read > settings.import_max_zip_bytes:
+                    raise ValueError("导入总大小超过限制")
+                entries.extend(importer.extract_zip(data))
+            elif name.lower().endswith((".md", ".markdown")):
+                data = await read_limited(f, settings.import_max_file_bytes)
+                total_read += len(data)
+                if total_read > settings.import_max_zip_bytes:
+                    raise ValueError("导入总大小超过限制")
+                entries.append((name, data))
+            else:
+                unsupported.append(name)
+        import_result = importer.import_posts(entries, overwrite=overwrite == "1")
+    except ValueError as exc:
+        return RedirectResponse(ap(f"/posts/import?error={exc}"), status_code=303)
+    if unsupported:
+        import_result["errors"] = [
+            f"{name}: 不支持的文件类型" for name in unsupported
+        ] + import_result["errors"]
+    if import_result["imported"] == 0:
+        return render(
+            request,
+            "import_posts.html",
+            {"label": "批量导入文章", "result": import_result},
+        )
+    build_result, elapsed = build.run_full()
+    if build_result.returncode != 0:
+        return RedirectResponse(ap("/posts/import?error=导入完成但构建失败"), status_code=303)
+    return render(
+        request,
+        "import_posts.html",
+        {"label": "批量导入文章", "result": import_result, "build_elapsed": elapsed},
+    )
+
+
+# ---------- 站点备份 ----------
+
+@app.get(ap("/backup"), response_class=HTMLResponse)
+def backup_page(request: Request):
+    require_login(request)
+    return render(request, "backup.html", {})
+
+
+@app.get(ap("/backup/download"))
+def backup_download(request: Request):
+    require_login(request)
+    data = backup_store.build_backup_zip()
+    ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    return Response(
+        content=data,
+        media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="liblog-backup-{ts}.zip"'},
+    )
+
+
+@app.post(ap("/backup/restore"))
+async def backup_restore(
+    request: Request,
+    file: UploadFile = File(...),
+    confirm: str = Form(""),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/backup?error=会话失效"), status_code=303)
+    if confirm != "1":
+        return RedirectResponse(ap("/backup?error=请先勾选确认覆盖"), status_code=303)
+    try:
+        data = await read_limited(file, settings.restore_max_bytes)
+        restore_store.restore_backup(data, safety=True)
+    except ValueError as exc:
+        return RedirectResponse(ap(f"/backup?error={exc}"), status_code=303)
+    build_result, elapsed = build.run_full()
+    if build_result.returncode != 0:
+        return RedirectResponse(ap("/backup?error=已恢复但构建失败，请检查备份内容"), status_code=303)
+    return RedirectResponse(
+        ap("/login?ok=已从备份恢复并重建，请重新登录"), status_code=303
     )
 
 
@@ -598,6 +954,7 @@ def _edit_fields(section: str, fm: dict) -> list:
             ("status", "状态", "select", fm.get("status", "published"), ["published", "draft"]),
             ("tags", "标签（逗号分隔）", "text", ", ".join(fm.get("tags") or [])),
             ("summary", "摘要", "textarea", fm.get("summary", "")),
+            ("pinned", "置顶文章", "checkbox", bool(fm.get("pinned", False))),
         ]
     if section == "projects":
         return [
@@ -643,6 +1000,8 @@ def section_list(
         order = "desc"
     per_page = min(max(int(per_page), 10), 100) if per_page else 50
     items = store.list_markdown(section, q=q, status=status, sort=sort, order=order)
+    if section == "posts":
+        items.sort(key=lambda it: not it.get("pinned", False))
     total = len(items)
     page = max(1, page)
     pages = max(1, ceil(total / per_page))
@@ -679,6 +1038,13 @@ def section_list(
                     "value": "draft" if item["status"] == "published" else "published",
                 }
             )
+            actions.append(
+                {
+                    "label": "取消置顶" if item.get("pinned") else "置顶",
+                    "href": ap(f"/posts/{item['slug']}/pin"),
+                    "method": "post",
+                }
+            )
         if section != "timeline":
             actions.append(
                 {
@@ -693,7 +1059,10 @@ def section_list(
             {
                 "title": item["title"],
                 "title_href": ap(f"/{section}/{item['slug']}/edit"),
-                "title_tags": item.get("tags", [])[:3],
+                "title_tags": (
+                    ([{"label": "置顶", "class": "admin-tag--pinned"}] if item.get("pinned") else [])
+                    + (item.get("tags") or [])[:2]
+                ),
                 "date": item["date"],
                 "status": item["status"],
                 "status_label": STATUS_LABELS.get(item["status"], item["status"]),
@@ -831,12 +1200,17 @@ def section_save(
     badge_label: str = Form(""),
     badge_color: str = Form(""),
     badge_href: str = Form(""),
+    pinned: str = Form(""),
     body: str = Form(""),
 ):
     require_login(request)
     if section not in SECTIONS or not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
-    if new_slug:
+    old_slug = ""
+    if new_slug and not SECTIONS[section]["single"]:
+        if new_slug != slug and store.markdown_exists(section, new_slug):
+            return RedirectResponse(ap(f"/{section}?error=目标标识已存在"), status_code=303)
+        old_slug = slug
         slug = new_slug
     try:
         if SECTIONS[section]["single"]:
@@ -849,20 +1223,43 @@ def section_save(
                     old, _ = store.read_markdown(section, slug)
                 except FileNotFoundError:
                     old = {}
+            fm = dict(old)
             if section == "posts":
-                fm = {"title": title, "date": date, "status": status,
-                      "tags": [t.strip() for t in tags.split(",") if t.strip()], "summary": summary}
-                for key in ("math", "mermaid", "cover"):
-                    if key in old:
-                        fm[key] = old[key]
+                fm.update(
+                    {
+                        "title": title,
+                        "date": date,
+                        "status": status,
+                        "tags": [t.strip() for t in tags.split(",") if t.strip()],
+                        "summary": summary,
+                        "pinned": pinned == "1",
+                    }
+                )
             elif section == "projects":
-                fm = {"title": title, "date": date, "repo": repo, "status": status,
-                      "tech": [t.strip() for t in tech.split(",") if t.strip()], "summary": summary,
-                      "badge": {"label": badge_label, "color": badge_color, "href": badge_href},
-                      "show_on_home": old.get("show_on_home", True)}
+                fm.update(
+                    {
+                        "title": title,
+                        "date": date,
+                        "repo": repo,
+                        "status": status,
+                        "tech": [t.strip() for t in tech.split(",") if t.strip()],
+                        "summary": summary,
+                        "badge": {
+                            "label": badge_label,
+                            "color": badge_color,
+                            "href": badge_href,
+                        },
+                        "show_on_home": fm.get("show_on_home", True),
+                    }
+                )
             else:
-                fm = {"title": title, "date": date, "kind": kind, "summary": summary}
+                fm.update({"title": title, "date": date, "kind": kind, "summary": summary})
             store.write_markdown(section, slug, fm, body)
+            if old_slug and old_slug != slug:
+                try:
+                    store.delete_markdown(section, old_slug)
+                except ValueError:
+                    pass
     except ValueError as exc:
         return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
     if action == "preview_raw":
@@ -904,6 +1301,29 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
     return RedirectResponse(ap(f"/{section}?ok=已删除并重建({elapsed}s)"), status_code=303)
 
 
+def rewrite_preview_html(html: str, admin_path: str) -> str:
+    """把预览 HTML 里的静态资源指向后台受保护路径（含图片与内联 CSS url）。"""
+    prefix = f"/{admin_path}/preview-out"
+    html = html.replace('href="/css/', f'href="/{admin_path}/static/css/')
+    html = html.replace('src="/js/', f'src="/{admin_path}/static/js/')
+    html = html.replace('href="/img/', f'href="{prefix}/img/')
+    html = html.replace('src="/img/', f'src="{prefix}/img/')
+    html = html.replace("url('/img/", f"url('{prefix}/img/")
+    html = html.replace('url("/img/', f'url("{prefix}/img/')
+    return html
+
+
+@app.get(ap("/preview-out/{path:path}"))
+def preview_out_file(request: Request, path: str):
+    """受登录保护的预览产物静态文件（替代未鉴权的 StaticFiles 挂载）。"""
+    require_login(request)
+    root = settings.preview_root.resolve()
+    target = (root / path).resolve()
+    if not target.is_relative_to(root) or not target.is_file():
+        raise HTTPException(404)
+    return FileResponse(target)
+
+
 @app.get(ap("/preview/{section}"), response_class=HTMLResponse)
 def preview_single(request: Request, section: str, raw: int = 0):
     return preview_page(request, section, "", raw)
@@ -916,8 +1336,7 @@ def preview_page(request: Request, section: str, slug: str, raw: int = 0):
     exists = target.exists()
     if raw and exists:
         html = target.read_text(encoding="utf-8")
-        html = html.replace('href="/css/', f'href="/{settings.admin_path}/static/css/')
-        html = html.replace('src="/js/', f'src="/{settings.admin_path}/static/js/')
+        html = rewrite_preview_html(html, settings.admin_path)
         return HTMLResponse(html)
     return render(
         request,
@@ -1045,5 +1464,8 @@ async def config_save(request: Request, name: str, csrf_token: str = Form("", al
     data, err = forms.parse_config(data, specs, form)
     if err:
         return RedirectResponse(ap(f"/config/{name}?error={err}"), status_code=303)
+    if name == "brand":
+        data["icp_icon"] = store.sanitize_inline_svg(data.get("icp_icon", ""))
+        data["police_icon"] = store.sanitize_inline_svg(data.get("police_icon", ""))
     store.save_yaml(name, data)
     return after_build_redirect(f"/config/{name}")

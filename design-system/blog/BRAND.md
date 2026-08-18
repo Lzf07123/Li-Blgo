@@ -66,10 +66,10 @@
 
 ## 3. 氛围动效（呼吸感）
 
-- 公开站：首页低浓度 CSS 装饰（≤4 元素，透明度低）；文章/时间线/项目页 0（纯排版）
+- 公开站：首页 full（Canvas + CSS 氛围）；栏目列表/关于/资源 soft 减量；文章详情 0（纯排版）
 - 后台：4 元素 × 透明度 0.5（表格区保持不透明表面）
 - 只动 transform/opacity/background-position；错峰 delay；`prefers-reduced-motion` 单帧；移动端减量
-- 不引入 Canvas 氛围层（性能优先），装饰全部纯 CSS
+- Canvas 效果层（FloatingBackground）仅在 full/soft 页面加载，移动端形状上限 6、DPR 上限 2，`prefers-reduced-motion` 时收敛为单帧静态绘制
 
 ## 4. 文案语调
 

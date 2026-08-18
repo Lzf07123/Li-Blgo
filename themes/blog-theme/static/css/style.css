@@ -334,6 +334,7 @@ main:focus { outline: none; }
 .badge-danger { background: var(--liblog-destructive-soft-solid, var(--liblog-destructive-soft)); color: var(--liblog-destructive-soft-fg, var(--liblog-destructive)); border-color: var(--liblog-destructive); }
 .badge-muted { background: var(--liblog-surface-2); color: var(--liblog-muted); }
 .badge-primary { background: var(--liblog-primary-soft-solid, var(--liblog-primary-soft)); color: var(--liblog-primary-soft-fg, var(--liblog-primary)); border-color: var(--liblog-primary); }
+.badge-pinned { background: var(--liblog-warning-soft-solid, var(--liblog-warning-soft)); color: var(--liblog-warning-soft-fg, var(--liblog-warning)); border-color: var(--liblog-warning); font-weight: 700; }
 .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 
 /* ---------- 卡片 ---------- */

@@ -41,6 +41,58 @@ class TestContent(unittest.TestCase):
         content.save_yaml("brand", {"name": "Li&Blog", "icp": ""})
         self.assertEqual(content.load_yaml("brand")["name"], "Li&Blog")
 
+    def test_remove_image_references(self):
+        post = self.root / "content" / "posts" / "hello.md"
+        post.write_text(
+            "---\ntitle: Hello\n---\n\n"
+            "![图一](/img/2026/08/a.png)\n\n"
+            '![](/img/2026/08/a.png "标题")\n\n'
+            '<img src="/img/2026/08/a.png" alt="x">\n\n'
+            '{{< figure src="/img/2026/08/a.png" caption="x" >}}\n\n'
+            "![保留](/img/2026/08/b.png)\n",
+            encoding="utf-8",
+        )
+        changed = content.remove_image_references("2026/08/a.png")
+        self.assertEqual(changed, ["posts/hello.md"])
+        text = post.read_text(encoding="utf-8")
+        self.assertNotIn("a.png", text)
+        self.assertIn("b.png", text)
+
+    def test_remove_image_references_keeps_unrelated_files(self):
+        post = self.root / "content" / "posts" / "hello.md"
+        post.write_text("正文![图](/img/2026/08/b.png)\n", encoding="utf-8")
+        self.assertEqual(content.remove_image_references("2026/08/a.png"), [])
+        self.assertIn("b.png", post.read_text(encoding="utf-8"))
+
+    def test_remove_image_references_clears_frontmatter(self):
+        post = self.root / "content" / "posts" / "hello.md"
+        post.write_text(
+            "---\ntitle: Hello\ncover: /img/2026/08/a.png\n---\n\n正文保留\n",
+            encoding="utf-8",
+        )
+        changed = content.remove_image_references("2026/08/a.png")
+        self.assertEqual(changed, ["posts/hello.md"])
+        text = post.read_text(encoding="utf-8")
+        self.assertIn("cover: ''", text)
+        self.assertIn("正文保留", text)
+
+    def test_clear_config_image_refs(self):
+        (self.root / "config" / "brand.yaml").write_text(
+            "name: Li&Blog\n"
+            "logo: /img/2026/08/a.png\n"
+            "favicon: /img/2026/08/a.png\n"
+            "icp_icon: /img/2026/08/b.png\n"
+            "theme_key: liblog-theme\n",
+            encoding="utf-8",
+        )
+        changed = content.clear_config_image_refs("2026/08/a.png")
+        self.assertEqual(changed, ["brand.yaml"])
+        data = content.load_yaml("brand")
+        self.assertEqual(data["logo"], "")
+        self.assertEqual(data["favicon"], "")
+        self.assertEqual(data["icp_icon"], "/img/2026/08/b.png")
+        self.assertEqual(data["theme_key"], "liblog-theme")
+
     def test_list_markdown_filter(self):
         content.write_markdown(
             "posts",
@@ -89,6 +141,31 @@ class TestContent(unittest.TestCase):
         slugs = [i["slug"] for i in content.list_markdown("posts")]
         self.assertNotIn("_index", slugs)
         self.assertIn("real-post", slugs)
+
+    def test_list_markdown_includes_pinned(self):
+        content.write_markdown(
+            "posts", "pinned-post",
+            {"title": "置顶", "date": "2026-08-18", "pinned": True},
+            "正文",
+        )
+        content.write_markdown(
+            "posts", "normal-post",
+            {"title": "普通", "date": "2026-08-18"},
+            "正文",
+        )
+        by_slug = {i["slug"]: i for i in content.list_markdown("posts")}
+        self.assertTrue(by_slug["pinned-post"]["pinned"])
+        self.assertFalse(by_slug["normal-post"]["pinned"])
+
+    def test_sanitize_inline_svg_removes_script_and_events(self):
+        safe = '<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>'
+        self.assertEqual(content.sanitize_inline_svg(safe), safe)
+        evil = '<svg onload="alert(1)"><script>alert(2)</script></svg>'
+        cleaned = content.sanitize_inline_svg(evil)
+        self.assertNotIn("onload", cleaned)
+        self.assertNotIn("<script", cleaned)
+        self.assertEqual(content.sanitize_inline_svg("<svg onclick=x>"), "")
+        self.assertEqual(content.sanitize_inline_svg("/img/icon.svg"), "/img/icon.svg")
 
 
 if __name__ == "__main__":

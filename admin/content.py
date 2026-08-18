@@ -8,6 +8,38 @@ import yaml
 from admin.config import settings
 
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
+IMAGE_REF_PATTERNS = (
+    # Markdown 行内图片：![alt](url)、![alt](<url>)、![alt](url "title")
+    lambda url: re.compile(
+        r"!\[[^\]]*\]\(\s*(?:<)?" + re.escape(url) + r"(?:>)?(?:\s+[\"'][^\"']*[\"'])?\s*\)"
+    ),
+    # HTML <img> 标签
+    lambda url: re.compile(
+        r"<img\b[^>]*\bsrc\s*=\s*[\"']" + re.escape(url) + r"[\"'][^>]*>",
+        re.IGNORECASE,
+    ),
+    # Hugo figure 短代码
+    lambda url: re.compile(
+        r"\{\{<\s*figure\b[^>]*\bsrc\s*=\s*[\"']" + re.escape(url) + r"[\"'][^>]*>\}\}",
+        re.IGNORECASE,
+    ),
+)
+_DANGEROUS_SVG_RE = re.compile(
+    r"(<script|javascript:|data:\s*text/html|on[a-z]+\s*=)", re.IGNORECASE
+)
+
+
+def sanitize_inline_svg(value: str) -> str:
+    """清洗后台可写的内联 SVG：拒绝脚本/事件属性，保留纯展示 SVG。"""
+    if not isinstance(value, str) or not value.lstrip().lower().startswith("<svg"):
+        return value
+    cleaned = re.sub(
+        r"\son[a-z]+\s*=\s*(?:\"[^\"]*\"|'[^']*')", "", value, flags=re.IGNORECASE
+    )
+    cleaned = re.sub(r"<script\b[^>]*>.*?</script>", "", cleaned, flags=re.IGNORECASE | re.DOTALL)
+    if _DANGEROUS_SVG_RE.search(cleaned):
+        return ""
+    return cleaned
 
 
 def safe_resolve(root: Path, rel: str) -> Path:
@@ -52,6 +84,7 @@ def list_markdown(
                 "date": fm.get("date", ""),
                 "status": fm.get("status", "published"),
                 "tags": fm.get("tags") or [],
+                "pinned": bool(fm.get("pinned", False)),
             }
         )
     if q:
@@ -88,6 +121,12 @@ def read_markdown(section: str, slug: str) -> tuple[dict, str]:
         except yaml.YAMLError:
             return {}, text
     return {}, text
+
+
+def markdown_exists(section: str, slug: str) -> bool:
+    if not SLUG_RE.match(slug):
+        return False
+    return safe_resolve(settings.content_root, f"{section}/{slug}.md").exists()
 
 
 def write_markdown(section: str, slug: str, frontmatter: dict, body: str) -> None:
@@ -131,6 +170,89 @@ def delete_markdown(section: str, slug: str) -> None:
     p = safe_resolve(settings.content_root, f"{section}/{slug}.md")
     if p.exists():
         p.unlink()
+
+
+def remove_image_references(rel: str) -> list[str]:
+    """删除媒体后，扫描内容 Markdown 并移除引用该图片的地址。
+
+    返回被修改文件的相对路径（相对 content/）。
+    """
+    url = f"/img/{rel}"
+    changed = []
+    root = settings.content_root
+    if not root.exists():
+        return changed
+    for p in sorted(root.rglob("*.md")):
+        text = p.read_text(encoding="utf-8")
+        new_text = _strip_image_refs(text, url)
+        new_text = _strip_frontmatter_refs(new_text, url)
+        if new_text != text:
+            p.write_text(new_text, encoding="utf-8")
+            changed.append(p.relative_to(root).as_posix())
+    return changed
+
+
+def _strip_frontmatter_refs(text: str, url: str) -> str:
+    """清空 Markdown frontmatter 中等于目标图片地址的字段（如 cover）。"""
+    parts = text.split("---", 2)
+    if len(parts) < 3 or parts[0].strip():
+        return text
+    try:
+        fm = yaml.safe_load(parts[1]) or {}
+    except yaml.YAMLError:
+        return text
+    if not isinstance(fm, dict) or not _clear_matching_strings(fm, url):
+        return text
+    new_fm = yaml.safe_dump(
+        fm, allow_unicode=True, sort_keys=False, default_flow_style=False
+    ).strip()
+    return f"---\n{new_fm}\n---{parts[2]}"
+
+
+def _strip_image_refs(text: str, url: str) -> str:
+    for make_pattern in IMAGE_REF_PATTERNS:
+        text = make_pattern(url).sub("", text)
+    return text
+
+
+def _clear_matching_strings(node, target: str) -> bool:
+    """递归把 YAML 中等于 target 的字符串值清空，返回是否有修改。"""
+    changed = False
+    if isinstance(node, dict):
+        for key, value in list(node.items()):
+            if isinstance(value, str) and value == target:
+                node[key] = ""
+                changed = True
+            elif isinstance(value, (dict, list)):
+                changed = _clear_matching_strings(value, target) or changed
+    elif isinstance(node, list):
+        for i, value in enumerate(node):
+            if isinstance(value, str) and value == target:
+                node[i] = ""
+                changed = True
+            elif isinstance(value, (dict, list)):
+                changed = _clear_matching_strings(value, target) or changed
+    return changed
+
+
+def clear_config_image_refs(rel: str) -> list[str]:
+    """删除媒体后，清空 config/*.yaml 中引用该图片的字段。返回修改的文件名。"""
+    url = f"/img/{rel}"
+    changed = []
+    root = settings.config_root
+    if not root.exists():
+        return changed
+    for p in sorted(root.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        except yaml.YAMLError:
+            continue
+        if not isinstance(data, dict) or not _clear_matching_strings(data, url):
+            continue
+        text = yaml.safe_dump(data, allow_unicode=True, sort_keys=False, default_flow_style=False)
+        p.write_text(f"# {p.stem}.yaml（后台保存生成）\n{text}", encoding="utf-8")
+        changed.append(p.name)
+    return changed
 
 
 def load_yaml(name: str) -> dict:

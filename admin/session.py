@@ -15,6 +15,7 @@ def create_session(kind: str, sub: Optional[str] = None, sid: Optional[str] = No
     session_id = secrets.token_hex(24)
     now = int(time.time())
     conn = connect()
+    conn.execute("DELETE FROM sessions WHERE expires_at < ?", (now,))
     conn.execute(
         "INSERT INTO sessions (id, kind, sub, sid, csrf, created_at, expires_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",

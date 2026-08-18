@@ -27,9 +27,13 @@
           <a href="{{ row[col.key ~ '_href'] }}"{% if row.get(col.key ~ '_external') %} target="_blank" rel="noopener"{% endif %}>{{ row[col.key] }}</a>
           {% if row.get(col.key ~ '_tags') %}
           <span class="admin-tags">
-            {% for t in row[col.key ~ '_tags'] %}<span class="admin-tag">{{ t }}</span>{% endfor %}
+            {% for t in row[col.key ~ '_tags'] %}<span class="admin-tag{{ ' ' + t.class if t is mapping and t.class else '' }}">{{ t.label if t is mapping else t }}</span>{% endfor %}
           </span>
           {% endif %}
+        </td>
+        {% elif col.type == 'image' %}
+        <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
+          <img class="table-thumb" src="{{ row[col.key ~ '_src'] }}" alt="{{ row[col.key] }}" loading="lazy">
         </td>
         {% elif col.type == 'badge' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
@@ -44,6 +48,8 @@
               {% if act.name %}<input type="hidden" name="{{ act.name }}" value="{{ act.value }}">{% endif %}
               <button type="submit" class="btn-link{{ ' danger' if act.danger else '' }}">{{ act.label }}</button>
             </form>
+            {% elif act.button %}
+            <button type="button" class="btn-link{{ ' ' + act.class if act.class else '' }}"{% if act.data_url %} data-url="{{ act.data_url }}"{% endif %} title="{{ act.label }}">{{ act.label }}</button>
             {% else %}
             <a class="btn-link{{ ' danger' if act.danger else '' }}" href="{{ act.href }}"{% if act.external %} target="_blank" rel="noopener"{% endif %} title="{{ act.label }}">{{ act.label }}</a>
             {% endif %}

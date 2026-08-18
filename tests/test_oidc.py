@@ -1,9 +1,12 @@
 import base64
 import hashlib
+import tempfile
 import unittest
+from pathlib import Path
 
 from admin import oidc
 from admin.config import settings
+from admin.db import connect, init_db
 
 
 class _FakeRequest:
@@ -33,6 +36,14 @@ class TestOidc(unittest.TestCase):
         import asyncio
 
         self.assertFalse(asyncio.run(oidc.backchannel_logout(_FakeRequest())))
+
+    def test_jti_replay_is_rejected(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        settings.db_path = Path(tmp.name) / "blog.db"
+        init_db()
+        self.assertFalse(oidc._jti_seen("jti-1", 9999999999))
+        self.assertTrue(oidc._jti_seen("jti-1", 9999999999))
 
 
 if __name__ == "__main__":

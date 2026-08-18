@@ -2,6 +2,7 @@ import tempfile
 import unittest
 import io
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -46,6 +47,12 @@ class TestMedia(unittest.TestCase):
         self.assertFalse(p.exists())
         self.assertEqual(media.list_media(), [])
 
+    def test_delete_media_rejects_non_image(self):
+        p = Path(media.MEDIA_ROOT) / "badge.svg"
+        p.write_text("<svg/>", encoding="utf-8")
+        with self.assertRaises(ValueError):
+            media.delete_media("badge.svg")
+
     def test_large_image_downscaled(self):
         p = media.save_upload("huge.jpg", make_image((3200, 2400), fmt="JPEG"))
         with Image.open(p) as img:
@@ -59,6 +66,19 @@ class TestMedia(unittest.TestCase):
     def test_safe_path_rejects_escape(self):
         with self.assertRaises(ValueError):
             media.safe_media_path("../secret.png")
+
+    def test_huge_dimensions_rejected_before_decode(self):
+        class FakeImage:
+            format = "PNG"
+            is_animated = False
+            size = (30000, 30000)
+
+            def load(self):
+                raise AssertionError("不应在尺寸校验前解码")
+
+        with patch("admin.media.Image.open", return_value=FakeImage()):
+            with self.assertRaises(ValueError):
+                media._optimize_image(b"fake")
 
 
 if __name__ == "__main__":

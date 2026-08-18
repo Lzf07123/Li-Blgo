@@ -6,7 +6,7 @@
   <title>基础信息 · {{ brand.name }} 设置</title>
   <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=32">
   <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=32">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=32">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=34">
 </head>
 <body class="admin-body auth-page">
   <main class="auth-shell auth-shell--wide">
@@ -37,7 +37,7 @@
       <p class="auth-step">第 1 步 / 共 3 步</p>
       <h2 class="auth-heading">基础信息</h2>
       <p class="auth-sub">先填写站点与个人基础信息</p>
-      {% if error %}<p class="flash auth-error" role="alert">{{ error }}</p>{% endif %}
+      {% if error %}<p class="flash auth-error" role="alert">{{ error }}</p>{% elif flash %}<p class="flash auth-error" role="alert">{{ flash }}</p>{% endif %}
       <form method="post" action="/{{ admin_path }}/setup/basic" class="auth-form">
         <input type="hidden" name="_csrf" value="{{ csrf }}">
         <div class="auth-form-grid">
@@ -57,6 +57,16 @@
           </fieldset>
         </div>
         <button type="submit" class="btn btn-block">下一步：创建管理员</button>
+      </form>
+      <div class="auth-divider">或者从备份恢复建站</div>
+      <p class="auth-sub">上传 Li&Blog 备份 ZIP，直接恢复内容、配置、媒体与数据库，跳过手工设置。</p>
+      <form method="post" action="/{{ admin_path }}/setup/restore" enctype="multipart/form-data" class="auth-form">
+        <input type="hidden" name="_csrf" value="{{ csrf }}">
+        <label>备份 ZIP
+          <input type="file" name="file" accept=".zip" required>
+        </label>
+        <label><input type="checkbox" name="confirm" value="1" required> 我确认用备份覆盖当前默认数据</label>
+        <button type="submit" class="btn btn-block btn-secondary">从备份恢复建站</button>
       </form>
     </section>
   </main>

@@ -39,9 +39,15 @@ class RateLimiter:
 
     def allow(self, key: str, limit: int, window: float) -> bool:
         now = time.monotonic()
+        if len(self._events) > 1000:
+            # 周期性清理完全过期的 key，避免长期运行后内存无限增长
+            self._events = {k: v for k, v in self._events.items() if v}
         queue = [t for t in self._events.get(key, []) if t > now - window]
         if len(queue) >= limit:
-            self._events[key] = queue
+            if queue:
+                self._events[key] = queue
+            else:
+                self._events.pop(key, None)
             return False
         queue.append(now)
         self._events[key] = queue

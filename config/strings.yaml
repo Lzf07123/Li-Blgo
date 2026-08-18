@@ -30,16 +30,20 @@ common:
   updated_at: 更新于
   published_at: 发布于
   back: 返回
+  close: 关闭
   draft: 草稿
   status_label: 状态
   prev: 上一篇
   next: 下一篇
   skip_to_content: 跳到正文
+  search_select: 选择
+  search_open: 打开
   search_label: 输入关键词
   not_found_title: 页面未找到
   not_found_body: 你访问的页面不存在或已被移动，回到首页继续浏览吧。
   top: 返回顶部
   tag: 标签
+  pinned: 置顶
   repo: 仓库
   no_related: 暂无相关文章
   links_title: 更多链接

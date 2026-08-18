@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">访问统计</span>
+</nav>
 <div class="list-head">
 <h1>访问统计</h1>
 <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/stats/export">导出 CSV</a>
