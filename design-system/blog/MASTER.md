@@ -39,7 +39,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | brand-logo | Logo 占位/图片，品牌色文字兜底 |
-| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字 + `static/img/badges/*.svg` 本地图标，模拟 README shields 标准，零外链） |
+| badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字 + 本地图标，模拟 README shields 标准，零外链）；图标支持 SVG slug 与主流光栅路径（png/jpg/jpeg/gif/webp/avif），显示层 object-fit: contain 自动缩放 |
 | admin-badge | 后台类型化徽章（published 对勾 / draft 圆点 / active 圆点 / muted / danger），语义色 + 边框 + 图标，列表标签渲染为 `admin-tag` 小胶囊 |
 | card | 项目卡/文章卡 |
 | timeline-node | 时间线节点 |

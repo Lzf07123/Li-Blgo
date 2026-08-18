@@ -75,6 +75,11 @@ main:focus { outline: none; }
   color: var(--liblog-fg);
 }
 .brand-logo:hover { text-decoration: none; }
+.brand-logo-img {
+  max-height: 28px;
+  width: auto;
+  object-fit: contain;
+}
 .logo-fallback {
   height: 28px;
   width: 28px;
@@ -291,6 +296,13 @@ main:focus { outline: none; }
   background: currentColor;
   -webkit-mask: var(--badge-icon) center / contain no-repeat;
   mask: var(--badge-icon) center / contain no-repeat;
+}
+.badge-readme-img {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  object-fit: contain;
+  border-radius: 3px;
 }
 .badge-success { background: var(--liblog-success-soft-solid, var(--liblog-success-soft)); color: var(--liblog-success-soft-fg, var(--liblog-success)); border-color: var(--liblog-success); }
 .badge-warning { background: var(--liblog-warning-soft-solid, var(--liblog-warning-soft)); color: var(--liblog-warning-soft-fg, var(--liblog-warning)); border-color: var(--liblog-warning); }

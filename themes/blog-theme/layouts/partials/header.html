@@ -5,7 +5,7 @@
   <div class="nav-inner">
     <a class="brand-logo" href="{{ .Site.Home.RelPermalink }}">
       {{ if $brand.logo }}
-        <img src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}">
+        <img class="brand-logo-img" src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}">
       {{ else }}
         <span class="logo-fallback" aria-hidden="true">{{ substr $brand.name 0 2 }}</span>
         <span class="brand-name-text">{{ $brand.name }}</span>

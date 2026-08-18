@@ -762,10 +762,12 @@ textarea.is-dragover {
 .media-month { font-size: 1rem; margin: 20px 0 8px; color: var(--liblog-muted); }
 .auth-theme-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
 .auth-logo-img {
-  width: 40px;
-  height: 40px;
+  max-width: 40px;
+  max-height: 40px;
+  width: auto;
+  height: auto;
   border-radius: 12px;
-  object-fit: cover;
+  object-fit: contain;
 }
 @media (max-width: 768px) {
   .stat-bar-row { grid-template-columns: 1fr 1fr 40px; }
