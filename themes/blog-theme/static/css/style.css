@@ -376,6 +376,10 @@ main:focus { outline: none; }
   margin: -20px -24px 14px;
   border-radius: 16px 16px 0 0;
   overflow: hidden;
+  transition: opacity var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.post-cover-link:hover {
+  opacity: 0.92;
 }
 .post-cover {
   display: block;
