@@ -172,7 +172,7 @@ config/
 - 秘密路径 `/admin` + 强密码 + 登录限速 + 可选 IP 白名单
 - 容器入口 root 仅用于初始化挂载目录属主，应用以 UID 1000 运行；不挂 Docker socket；admin 不暴露宿主端口
 - OIDC secret 只存环境变量/secret 文件，不进 git
-- 后台关闭时 nginx 返回中性"暂不可用"页
+- 后台关闭时 nginx 返回"后台服务未启动"引导页（502 → admin-off.html）
 
 ## 7. OIDC 对接设计（Li&Pass）
 

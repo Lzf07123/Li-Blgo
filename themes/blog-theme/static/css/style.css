@@ -20,6 +20,11 @@ body {
     color var(--liblog-motion-base) var(--liblog-ease-out);
 }
 
+h1, h2, h3, h4, h5, h6 {
+  overflow-wrap: break-word;
+}
+img { max-width: 100%; }
+
 a {
   color: var(--liblog-primary);
   text-decoration: none;
@@ -49,25 +54,29 @@ main:focus { outline: none; }
 .skip-link:focus { top: 12px; }
 
 /* ---------- 页头（sticky + 品牌流动线） ---------- */
+:root { --header-h: 56px; }
 .site-header {
   position: sticky;
   top: 0;
   z-index: 20;
   flex-shrink: 0;
-  padding: 12px 0 0;
+  height: var(--header-h);
+  padding: 0;
   border-bottom: 1px solid var(--liblog-border);
   background: var(--liblog-bg);
 }
 .nav-inner {
   width: min(1024px, calc(100% - 32px));
+  height: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding-bottom: 12px;
+  gap: 16px;
+  flex-wrap: nowrap;
+  padding-bottom: 0;
 }
 .brand-logo {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -93,28 +102,26 @@ main:focus { outline: none; }
 }
 .site-nav {
   margin-left: auto;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  font-size: 0.9rem;
+  gap: 2px;
+  flex-wrap: nowrap;
+  font-size: 1rem;
 }
-.site-nav a {
+.site-nav a, .nav-search-btn {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 4px 8px;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 10px;
   border-radius: 8px;
+  white-space: nowrap;
 }
 .site-nav a:hover { background: var(--liblog-surface-2); text-decoration: none; }
 .site-nav a[aria-current="page"] { color: var(--liblog-primary); font-weight: 600; }
 .nav-search-btn {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 4px 8px;
   border: 0;
-  border-radius: 8px;
   background: none;
   color: inherit;
   font: inherit;
@@ -437,7 +444,6 @@ input:focus, select:focus, textarea:focus {
 .journey-body p { margin: 6px 0 0; color: var(--liblog-muted); font-size: 0.9rem; }
 
 /* ---------- Hero ---------- */
-:root { --header-h: 53px; }
 .hero {
   position: relative;
   min-height: calc(100vh - var(--header-h));
@@ -866,15 +872,33 @@ mark {
 
 /* ---------- 响应式（1024 / 768 / 640 断点，覆盖 375–1440） ---------- */
 @media (max-width: 1024px) {
-  :root { --header-h: 95px; }
   .page-shell { width: min(880px, calc(100% - 28px)); }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
 @media (max-width: 768px) {
-  .site-header { padding-top: 8px; }
-  .nav-inner { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .site-nav { margin-left: 0; gap: 14px; font-size: 0.85rem; }
-  .site-nav a { padding: 4px 6px; }
+  :root { --header-h: 52px; }
+  .nav-inner { gap: 8px; }
+  .brand-logo { gap: 8px; }
+  .brand-logo-img { max-height: 26px; }
+  .logo-fallback { height: 26px; width: 26px; font-size: 0.8rem; }
+  .site-nav {
+    flex: 1;
+    min-width: 0;
+    margin-left: 0;
+    gap: 2px;
+    font-size: 0.95rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .site-nav::-webkit-scrollbar { display: none; }
+  .site-nav a, .nav-search-btn {
+    flex: none;
+    min-height: 44px;
+    padding: 0 10px;
+  }
+  .nav-search-btn { order: -1; }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }
   .hero { padding: 24px 0; }
@@ -894,6 +918,12 @@ mark {
 }
 @media (max-width: 640px) {
   .article-body { font-size: 0.95rem; }
+  .article-body table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   .page-shell { width: calc(100% - 24px); }
   .card-grid { grid-template-columns: 1fr; }
   .hero-title { font-size: 1.45rem; }

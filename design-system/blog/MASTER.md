@@ -80,6 +80,8 @@
 
 **易用性迭代（2026-08-18）：** 后台编辑器分栏 Hugo 预览（保存后原地生成，不离开编辑页）、媒体库上传/插入图片、列表搜索与分页、首页/资料配置改为结构化表单、保存可选择留在本页、后台深浅色与分组导航；公开站补面包屑、阅读时间、上一篇/下一篇、搜索页结果计数与摘要、404 页、跳转到正文；25 项单元测试 + TestClient 端到端流程验证。
 
+**页头收敛（2026-08-18）：** 页头改为固定高度（桌面 56px / 移动端 52px），导航字号提升至 1rem / 0.95rem；移动端导航与 logo 同行，单行横向滚动（保留 44px 触达尺寸），搜索按钮 `order:-1` 置顶可见；`--header-h` 与实际高度对齐；文章表格在移动端启用横向滚动，标题支持断行防溢出。
+
 **后台视觉全量补齐（2026-08-18）：** 全页面统一标题/卡片/面包屑/错误提示（flash--error）、代码与分隔线样式；文件选择与复选控件令牌化（accent-color + file-selector-button）；媒体库并入 table-shell；统计/编辑/预览/OIDC 绑定页补齐面包屑与卡片容器；桌面与移动端无横向溢出。
 
 **开源实践 50 轮优化（2026-08-18）：** 后台补 Markdown 工具栏、Ctrl+S、拖拽上传、快捷发布/转草稿、CSV 导出、构建时间、TOP5 看板、媒体按月分组、面包屑、返回顶部与安全响应头；前端补 OG/Twitter/JSON-LD/canonical/RSS、图片懒加载、外链安全、阅读进度、相关文章、标签页、搜索高亮、返回顶部；逐条记录见 `OPTIMIZATION-50.md`。
@@ -88,7 +90,7 @@
 
 **React 完全复刻（2026-08-18）：** 效果层改用与 Li&Pass 同款 React/motion 组件（Canvas FloatingBackground、AuroraBackground、TechAmbience 去光束、BlurText、CountUp），esbuild 打成单文件进 Hugo 静态目录；页面按 data-ambient 分级加载（首页全量/列表柔和/文章不加载），服务器仍为纯静态。
 
-**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回 502 中性页而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷，admin 只读导入、偏移存 data 卷）；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权，无需宿主机目录；媒体容器内映射 `themes/blog-theme/static/img`，公开路径 `/img/`），上传图片持久化、容器重建不丢失；`content/ config/ output/` 为 bind 挂载，容器入口以 root 自动修复挂载目录属主（仅当 UID 1000 不可写时）后降权运行，全新部署无需手动 chown；admin 启动时若 `output/index.html` 缺失自动全量构建，nginx 对缺失产物返回“构建中”引导页（403 → pending.html）；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
+**容器化注意点：** nginx 后台反代使用 Docker DNS（127.0.0.11）+ 变量上游，admin 离线时返回“后台服务未启动”引导页（502 → admin-off.html）而不是启动崩溃；admin 容器必须设 `BEACON_LOG=/app/beacon/beacon.log`（beacon 命名卷，admin 只读导入、偏移存 data 卷）；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权，无需宿主机目录；媒体容器内映射 `themes/blog-theme/static/img`，公开路径 `/img/`），上传图片持久化、容器重建不丢失；`content/ config/ output/` 为 bind 挂载，容器入口以 root 自动修复挂载目录属主（仅当 UID 1000 不可写时）后降权运行，全新部署无需手动 chown；admin 启动时若 `output/index.html` 缺失自动全量构建，nginx 对缺失产物返回“构建中”引导页（403 → pending.html）；Hugo 二进制（v0.165.0）随仓库提交于 `bin/hugo/`（amd64/arm64，含 SHA256 校验），构建期按 `TARGETARCH` COPY，不联网下载；构建发布为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载，禁止整目录 `os.replace` 交换）；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 环境变量套镜像前缀加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）。
 
 **镜像结构（2026-08-18 重构）：** admin 镜像改为多阶段构建——builder 从仓库 `bin/hugo/` COPY 并校验 Hugo v0.165.0（不联网）、安装 pip 依赖到 `/opt/venv`；runtime 只保留 venv、Hugo 与 ca-certificates，入口以 root 修复挂载目录属主后降权 UID 1000 运行应用（`su-exec`），内置 `/healthz` HEALTHCHECK，compose 开启 `init: true`。nginx `client_max_body_size` 放宽到 100m（媒体单文件仍由应用层限 5MB），以支持备份 ZIP 上传。挂载目录属主由入口自动修复，全新部署无需手动 chown。
 

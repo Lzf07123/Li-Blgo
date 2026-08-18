@@ -34,7 +34,7 @@ docker compose --profile admin up -d
 
 默认公开站端口 80；如需自定义端口，在 `.env` 中设置 `HTTP_PORT` / `HTTPS_PORT`。
 
-首次部署无需手动构建：admin 启动时若 `output/index.html` 不存在会自动执行全量构建；构建完成前 nginx 返回“站点构建中”引导页（自动刷新），而不是 403。
+首次部署无需手动构建：admin 启动时若 `output/index.html` 不存在会自动执行全量构建；构建完成前 nginx 返回“站点构建中”引导页（自动刷新），而不是 403。admin 容器未启动时，访问后台路径会返回“后台服务未启动”引导页（502 → admin-off.html），而不是直接报错。
 
 Docker Hub 基础镜像拉取加速：在 `.env` 设置 `DOCKER_MIRROR_PREFIX`（如 `docker.m.daocloud.io/`，必须以 `/` 结尾；留空为官方源），nginx 与 admin 基础镜像都会套用该前缀。
 
