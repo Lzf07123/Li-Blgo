@@ -25,7 +25,7 @@ noClasses = false
 style = "friendly"
 
 [outputs]
-home = ["HTML", "RSS"]
+home = ["HTML", "RSS", "LLMS", "Security", "Humans"]
 
 [sitemap]
   changefreq = "weekly"
@@ -34,6 +34,24 @@ home = ["HTML", "RSS"]
 [outputFormats.Search]
 mediaType = "application/json"
 baseName = "index"
+isPlainText = true
+notAlternativeFormats = true
+
+[outputFormats.LLMS]
+mediaType = "text/plain"
+baseName = "llms"
+isPlainText = true
+notAlternativeFormats = true
+
+[outputFormats.Security]
+mediaType = "text/plain"
+baseName = "security"
+isPlainText = true
+notAlternativeFormats = true
+
+[outputFormats.Humans]
+mediaType = "text/plain"
+baseName = "humans"
 isPlainText = true
 notAlternativeFormats = true
 

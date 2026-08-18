@@ -1,0 +1,23 @@
+# {{ .Site.Title }}
+
+{{ hugo.Data.brand.tagline }} · {{ hugo.Data.brand.promise }}
+
+## 站点信息
+
+- 作者：{{ hugo.Data.profile.name }}（{{ hugo.Data.profile.identity }}）
+- 方向：{{ hugo.Data.profile.direction }}
+- 主页：{{ .Site.Home.Permalink }}
+
+## 栏目
+
+- 文章：{{ "posts/" | relURL }}
+- 项目：{{ "projects/" | relURL }}
+- 历程：{{ "timeline/" | relURL }}
+- 关于：{{ "about/" | relURL }}
+- 资源：{{ "resources/" | relURL }}
+
+## 最新文章
+
+{{ range first 20 (where .Site.RegularPages.ByDate.Reverse "Section" "posts") }}
+- [{{ .Title }}]({{ .Permalink }})：{{ .Summary | plainify | replaceRE "[\\s]+" " " | truncate 120 }}
+{{ end }}

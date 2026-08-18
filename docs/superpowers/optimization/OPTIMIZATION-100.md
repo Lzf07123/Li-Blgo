@@ -30,7 +30,7 @@
 | v005 | SEO | Article JSON-LD 增强（image/wordCount/inLanguage/publisher） | 完成 | Hugo 构建 353 页通过；BlogPosting/BreadcrumbList/WebSite 全部通过 JSON 解析校验 |
 | v006 | SEO | WebSite JSON-LD 补 sameAs（profile links） | 完成 | 首页 WebSite JSON-LD 含 GitHub sameAs，JSON 校验通过 |
 | v007 | SEO | 自定义 robots.txt（含 Sitemap）+ [sitemap] 配置 | 完成 | 相对 baseURL 无 Sitemap 行；绝对域名下输出 `Sitemap: https://blog.example.cn/sitemap.xml`，sitemap 33KB 全量 |
-| v008 | SEO | llms.txt 输出格式与模板 | 计划 | — |
+| v008 | SEO | llms.txt 输出格式与模板 | 完成 | Hugo 构建通过；llms.txt 含站点信息/栏目/最新文章（待 v009 消除 humans/security 缺模板告警） |
 | v009 | SEO | security.txt 与 humans.txt | 计划 | — |
 | v010 | SEO | 404 页 robots noindex、移除误导性 canonical | 计划 | — |
 | v011 | SEO | 列表/标签/分页页 title 与 description 细化 | 计划 | — |
