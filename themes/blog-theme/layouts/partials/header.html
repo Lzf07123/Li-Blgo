@@ -18,7 +18,7 @@
       <a href="{{ "timeline/" | relURL }}" {{ if hasPrefix $current "/timeline/" }}aria-current="page"{{ end }}>{{ $nav.timeline }}</a>
       <a href="{{ "about/" | relURL }}" {{ if hasPrefix $current "/about/" }}aria-current="page"{{ end }}>{{ $nav.about }}</a>
       <a href="{{ "resources/" | relURL }}" {{ if hasPrefix $current "/resources/" }}aria-current="page"{{ end }}>{{ $nav.resources }}</a>
-      <a href="{{ "search-ui/" | relURL }}" {{ if hasPrefix $current "/search-ui/" }}aria-current="page"{{ end }}>{{ $nav.search }}</a>
+      <button type="button" class="nav-search-btn" data-open-search>{{ $nav.search }}</button>
     </nav>
   </div>
   <span class="flow-line" aria-hidden="true"></span>

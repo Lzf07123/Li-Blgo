@@ -1,0 +1,100 @@
+{{ $strings := hugo.Data.strings }}
+<div id="search-modal" class="search-modal" hidden>
+  <div class="search-modal-backdrop" data-close-search></div>
+  <div class="search-modal-panel" role="dialog" aria-modal="true" aria-label="{{ $strings.nav.search }}">
+    <div class="search-modal-head">
+      <input id="search-modal-input" class="search-input" type="search"
+             placeholder="{{ $strings.home.search_placeholder }}" autocomplete="off"
+             aria-label="{{ $strings.common.search_label }}">
+      <button type="button" class="btn btn-secondary btn-sm" data-close-search>关闭</button>
+    </div>
+    <p id="search-modal-info" class="search-info" role="status" aria-live="polite"></p>
+    <ul id="search-modal-results" class="search-results"></ul>
+  </div>
+</div>
+<script defer src="{{ "js/fuse.min.js" | relURL }}"></script>
+<script>
+  (function () {
+    var modal = document.getElementById("search-modal");
+    var input = document.getElementById("search-modal-input");
+    var list = document.getElementById("search-modal-results");
+    var info = document.getElementById("search-modal-info");
+    var STRINGS = {{ hugo.Data.strings.home | jsonify }};
+    var fuse = null;
+    var lastTrigger = null;
+
+    function open(trigger) {
+      lastTrigger = trigger || document.activeElement;
+      modal.hidden = false;
+      document.body.classList.add("search-modal-open");
+      input.value = "";
+      list.innerHTML = "";
+      info.textContent = "";
+      input.focus();
+    }
+    function close() {
+      modal.hidden = true;
+      document.body.classList.remove("search-modal-open");
+      if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
+    }
+
+    document.querySelectorAll("[data-open-search]").forEach(function (btn) {
+      btn.addEventListener("click", function () { open(btn); });
+    });
+    document.querySelectorAll("[data-close-search]").forEach(function (el) {
+      el.addEventListener("click", close);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !modal.hidden) close();
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); open(); }
+    });
+
+    fetch("/search/index.json")
+      .then(function (r) { return r.json(); })
+      .then(function (posts) {
+        fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
+      });
+
+    function highlight(text, needle) {
+      var i = text.toLowerCase().indexOf(needle.toLowerCase());
+      if (i < 0) return document.createTextNode(text);
+      var frag = document.createDocumentFragment();
+      frag.appendChild(document.createTextNode(text.slice(0, i)));
+      var mark = document.createElement("mark");
+      mark.textContent = text.slice(i, i + needle.length);
+      frag.appendChild(mark);
+      frag.appendChild(document.createTextNode(text.slice(i + needle.length)));
+      return frag;
+    }
+
+    input.addEventListener("input", function () {
+      list.innerHTML = "";
+      var q = input.value.trim();
+      if (!q || !fuse) { info.textContent = ""; return; }
+      var found = fuse.search(q).slice(0, 20);
+      info.textContent = found.length + " " + STRINGS.result_count;
+      found.forEach(function (r) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = r.item.url;
+        a.appendChild(highlight(r.item.title, q));
+        var p = document.createElement("p");
+        p.className = "search-snippet";
+        p.appendChild(highlight(r.item.summary || "", q));
+        li.appendChild(a);
+        li.appendChild(p);
+        list.appendChild(li);
+      });
+      if (!found.length) {
+        var li = document.createElement("li");
+        li.className = "search-empty";
+        li.appendChild(document.createTextNode(STRINGS.no_results + " "));
+        var a = document.createElement("a");
+        a.href = "/posts/";
+        a.textContent = STRINGS.browse_posts;
+        li.appendChild(a);
+        list.appendChild(li);
+      }
+    });
+  })();
+</script>

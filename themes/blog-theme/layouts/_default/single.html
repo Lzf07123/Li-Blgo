@@ -46,7 +46,7 @@
     {{ range . }}<a class="badge badge-primary" href="{{ .href }}" target="_blank" rel="noopener">{{ .label }}</a>{{ end }}
   </div>
   {{ end }}
-  {{ if or .PrevInSection .NextInSection }}
+  {{ if and (eq .Section "posts") (or .PrevInSection .NextInSection) }}
   <nav class="post-nav" aria-label="文章导航">
     {{ with .PrevInSection }}
     <a class="post-nav-item" href="{{ .RelPermalink }}">
@@ -63,7 +63,7 @@
   </nav>
   {{ end }}
   {{ $related := where (.Site.RegularPages.Related .) "Section" "posts" | first 3 }}
-  {{ if $related }}
+  {{ if and (eq .Section "posts") $related }}
   <nav class="related-posts" aria-label="{{ $strings.home.related_title }}">
     <h2 class="section-title">{{ $strings.home.related_title }}</h2>
     <div class="post-list">

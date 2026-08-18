@@ -66,7 +66,7 @@
 | toast / modal | 保存反馈与确认弹窗 |
 | theme-toggle | 后台主题切换 |
 | admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |
-| search-page | Fuse.js 7 本地文件 + 构建期 JSON 索引，零服务端、零外链 |
+| search-page | 全站弹出式搜索（Fuse.js 7 本地文件 + 构建期 JSON 索引，导航/404 均可唤起，Ctrl/Cmd+K 快捷打开，零服务端、零外链） |
 | list-filters | 列表页搜索/状态筛选/分页（50 条/页）与空状态引导 |
 | structured-config | 品牌/文案/首页/资料结构化表单：数字、勾选、技能/链接行编辑，不再手写 YAML |
 | beacon-ingest | nginx empty_gif 匿名日志 → admin 启动导入 stats 表 |

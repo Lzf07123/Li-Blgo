@@ -108,6 +108,19 @@ main:focus { outline: none; }
 }
 .site-nav a:hover { background: var(--liblog-surface-2); text-decoration: none; }
 .site-nav a[aria-current="page"] { color: var(--liblog-primary); font-weight: 600; }
+.nav-search-btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.nav-search-btn:hover { background: var(--liblog-surface-2); }
 .flow-line {
   position: absolute;
   left: 0;
@@ -653,6 +666,40 @@ input:focus, select:focus, textarea:focus {
 .search-info { color: var(--liblog-muted); font-size: 0.85rem; margin-top: 12px; }
 .search-snippet { margin: 4px 0 0; color: var(--liblog-muted); font-size: 0.85rem; }
 .search-empty { color: var(--liblog-muted); }
+.search-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 12vh 16px 16px;
+}
+.search-modal[hidden] { display: none; }
+.search-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--liblog-fg) 35%, transparent);
+}
+.search-modal-panel {
+  position: relative;
+  width: min(640px, 100%);
+  max-height: 70vh;
+  overflow: auto;
+  background: var(--liblog-surface);
+  border: 1px solid var(--liblog-border);
+  border-radius: 16px;
+  box-shadow: var(--liblog-shadow-lg);
+  padding: 20px;
+}
+.search-modal-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.search-modal .search-input { margin-top: 0; flex: 1; }
+.search-modal .search-results { max-height: 46vh; overflow: auto; }
+body.search-modal-open { overflow: hidden; }
 
 /* ---------- 文章导航与 404 ---------- */
 .post-nav {
