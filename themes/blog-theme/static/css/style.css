@@ -837,6 +837,7 @@ body.search-modal-open { overflow: hidden; }
 @media (max-width: 640px) {
   .search-modal-hints { display: none; }
   .search-modal { padding-top: 8vh; }
+  .search-modal-close { width: 44px; height: 44px; }
 }
 
 /* ---------- 文章导航与 404 ---------- */

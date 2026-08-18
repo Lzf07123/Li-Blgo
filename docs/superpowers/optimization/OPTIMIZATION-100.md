@@ -51,7 +51,7 @@
 | v026 | 无障碍 | 搜索模态 dialog 语义与 label 完善 | 完成 | 构建通过；aria-labelledby/aria-describedby 与隐藏标题就位，公共 visually-hidden 工具类入 style.css |
 | v027 | 无障碍 | 模态打开时背景 inert | 完成 | 构建通过；脚本含 `inert` 背景切换，模态关闭恢复 |
 | v028 | 无障碍 | 对比度自动化审计（WCAG AA ≥4.5） | 完成 | 16 组关键文本对实测 4.72–10.78 全部达标；新增 scripts/check_contrast.py 与单元测试 |
-| v029 | 无障碍 | 移动端 44px 触达尺寸审查 | 计划 | — |
+| v029 | 无障碍 | 移动端 44px 触达尺寸审查 | 完成 | 构建通过；搜索关闭按钮移动端 44×44，导航触达 44px 保持 |
 | v030 | 无障碍 | 阅读进度/目录导航 aria 完善 | 计划 | — |
 | v031 | 内容 | 文章封面图（frontmatter cover + 模板 + 后台字段） | 计划 | — |
 | v032 | 内容 | 相关文章算法配置（tags/date） | 计划 | — |
