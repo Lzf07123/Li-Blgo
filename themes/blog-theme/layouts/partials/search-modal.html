@@ -51,6 +51,27 @@
     var lastTrigger = null;
     var indexPromise = null;
 
+    function setSearchExpanded(expanded) {
+      document.querySelectorAll("[data-open-search]").forEach(function (btn) {
+        btn.setAttribute("aria-expanded", expanded ? "true" : "false");
+      });
+    }
+
+    function trapFocus(e) {
+      if (e.key !== "Tab") return;
+      var focusables = modal.querySelectorAll('button, input, a[href], [tabindex]:not([tabindex="-1"])');
+      if (!focusables.length) return;
+      var first = focusables[0];
+      var last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+
     function ensureIndex() {
       if (!indexPromise) {
         indexPromise = fetch("/search/index.json")
@@ -119,6 +140,7 @@
       lastTrigger = trigger || document.activeElement;
       modal.hidden = false;
       document.body.classList.add("search-modal-open");
+      setSearchExpanded(true);
       input.value = "";
       render("");
       input.focus();
@@ -127,6 +149,7 @@
     function close() {
       modal.hidden = true;
       document.body.classList.remove("search-modal-open");
+      setSearchExpanded(false);
       if (lastTrigger && lastTrigger.focus) lastTrigger.focus();
     }
 
@@ -141,6 +164,7 @@
         if ((e.metaKey || e.ctrlKey) && e.key === "k") { e.preventDefault(); open(); }
         return;
       }
+      trapFocus(e);
       if (e.key === "Escape") { close(); return; }
       if (e.key === "ArrowDown") { e.preventDefault(); setActive(Math.min(activeIndex + 1, items.length - 1)); }
       if (e.key === "ArrowUp") { e.preventDefault(); setActive(Math.max(activeIndex - 1, 0)); }
