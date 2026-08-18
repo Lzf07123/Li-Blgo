@@ -1,6 +1,9 @@
+import os
 import pathlib
 import tempfile
+import types
 import unittest
+from unittest import mock
 
 from scripts.build import publish, validate_content
 
@@ -35,6 +38,32 @@ class TestBuild(unittest.TestCase):
             publish(src, dst)
             self.assertTrue((dst / "a.html").exists())
             self.assertFalse((dst / "old.html").exists())
+
+
+class TestBootstrapBuild(unittest.TestCase):
+    def test_bootstrap_always_runs_full_build_even_if_index_exists(self):
+        from admin import main as main_mod
+
+        with tempfile.TemporaryDirectory() as d:
+            output = pathlib.Path(d)
+            (output / "index.html").write_text("x", encoding="utf-8")
+            with mock.patch.dict(os.environ, {"LIBLOG_BOOTSTRAP_BUILD": "1"}):
+                with mock.patch.object(main_mod.settings, "output_root", output):
+                    with mock.patch.object(
+                        main_mod.build,
+                        "run_full",
+                        return_value=(types.SimpleNamespace(returncode=0), 0.1),
+                    ) as run:
+                        main_mod._bootstrap_build()
+            run.assert_called_once_with()
+
+    def test_bootstrap_can_be_disabled(self):
+        from admin import main as main_mod
+
+        with mock.patch.dict(os.environ, {"LIBLOG_BOOTSTRAP_BUILD": "0"}):
+            with mock.patch.object(main_mod.build, "run_full") as run:
+                main_mod._bootstrap_build()
+        run.assert_not_called()
 
 
 if __name__ == "__main__":

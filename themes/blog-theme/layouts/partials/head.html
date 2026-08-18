@@ -20,7 +20,7 @@
 {{ with $brand.favicon }}<link rel="icon" href="{{ . | relURL }}" sizes="any">{{ end }}
 {{ with $brand.logo }}<link rel="apple-touch-icon" href="{{ . | relURL }}">{{ end }}
 <link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=35">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=37">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=38">
 {{ if .IsHome }}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebSite","name":{{ $brand.name | jsonify }},"url":{{ .Site.Home.Permalink | jsonify }}}

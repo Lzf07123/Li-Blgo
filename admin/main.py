@@ -39,11 +39,8 @@ from admin.uploads import read_limited
 
 
 def _bootstrap_build() -> None:
-    """output/index.html 缺失时（新部署/首次访问前）自动全量构建；失败不阻塞启动。"""
+    """admin 每次启动自动全量构建；失败只告警不阻塞启动（LIBLOG_BOOTSTRAP_BUILD=0 可关闭）。"""
     if os.getenv("LIBLOG_BOOTSTRAP_BUILD", "1") == "0":
-        return
-    index = settings.output_root / "index.html"
-    if index.exists():
         return
     try:
         result, elapsed = build.run_full()

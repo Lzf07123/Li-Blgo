@@ -270,7 +270,7 @@ services:
 - **P0 设计实例化（本阶段）**：设计文档 + design-system/blog + 令牌 + 配置骨架 + AGENTS.md
 - **P1 公开站**：Hugo 主题骨架（Goldmark/shortcodes/Chroma）+ 分段编排壳 + 内容结构 + strings.yaml + 3 篇示例 + 兄弟项目 Markdown 初稿
 - **P2 后台**：Setup 向导 + 双登录（本地 + OIDC）+ 八栏目 + 预览（走 Hugo）+ 保存触发编排构建
-- **P3 容器化**：Dockerfile（加速变量）+ compose.yaml（profiles/bind 挂载）+ nginx 反代与匿名打点（已完成，P3→P5 合并推进）
+- **P3 容器化**：Dockerfile（加速变量）+ compose.yaml（profiles/bind 挂载）+ nginx 反代与匿名打点 + admin 每次启动全量重建（已完成，P3→P5 合并推进）
 - **P4 搜索统计**：Fuse.js 本地化 + 搜索页 + empty_gif 打点 + 启动导入（已完成）
 - **P5 备案上线**：域名、服务器、备案、HTTPS、Li&Pass 客户端登记、正式部署
 

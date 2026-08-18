@@ -9,5 +9,7 @@
     {{ if .ReadingTime }}<span class="meta-sep">·</span><span>{{ .ReadingTime }} {{ $strings.common.reading_time }}</span>{{ end }}
     {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
-  {{ with .Summary }}<p class="post-summary">{{ . }}</p>{{ end }}
+  {{ $summary := "" }}
+  {{ with .Params.summary }}{{ $summary = . }}{{ else }}{{ $summary = .Summary | plainify }}{{ end }}
+  {{ with $summary }}<p class="post-summary">{{ . | truncate 90 "…" }}</p>{{ end }}
 </article>
