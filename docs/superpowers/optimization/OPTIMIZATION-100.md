@@ -39,7 +39,7 @@
 | v014 | 性能 | 图片渲染钩子补 width/height 减少 CLS | 完成 | 临时站验证：`<img src=/img/a.png … width=320 height=200>`；真实站点构建通过 |
 | v015 | 性能 | 站点 Logo fetchpriority=high + eager + width/height | 完成 | 首页输出 `loading=eager fetchpriority=high width=1265 height=1265` |
 | v016 | 性能 | 首页区块 content-visibility 优化 | 完成 | 构建通过；style.css 含 `content-visibility: auto` 与 `contain-intrinsic-size` |
-| v017 | 性能 | 表格/长列表 contain 优化 | 计划 | — |
+| v017 | 性能 | 表格/长列表 contain 优化 | 完成 | 构建通过；style.css 含 2 处 `contain: layout style`，版本号 v42 |
 | v018 | 性能 | nginx HTML no-cache、静态资源长缓存策略 | 计划 | — |
 | v019 | 性能 | nginx sendfile/tcp_nopush/gzip 参数细化 | 计划 | — |
 | v020 | 性能 | 搜索模态焦点陷阱、焦点恢复、aria-expanded | 计划 | — |

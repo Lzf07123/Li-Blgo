@@ -355,6 +355,7 @@ main:focus { outline: none; }
 }
 .card-interactive:hover { transform: translateY(-1px); box-shadow: var(--liblog-shadow-md); }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+.card-grid, .post-list, .journey-panel { contain: layout style; }
 .project-card, .post-card { padding: 20px 24px; }
 .post-card { min-width: 0; }
 .project-card { display: flex; flex-direction: column; }
@@ -659,7 +660,7 @@ input:focus, select:focus, textarea:focus {
 }
 .article-body code { background: var(--liblog-surface-2); border-radius: 4px; padding: 2px 5px; font-size: 0.875em; }
 .article-body pre code, .article-body .highlight code { background: none; padding: 0; }
-.article-body table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+.article-body table { border-collapse: collapse; width: 100%; margin: 16px 0; contain: layout style; }
 .article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
 .article-body th { background: var(--liblog-surface-2); }
 .article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
