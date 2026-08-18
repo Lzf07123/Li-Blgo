@@ -220,7 +220,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 /* v4 单元格：统一内边距与垂直对齐 */
 .table-shell th,
 .table-shell td {
-  padding: 11px 14px;
+  padding: 7px 12px;
   text-align: left;
   vertical-align: middle;
 }
@@ -290,7 +290,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .table-col-actions .btn-link {
   display: inline-flex;
   align-items: center;
-  min-height: 36px;
+  min-height: 30px;
 }
 .table-col-actions button.btn-link,
 .row-actions button.btn-link {
@@ -334,7 +334,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 }
 /* v23 空状态：居中、弱化、留白 */
 .table-empty-row td {
-  padding: 28px 16px;
+  padding: 20px 16px;
   text-align: center;
   color: var(--liblog-muted);
   font-size: 0.9rem;
@@ -415,7 +415,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 6px 14px;
+    padding: 4px 12px;
     border: 0;
     text-align: right;
   }
@@ -777,8 +777,8 @@ textarea.is-dragover {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-height: 24px;
-  padding: 2px 10px 2px 8px;
+  min-height: 20px;
+  padding: 1px 8px 1px 6px;
   border: 1px solid var(--liblog-border);
   border-radius: 999px;
   background: var(--liblog-surface-2);
@@ -837,8 +837,8 @@ textarea.is-dragover {
 .admin-tag {
   display: inline-flex;
   align-items: center;
-  min-height: 20px;
-  padding: 1px 8px;
+  min-height: 18px;
+  padding: 0 7px;
   border: 1px solid var(--liblog-border);
   border-radius: 999px;
   background: var(--liblog-surface);
