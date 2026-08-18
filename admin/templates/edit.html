@@ -27,9 +27,9 @@
         {% set name, label, ftype, value = field[0], field[1], field[2], field[3] %}
         <label>{{ label }}
           {% if ftype == "select" %}
-            <select name="{{ name }}" style="background: var(--liblog-surface); color: var(--liblog-fg);">
+            <select name="{{ name }}" data-custom-dropdown>
               {% for option in field[4] %}
-              <option value="{{ option }}" {% if option == value %}selected{% endif %} style="background: var(--liblog-surface); color: var(--liblog-fg);">{{ option }}</option>
+              <option value="{{ option }}" {% if option == value %}selected{% endif %}>{{ option }}</option>
               {% endfor %}
             </select>
           {% elif ftype == "checkbox" %}

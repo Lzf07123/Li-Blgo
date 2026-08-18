@@ -595,6 +595,94 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .row-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .row-actions form { margin: 0; }
 
+/* ---------- 自定义下拉组件 ---------- */
+.custom-select {
+  position: relative;
+  display: inline-block;
+  min-width: 140px;
+}
+.custom-select-native {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  clip: rect(0 0 0 0);
+}
+.custom-select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 8px;
+  background: var(--liblog-surface);
+  color: var(--liblog-fg);
+  font: inherit;
+  font-size: 0.85rem;
+  box-shadow: var(--liblog-shadow-sm);
+  cursor: pointer;
+}
+.custom-select-trigger:hover { border-color: var(--liblog-primary); }
+.custom-select.is-open .custom-select-trigger {
+  border-color: var(--liblog-primary);
+  box-shadow: 0 0 0 3px var(--liblog-primary-soft);
+}
+.custom-select-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.custom-select-chevron {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--liblog-muted);
+  transition: transform var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.custom-select.is-open .custom-select-chevron { transform: rotate(180deg); }
+.custom-select-menu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--liblog-border);
+  border-radius: 8px;
+  background: var(--liblog-surface);
+  box-shadow: var(--liblog-shadow-md);
+}
+.custom-select-option {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--liblog-fg);
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+}
+.custom-select-option:hover,
+.custom-select-option.is-active { background: var(--liblog-primary-soft); color: var(--liblog-primary); }
+.custom-select-option.is-selected { font-weight: 600; color: var(--liblog-primary); }
+label .custom-select { display: block; }
+@media (max-width: 768px) {
+  .list-filters .custom-select { flex: 1; }
+}
+
 /* ---------- 编辑器 ---------- */
 .editor-layout {
   display: grid;

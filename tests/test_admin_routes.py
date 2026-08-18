@@ -154,6 +154,17 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertIn('id="import-pending-list"', r.text)
             self.assertIn('addEventListener("change"', r.text)
 
+    def test_custom_dropdown_referenced_on_list_and_base(self):
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('data-custom-dropdown', r.text)
+            self.assertIn('name="per_page" aria-label="每页条数" data-custom-dropdown', r.text)
+            r = client.get("/admin/static/js/admin-dropdown.js")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("custom-select", r.text)
+
     def test_project_save_preserves_unknown_fields(self):
         store.write_markdown(
             "projects",
