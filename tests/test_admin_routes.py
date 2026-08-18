@@ -243,6 +243,9 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertEqual(r.status_code, 303)
         fm, _ = store.read_markdown("posts", "cover-post")
         self.assertEqual(fm["cover"], "/img/2026/08/cover.webp")
+        self.assertTrue(
+            (settings.db_path.parent / "revisions" / "posts" / "cover-post").exists()
+        )
 
     def test_posts_list_groups_rows_by_year(self):
         store.write_markdown(
@@ -295,6 +298,31 @@ class AdminRoutesTest(unittest.TestCase):
             )
             self.assertEqual(r.status_code, 303)
             self.assertFalse((settings.content_root / "posts" / "bulk-a.md").exists())
+
+    def test_tags_rename_updates_posts(self):
+        store.write_markdown(
+            "posts", "tag-a",
+            {"title": "A", "date": "2026-08-18", "tags": ["old", "keep"]},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/tags/apply",
+                data={
+                    "_csrf": csrf,
+                    "old_tag": "old",
+                    "new_tag": "renamed",
+                    "action": "rename",
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, _ = store.read_markdown("posts", "tag-a")
+        self.assertEqual(fm["tags"], ["keep", "renamed"])
 
     def test_logout_post_requires_csrf(self):
         with TestClient(app) as client:

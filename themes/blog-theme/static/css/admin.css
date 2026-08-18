@@ -739,6 +739,34 @@ label .custom-select { display: block; }
   border-radius: 12px;
   background: var(--liblog-surface);
 }
+.preview-loading { margin: 0 0 8px; }
+.revision-list {
+  margin-top: 14px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--liblog-surface);
+}
+.revision-list .editor-preview-head { margin: 0 0 8px; }
+.revision-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.revision-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+.revision-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
 
 /* ---------- 插入图片对话框 ---------- */
 .media-dialog {
@@ -790,6 +818,10 @@ label .custom-select { display: block; }
   background: var(--liblog-surface);
 }
 .upload-box small { color: var(--liblog-muted); }
+.upload-box.is-dragover {
+  border-color: var(--liblog-primary);
+  background: var(--liblog-primary-soft);
+}
 
 /* 上传进度组件（内置设计：令牌配色 + 进度条） */
 .upload-progress-panel {
@@ -827,6 +859,13 @@ label .custom-select { display: block; }
 .upload-file-name {
   font-weight: 600;
   font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.upload-file-meta {
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

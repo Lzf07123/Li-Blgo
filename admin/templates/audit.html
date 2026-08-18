@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">内容体检</span>
+</nav>
+<div class="list-head">
+  <h1>内容体检</h1>
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/audit">重新扫描</a>
+</div>
+<div class="stat-cards">
+  <div class="stat-card"><span>问题总数</span><strong>{{ issues|length }}</strong></div>
+  <div class="stat-card"><span>严重（链接/图片）</span><strong>{{ danger }}</strong></div>
+  <div class="stat-card"><span>提醒（质量）</span><strong>{{ warning }}</strong></div>
+</div>
+<p class="field-help">扫描内容中的失效内部链接、缺失图片、空正文、缺摘要、重复标题与超长标题；修复后重新扫描。</p>
+{% with table = table %}{% include "partials/table.html" %}{% endwith %}
+{% endblock %}

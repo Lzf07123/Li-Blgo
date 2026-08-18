@@ -41,6 +41,25 @@
     var overallBar = document.getElementById("upload-overall-bar");
     var rows = [];
 
+    ["dragover", "dragenter"].forEach(function (name) {
+      form.addEventListener(name, function (e) {
+        e.preventDefault();
+        form.classList.add("is-dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach(function (name) {
+      form.addEventListener(name, function (e) {
+        e.preventDefault();
+        form.classList.remove("is-dragover");
+      });
+    });
+    form.addEventListener("drop", function (e) {
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || !files.length) return;
+      input.files = files;
+      showPending();
+    });
+
     function fmtSize(bytes) {
       if (bytes >= 1024 * 1024) return (bytes / 1024 / 1024).toFixed(1) + " MB";
       if (bytes >= 1024) return Math.round(bytes / 1024) + " KB";
@@ -186,6 +205,16 @@
           navigator.clipboard.writeText(url).then(function () { btn.textContent = "已复制"; });
         } else {
           window.prompt("复制图片路径", url);
+        }
+      });
+    });
+    document.querySelectorAll(".media-copy-md").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var md = "![](" + btn.dataset.url + ")";
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(md).then(function () { btn.textContent = "已复制"; });
+        } else {
+          window.prompt("复制 Markdown 语法", md);
         }
       });
     });

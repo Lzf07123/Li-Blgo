@@ -133,13 +133,41 @@
         var size = document.createElement("span");
         size.className = "upload-file-size";
         size.textContent = fmtSize(file.size);
+        var meta = document.createElement("span");
+        meta.className = "upload-file-meta";
+        meta.textContent = "读取中…";
         var status = document.createElement("span");
         status.className = "upload-status";
         status.textContent = "等待导入";
         li.appendChild(name);
         li.appendChild(size);
+        li.appendChild(meta);
         li.appendChild(status);
         pendingList.appendChild(li);
+        if (/\.(md|markdown)$/i.test(file.name)) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            var text = String(reader.result || "");
+            var parts = text.split("---");
+            var title = "";
+            var date = "";
+            if (parts.length >= 3) {
+              var fm = parts[1];
+              var tm = fm.match(/^title:\s*(.+)$/m);
+              var dm = fm.match(/^date:\s*(.+)$/m);
+              if (tm) title = tm[1].trim().replace(/^["']|["']$/g, "");
+              if (dm) date = dm[1].trim().replace(/^["']|["']$/g, "");
+            }
+            if (!title) {
+              var hm = text.match(/^#\s+(.+)$/m);
+              if (hm) title = hm[1].trim();
+            }
+            meta.textContent = (title || file.name) + (date ? " · " + date : "");
+          };
+          reader.readAsText(file, "utf-8");
+        } else {
+          meta.textContent = "ZIP 压缩包";
+        }
       });
     }
 

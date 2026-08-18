@@ -13,6 +13,7 @@
     {% endif %}
     {% if section == "posts" %}
     <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/import">批量导入</a>
+    <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/export?q={{ q|urlencode }}&status={{ status }}&sort={{ sort }}&order={{ order }}">导出 CSV</a>
     {% endif %}
     <a class="btn btn-sm btn-ghost" href="/{{ section }}/" target="_blank" rel="noopener">查看公开页</a>
   </div>
@@ -84,5 +85,31 @@
       }
     }
   });
+  (function () {
+    var section = "{{ section }}";
+    var key = "liblog-list-" + section;
+    var params = new URLSearchParams(location.search);
+    var hasFilter = ["q", "status", "sort", "order", "per_page"].some(function (k) {
+      return params.has(k);
+    });
+    var form = document.querySelector(".list-filters");
+    if (!hasFilter) {
+      var saved = localStorage.getItem(key);
+      if (saved) {
+        var target = "/{{ admin_path }}/" + section + "?" + saved;
+        if (target !== location.pathname + location.search) {
+          location.replace(target);
+          return;
+        }
+      }
+    } else if (form) {
+      var qs = new URLSearchParams();
+      ["q", "status", "per_page", "sort", "order"].forEach(function (k) {
+        var el = form.querySelector('[name="' + k + '"]');
+        if (el && el.value) qs.set(k, el.value);
+      });
+      localStorage.setItem(key, qs.toString());
+    }
+  })();
 </script>
 {% endblock %}

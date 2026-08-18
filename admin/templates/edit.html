@@ -45,6 +45,9 @@
             <input type="text" name="{{ name }}" value="{{ value }}"{% if name == "tags" and section == "posts" %} list="tag-options"{% endif %}>
           {% endif %}
         </label>
+        {% if name == "cover" and section == "posts" %}
+        <button type="button" class="btn btn-sm btn-secondary" id="cover-pick">从媒体库选择封面</button>
+        {% endif %}
       {% endfor %}
       {% if section == "posts" and all_tags %}
       <datalist id="tag-options">
@@ -82,7 +85,24 @@
       <a id="preview-open" class="btn-link" href="/{{ admin_path }}{{ preview_path }}?raw=1" target="_blank" rel="noopener">新窗口打开</a>
       {% endif %}
     </div>
+    <p id="preview-loading" class="flash preview-loading" hidden>正在生成预览…</p>
     <iframe id="preview-frame" name="preview-frame" title="Hugo 预览" class="preview-frame"></iframe>
+    {% if revisions %}
+    <div class="revision-list">
+      <p class="editor-preview-head">修订历史（最近 {{ revisions|length }} 份）</p>
+      <ul>
+        {% for ts in revisions[:10] %}
+        <li>
+          <a href="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ ts }}" target="_blank" rel="noopener">{{ ts }}</a>
+          <form method="post" action="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ ts }}/restore" data-busy>
+            <input type="hidden" name="_csrf" value="{{ csrf }}">
+            <button type="submit" class="btn-link">恢复</button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </aside>
 </div>
 
@@ -290,6 +310,14 @@
       fullscreenBtn.textContent = on ? "退出全屏" : "全屏";
       body.focus();
     });
+    var coverPick = document.getElementById("cover-pick");
+    var coverMode = false;
+    if (coverPick) {
+      coverPick.addEventListener("click", function () {
+        coverMode = true;
+        dialog.showModal();
+      });
+    }
     document.querySelectorAll(".media-pick").forEach(function (btn) {
       btn.addEventListener("click", function () {
         document.getElementById("image-path-input").value = btn.dataset.path;
@@ -298,13 +326,22 @@
     document.getElementById("image-insert-confirm").addEventListener("click", function () {
       var path = document.getElementById("image-path-input").value.trim();
       if (path) {
-        insertAtCursor("![](" + path + ")\n");
+        if (coverMode) {
+          var coverInput = form.querySelector('input[name="cover"]');
+          if (coverInput) coverInput.value = path;
+          coverMode = false;
+        } else {
+          insertAtCursor("![](" + path + ")\n");
+        }
       }
       dialog.close();
     });
 
     document.getElementById("preview-btn").addEventListener("click", function (e) {
       e.preventDefault();
+      var loading = document.getElementById("preview-loading");
+      loading.hidden = false;
+      window.setTimeout(function () { loading.hidden = true; }, 15000);
       var input = document.createElement("input");
       input.type = "hidden";
       input.name = "action";

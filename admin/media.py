@@ -47,12 +47,19 @@ def list_media() -> list[dict]:
     for p in sorted(MEDIA_ROOT.rglob("*")):
         if p.is_file() and p.suffix.lower() in ALLOWED_EXT:
             rel = p.relative_to(MEDIA_ROOT).as_posix()
+            dims = None
+            try:
+                with Image.open(p) as img:
+                    dims = (img.width, img.height)
+            except Exception:
+                dims = None
             items.append(
                 {
                     "rel": rel,
                     "url": f"/img/{rel}",
                     "admin_url": f"/{rel}",
                     "size": p.stat().st_size,
+                    "dims": dims,
                 }
             )
     items.sort(key=lambda x: x["rel"], reverse=True)

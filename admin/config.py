@@ -21,6 +21,7 @@ class Settings:
         self.import_max_zip_bytes = int(os.getenv("IMPORT_MAX_ZIP_BYTES", str(20 * 1024 * 1024)))
         self.restore_max_files = int(os.getenv("RESTORE_MAX_FILES", "5000"))
         self.restore_max_bytes = int(os.getenv("RESTORE_MAX_BYTES", str(100 * 1024 * 1024)))
+        self.revision_max = int(os.getenv("REVISION_MAX", "50"))
         self.cookie_secure = os.getenv("COOKIE_SECURE", "0") == "1"
         self.session_ttl = int(os.getenv("SESSION_TTL", "43200"))
         self.session_secret = self._resolve_session_secret()

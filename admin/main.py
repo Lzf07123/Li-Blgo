@@ -21,6 +21,7 @@ from fastapi.templating import Jinja2Templates
 from starlette.middleware.sessions import SessionMiddleware
 
 from admin import (
+    audit,
     backup as backup_store,
     build,
     content as store,
@@ -29,6 +30,7 @@ from admin import (
     media as media_store,
     oidc,
     restore as restore_store,
+    revisions,
     security,
 )
 from admin.ingest import import_beacon_log
@@ -112,6 +114,7 @@ ADMIN_NAV = [
         "label": "内容",
         "items": [
             {"label": "文章", "path": "/posts", "icon": "file"},
+            {"label": "标签", "path": "/tags", "icon": "text"},
             {"label": "项目", "path": "/projects", "icon": "folder"},
             {"label": "时间线", "path": "/timeline", "icon": "clock"},
             {"label": "关于我", "path": "/about", "icon": "user"},
@@ -132,6 +135,7 @@ ADMIN_NAV = [
         "items": [
             {"label": "媒体库", "path": "/media", "icon": "image"},
             {"label": "统计", "path": "/stats", "icon": "chart"},
+            {"label": "内容体检", "path": "/audit", "icon": "card"},
             {"label": "备份", "path": "/backup", "icon": "archive"},
         ],
     },
@@ -677,6 +681,9 @@ def media_page(request: Request, q: str = ""):
         rows = []
         for m in files:
             static_url = f"/{settings.admin_path}/static/img/{m['rel']}"
+            size_text = f"{m['size'] / 1024:.0f} KB" if m["size"] >= 1024 else f"{m['size']} B"
+            if m.get("dims"):
+                size_text = f"{m['dims'][0]}×{m['dims'][1]} · {size_text}"
             rows.append(
                 {
                     "thumb": m["rel"],
@@ -684,13 +691,19 @@ def media_page(request: Request, q: str = ""):
                     "rel": m["rel"],
                     "rel_href": static_url,
                     "rel_external": True,
-                    "size": f"{m['size'] / 1024:.0f} KB" if m["size"] >= 1024 else f"{m['size']} B",
+                    "size": size_text,
                     "actions": [
                         {"label": "查看", "href": static_url, "external": True},
                         {
                             "label": "复制路径",
                             "button": True,
                             "class": "media-copy",
+                            "data_url": m["url"],
+                        },
+                        {
+                            "label": "复制 Markdown",
+                            "button": True,
+                            "class": "media-copy-md",
                             "data_url": m["url"],
                         },
                         {
@@ -854,6 +867,120 @@ def stats_export(request: Request):
         content="\n".join(lines) + "\n",
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": 'attachment; filename="liblog-stats.csv"'},
+    )
+
+
+@app.get(ap("/audit"), response_class=HTMLResponse)
+def audit_page(request: Request):
+    require_login(request)
+    issues = audit.audit_content()
+    danger = sum(1 for i in issues if i["severity"] == "danger")
+    warning = len(issues) - danger
+    columns = [
+        {"key": "title", "label": "标题", "type": "link"},
+        {"key": "severity", "label": "级别", "type": "badge"},
+        {"key": "message", "label": "问题", "type": "text"},
+        {"key": "actions", "label": "操作", "type": "actions"},
+    ]
+    rows = []
+    for issue in issues:
+        edit_href = (
+            ap(f"/{issue['section']}/{issue['slug']}/edit")
+            if issue["section"] in SECTIONS and not SECTIONS[issue["section"]]["single"]
+            else ""
+        )
+        rows.append(
+            {
+                "title": issue["title"],
+                "title_href": edit_href,
+                "severity": issue["severity"],
+                "severity_label": "严重" if issue["severity"] == "danger" else "提醒",
+                "severity_class": (
+                    "admin-badge--danger"
+                    if issue["severity"] == "danger"
+                    else "admin-badge--draft"
+                ),
+                "message": issue["message"],
+                "actions": (
+                    [{"label": "编辑", "href": edit_href}] if edit_href else []
+                ),
+            }
+        )
+    table = {
+        "caption": "内容体检结果",
+        "columns": columns,
+        "rows": rows,
+        "empty": "未发现问题，内容健康",
+        "striped": True,
+    }
+    return render(
+        request,
+        "audit.html",
+        {"issues": issues, "danger": danger, "warning": warning, "table": table},
+    )
+
+
+def _tag_counts() -> list[dict]:
+    counts: dict[str, int] = {}
+    for item in store.list_markdown("posts"):
+        for tag in item.get("tags") or []:
+            counts[str(tag)] = counts.get(str(tag), 0) + 1
+    return [{"name": name, "count": count} for name, count in sorted(counts.items())]
+
+
+@app.get(ap("/tags"), response_class=HTMLResponse)
+def tags_page(request: Request):
+    require_login(request)
+    tags = _tag_counts()
+    columns = [
+        {"key": "name", "label": "标签", "type": "text"},
+        {"key": "count", "label": "文章数", "type": "number"},
+    ]
+    table = {
+        "caption": "标签列表",
+        "columns": columns,
+        "rows": [{"name": t["name"], "count": t["count"]} for t in tags],
+        "empty": "还没有标签",
+        "striped": True,
+    }
+    return render(request, "tags.html", {"tags": tags, "table": table})
+
+
+@app.post(ap("/tags/apply"))
+def tags_apply(
+    request: Request,
+    old_tag: str = Form(""),
+    new_tag: str = Form(""),
+    action: str = Form("rename"),
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/tags?error=会话失效"), status_code=303)
+    old_tag = old_tag.strip()
+    new_tag = new_tag.strip()
+    if not old_tag or action not in ("rename", "merge", "delete"):
+        return RedirectResponse(ap("/tags?error=参数不合法"), status_code=303)
+    if action in ("rename", "merge") and not new_tag:
+        return RedirectResponse(ap("/tags?error=新标签不能为空"), status_code=303)
+    changed = 0
+    for item in store.list_markdown("posts"):
+        if old_tag not in (item.get("tags") or []):
+            continue
+        fm, body = store.read_markdown("posts", item["slug"])
+        tags = [str(t) for t in (fm.get("tags") or []) if str(t) != old_tag]
+        if action in ("rename", "merge") and new_tag not in tags:
+            tags.append(new_tag)
+        fm["tags"] = tags
+        store.write_markdown("posts", item["slug"], fm, body)
+        changed += 1
+    if not changed:
+        return RedirectResponse(ap("/tags?error=没有文章使用该标签"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/tags?error=标签更新后构建失败"), status_code=303)
+    return RedirectResponse(
+        ap(f"/tags?ok=已更新 {changed} 篇文章并重建（{elapsed}s）"), status_code=303
     )
 
 
@@ -1200,6 +1327,45 @@ def posts_bulk(
     )
 
 
+@app.get(ap("/posts/export"))
+def posts_export(
+    request: Request,
+    q: str = "",
+    status: str = "",
+    sort: str = "date",
+    order: str = "desc",
+):
+    require_login(request)
+    items = store.list_markdown("posts", q=q, status=status, sort=sort, order=order)
+    items.sort(key=lambda it: not it.get("pinned", False))
+
+    def cell(value) -> str:
+        s = str(value)
+        if s[:1] in ("=", "+", "-", "@", "\t", "\r"):
+            s = "'" + s
+        return '"' + s.replace('"', '""') + '"'
+
+    lines = ["slug,title,date,status,pinned,tags"]
+    for it in items:
+        lines.append(
+            ",".join(
+                [
+                    cell(it["slug"]),
+                    cell(it["title"]),
+                    cell(it.get("date", "")),
+                    cell(it.get("status", "")),
+                    cell("1" if it.get("pinned") else "0"),
+                    cell(", ".join(it.get("tags") or [])),
+                ]
+            )
+        )
+    return Response(
+        content="\n".join(lines) + "\n",
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="liblog-posts.csv"'},
+    )
+
+
 @app.get(ap("/{section}/new"), response_class=HTMLResponse)
 def section_new(request: Request, section: str):
     require_login(request)
@@ -1264,6 +1430,7 @@ def section_slug_edit(request: Request, section: str, slug: str):
             "label": SECTIONS[section]["label"],
             "fields": _edit_fields(section, fm),
             "all_tags": store.all_tags(),
+            "revisions": revisions.list_revisions("posts", slug),
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}/{slug}",
@@ -1347,6 +1514,7 @@ def section_save(
             else:
                 fm.update({"title": title, "date": date, "kind": kind, "summary": summary})
             store.write_markdown(section, slug, fm, body)
+            revisions.save_revision(section, slug, fm, body)
             if old_slug and old_slug != slug:
                 try:
                     store.delete_markdown(section, old_slug)
@@ -1376,6 +1544,44 @@ def section_save(
         edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
         return RedirectResponse(ap(f"{edit_path}?ok=已保存并重建（{elapsed}s）"), status_code=303)
     return after_build_redirect(f"/{section}")
+
+
+@app.get(ap("/posts/{slug}/revisions/{ts}"), response_class=HTMLResponse)
+def revision_view(request: Request, slug: str, ts: str):
+    require_login(request)
+    try:
+        fm, body = revisions.read_revision("posts", slug, ts)
+    except (ValueError, FileNotFoundError):
+        raise HTTPException(404)
+    return render(
+        request,
+        "revision.html",
+        {"slug": slug, "ts": ts, "title": fm.get("title", slug), "body": body},
+    )
+
+
+@app.post(ap("/posts/{slug}/revisions/{ts}/restore"))
+def revision_restore(
+    request: Request,
+    slug: str,
+    ts: str,
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap(f"/posts/{slug}/edit?error=会话失效"), status_code=303)
+    try:
+        fm, body = revisions.read_revision("posts", slug, ts)
+        store.write_markdown("posts", slug, fm, body)
+        revisions.save_revision("posts", slug, fm, body)
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/posts/{slug}/edit?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap(f"/posts/{slug}/edit?error=恢复后构建失败"), status_code=303)
+    return RedirectResponse(
+        ap(f"/posts/{slug}/edit?ok=已恢复 {ts} 版本并重建（{elapsed}s）"), status_code=303
+    )
 
 
 @app.post(ap("/{section}/{slug}/delete"))
