@@ -23,8 +23,8 @@
 
 | # | 系列 | 改动 | 状态 | 验证证据 |
 | --- | --- | --- | --- | --- |
-| v001 | 基建 | 建立本日志与 100 轮路线图 | 计划 | — |
-| v002 | SEO | 页面级 description：文章/页面用自身摘要，默认品牌 tagline | 计划 | — |
+| v001 | 基建 | 建立本日志与 100 轮路线图 | 完成 | 提交 f83b3a7 |
+| v002 | SEO | 页面级 description：文章/页面用自身摘要，默认品牌 tagline | 完成 | Hugo 构建 353 页通过；about 页 description 为内容摘要、首页保持 tagline |
 | v003 | SEO | og:locale、article 时间/标签、meta author | 计划 | — |
 | v004 | SEO | BreadcrumbList JSON-LD | 计划 | — |
 | v005 | SEO | Article JSON-LD 增强（image/wordCount/inLanguage/publisher） | 计划 | — |
