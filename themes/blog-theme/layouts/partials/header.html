@@ -5,7 +5,13 @@
   <div class="nav-inner">
     <a class="brand-logo" href="{{ .Site.Home.RelPermalink }}">
       {{ if $brand.logo }}
-        <img class="brand-logo-img" src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}">
+        {{ $logo_path := "" }}
+        {{ if hasPrefix $brand.logo "/assets/" }}{{ $logo_path = printf "themes/blog-theme/static%s" $brand.logo }}
+        {{ else if hasPrefix $brand.logo "/img/" }}{{ $logo_path = printf "themes/blog-theme/static%s" $brand.logo }}
+        {{ end }}
+        {{ $lw := "" }}{{ $lh := "" }}
+        {{ with $logo_path }}{{ if fileExists . }}{{ with imageConfig . }}{{ $lw = .Width }}{{ $lh = .Height }}{{ end }}{{ end }}{{ end }}
+        <img class="brand-logo-img" src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}" loading="eager" fetchpriority="high"{{ with $lw }} width="{{ . }}"{{ end }}{{ with $lh }} height="{{ . }}"{{ end }}>
       {{ else }}
         <span class="logo-fallback" aria-hidden="true">{{ substr $brand.name 0 2 }}</span>
         <span class="brand-name-text">{{ $brand.name }}</span>
