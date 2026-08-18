@@ -34,7 +34,7 @@
 | v009 | SEO | security.txt 与 humans.txt | 完成 | 构建 0 警告；/security.txt 含 Contact/Expires/Policy（来自 profile 链接），/humans.txt 含作者与站点信息 |
 | v010 | SEO | 404 页 robots noindex、移除误导性 canonical | 完成 | 构建通过；404.html 含 noindex、无 canonical/og:url |
 | v011 | SEO | 列表/标签/分页页 title 细化（第 N 页） | 完成 | /posts/page/2/ 标题为「文章（第 2 页）」；全部页面构建通过 |
-| v012 | SEO | OG 图片绝对地址与 alt | 计划 | — |
+| v012 | SEO | OG 图片（支持封面）与 alt | 完成 | 首页 og:image/twitter:image 与 alt 均输出，构建通过 |
 | v013 | 性能 | 打印样式（隐藏导航/氛围/打点，正文干净排版） | 计划 | — |
 | v014 | 性能 | 图片渲染钩子补 width/height 减少 CLS | 计划 | — |
 | v015 | 性能 | Hero Logo fetchpriority=high | 计划 | — |
