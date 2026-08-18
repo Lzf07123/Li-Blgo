@@ -788,7 +788,10 @@ def section_slug_edit(request: Request, section: str, slug: str):
     require_login(request)
     if section not in SECTIONS or SECTIONS[section]["single"]:
         raise HTTPException(404)
-    fm, body = store.read_markdown(section, slug)
+    try:
+        fm, body = store.read_markdown(section, slug)
+    except (ValueError, FileNotFoundError):
+        raise HTTPException(404)
     return render(
         request,
         "edit.html",
@@ -886,7 +889,10 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
     require_login(request)
     if section not in SECTIONS or SECTIONS[section]["single"] or not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
-    store.delete_markdown(section, slug)
+    try:
+        store.delete_markdown(section, slug)
+    except ValueError:
+        return RedirectResponse(ap(f"/{section}?error=非法标识"), status_code=303)
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap(f"/{section}?error=删除后构建失败"), status_code=303)

@@ -76,6 +76,20 @@ class TestContent(unittest.TestCase):
         self.assertEqual([i["slug"] for i in asc], ["a", "b"])
         self.assertEqual([i["slug"] for i in desc], ["b", "a"])
 
+    def test_list_markdown_skips_index(self):
+        (self.root / "content" / "posts" / "_index.md").write_text(
+            "---\ntitle: 文章\n---\n", encoding="utf-8"
+        )
+        content.write_markdown(
+            "posts",
+            "real-post",
+            {"title": "真实文章", "date": "2026-08-18"},
+            "正文",
+        )
+        slugs = [i["slug"] for i in content.list_markdown("posts")]
+        self.assertNotIn("_index", slugs)
+        self.assertIn("real-post", slugs)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -42,6 +42,8 @@ def list_markdown(
         return []
     items = []
     for p in sorted(directory.glob("*.md")):
+        if p.stem in ("_index", "index"):
+            continue
         fm = _read_frontmatter(p)
         items.append(
             {
