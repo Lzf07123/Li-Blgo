@@ -41,6 +41,18 @@
 {"@context":"https://schema.org","@type":"BlogPosting","headline":{{ .Title | jsonify }},"description":{{ .Summary | plainify | jsonify }},{{ if gt .Date.Year 1 }}"datePublished":{{ .Date.Format "2006-01-02T15:04:05Z07:00" | jsonify }},{{ end }}{{ if gt .Lastmod.Year 1 }}"dateModified":{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" | jsonify }},{{ end }}"url":{{ .Permalink | jsonify }},"author":{"@type":"Person","name":{{ hugo.Data.profile.name | jsonify }}}}
 </script>
 {{ end }}
+{{ if not .IsHome }}
+{{ $crumb := slice (dict "@type" "ListItem" "position" 1 "name" hugo.Data.strings.nav.home "item" .Site.Home.Permalink) }}
+{{ $pos := 2 }}
+{{ if and .CurrentSection (ne .CurrentSection .Site.Home) }}
+{{ $crumb = $crumb | append (dict "@type" "ListItem" "position" $pos "name" .CurrentSection.Title "item" .CurrentSection.Permalink) }}
+{{ $pos = add $pos 1 }}
+{{ end }}
+{{ $crumb = $crumb | append (dict "@type" "ListItem" "position" $pos "name" .Title "item" .Permalink) }}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":{{ $crumb | jsonify }}}
+</script>
+{{ end }}
 {{ $density := partial "density.html" . }}
 {{ if ne $density "none" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}

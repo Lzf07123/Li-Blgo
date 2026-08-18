@@ -25,8 +25,8 @@
 | --- | --- | --- | --- | --- |
 | v001 | 基建 | 建立本日志与 100 轮路线图 | 完成 | 提交 f83b3a7 |
 | v002 | SEO | 页面级 description：文章/页面用自身摘要，默认品牌 tagline | 完成 | Hugo 构建 353 页通过；about 页 description 为内容摘要、首页保持 tagline |
-| v003 | SEO | og:locale、article 时间/标签、meta author | 计划 | — |
-| v004 | SEO | BreadcrumbList JSON-LD | 计划 | — |
+| v003 | SEO | og:locale、article 时间/标签、meta author | 完成 | 提交 7c88b4f；about 页含 og:locale 与 author |
+| v004 | SEO | BreadcrumbList JSON-LD | 完成 | Hugo 构建通过；about 等非首页含 BreadcrumbList，首页不含 |
 | v005 | SEO | Article JSON-LD 增强（image/wordCount/inLanguage/publisher） | 计划 | — |
 | v006 | SEO | WebSite/Organization JSON-LD 补 sameAs（profile links） | 计划 | — |
 | v007 | SEO | 自定义 robots.txt（含 Sitemap）+ [sitemap] 配置 | 计划 | — |
