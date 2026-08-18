@@ -170,7 +170,7 @@ config/
 ### 后台安全
 
 - 秘密路径 `/admin` + 强密码 + 登录限速 + 可选 IP 白名单
-- 容器非 root；不挂 Docker socket；admin 不暴露宿主端口
+- 容器入口 root 仅用于初始化挂载目录属主，应用以 UID 1000 运行；不挂 Docker socket；admin 不暴露宿主端口
 - OIDC secret 只存环境变量/secret 文件，不进 git
 - 后台关闭时 nginx 返回中性"暂不可用"页
 
@@ -244,13 +244,13 @@ services:
 
 命令：日常 `docker compose up -d`；管理 `docker compose --profile admin up -d`；停后台 `docker compose --profile admin stop admin`。端口可用 `${HTTP_PORT}` / `${HTTPS_PORT}` 覆盖（如本地验证用 18080）。
 
-挂载：content/config/output/data 用仓库 bind 挂载（仓库即数据源，单份数据）；beacon-log 为命名卷（nginx 写匿名打点，admin 启动导入）。
+挂载：content/config/output 用仓库 bind 挂载（仓库即数据源，单份数据；入口自动修复属主，无需手动 chown）；data/media 为 Docker 命名卷；beacon-log 为命名卷（nginx 写匿名打点，admin 启动只读导入）。
 
 环境变量（.env，不进 git）：`LIPASS_ISSUER`、`LIPASS_CLIENT_ID`、`LIPASS_CLIENT_SECRET`、`LIPASS_REDIRECT_URI`、`ADMIN_PATH`、`ADMIN_SESSION_SECRET` 等；模板见 `.env.example`。
 
 软件源加速变量（构建期 `--build-arg`）：`APT_MIRROR`、`PIP_INDEX_URL`——apt/pip 下载可走国内镜像，默认官方源；Docker Hub 基础镜像（nginx/python）可通过 `DOCKER_MIRROR_PREFIX` 镜像前缀变量加速（如 `docker.m.daocloud.io/`，须以 `/` 结尾，留空=官方源）；Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`，构建不联网下载。
 
-镜像结构：多阶段构建（builder 从仓库 `bin/hugo/` COPY 并校验 Hugo + 安装 venv 依赖；runtime 只保留 venv/Hugo/ca-certificates），运行期以 UID 1000 非 root 执行，内置 `/healthz` 健康检查；`content/ config/ output/` 用仓库 bind 挂载，`data/ media/` 为 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权），媒体容器内映射 `themes/blog-theme/static/img`（公开 `/img/`），Linux 主机需保证 `content/ config/ output/` 对 UID 1000 可写。
+镜像结构：多阶段构建（builder 从仓库 `bin/hugo/` COPY 并校验 Hugo + 安装 venv 依赖；runtime 只保留 venv/Hugo/ca-certificates），入口以 root 修复挂载目录属主后降权 UID 1000 执行，内置 `/healthz` 健康检查；`content/ config/ output/` 用仓库 bind 挂载（属主自动修复），`data/ media/` 为 Docker 命名卷（`blog-data`/`blog-media`，自动继承 UID 1000 所有权），媒体容器内映射 `themes/blog-theme/static/img`（公开 `/img/`），全新部署无需手动 chown。
 
 媒体库删除：删除图片时同步扫描 content Markdown（正文图片语法、HTML img、Hugo figure 短代码、frontmatter cover 等）与 config YAML，清空引用该图片的地址后再触发重建。
 

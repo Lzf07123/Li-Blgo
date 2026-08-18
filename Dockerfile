@@ -55,15 +55,18 @@ COPY --chown=app:app themes/ themes/
 COPY --chown=app:app config/ config/
 COPY --chown=app:app content/ content/
 COPY --chown=app:app hugo.toml requirements.txt ./
+COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 RUN mkdir -p /app/beacon /app/data /app/output /app/.preview-out /app/.build-tmp \
     /app/themes/blog-theme/static/img \
     && chown -R app:app /app \
     && hugo version
 
-USER app
+USER root
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
+  CMD ["setpriv", "--reuid=1000", "--regid=1000", "--clear-groups", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=3)"]
 
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["uvicorn", "admin.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
