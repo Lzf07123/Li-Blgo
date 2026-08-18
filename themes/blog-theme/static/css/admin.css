@@ -187,7 +187,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 /* ---------- 列表与筛选 ---------- */
 .list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .list-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 16px 0; }
-.list-filters input[type="search"] { width: 280px; }
+.list-filters input[type="search"] { width: 240px; }
 .list-filters label { margin: 0; }
 
 /* ============ 后台表格组件（v1–v50 迭代） ============ */
@@ -348,11 +348,14 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 }
 .list-filters select,
 .list-filters input[type="search"] {
-  min-height: 44px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 0.85rem;
 }
 /* v26 筛选按钮：与输入框等高 */
 .list-filters .btn {
-  min-height: 44px;
+  min-height: 36px;
+  padding: 6px 12px;
 }
 /* v27 分页：弹性间距 + 信息区 */
 .pagination {
@@ -509,7 +512,7 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .list-filters .btn-link {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 36px;
 }
 /* v49 分页：空页码链接禁用态（模板不输出链接时占位） */
 .pagination a[aria-disabled="true"] {

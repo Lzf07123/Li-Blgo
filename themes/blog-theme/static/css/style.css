@@ -148,8 +148,10 @@ main:focus { outline: none; }
 }
 .footer-inner {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 6px 20px;
+  justify-content: center;
   align-items: center;
 }
 .footer-copyright { margin: 0; }
