@@ -54,7 +54,13 @@ def _bootstrap_build() -> None:
         print(f"[build] 启动引导构建成功（{elapsed}s）")
     else:
         tail = (result.stderr or result.stdout or "").strip()[-300:]
-        print(f"[build] 启动引导构建失败：{tail}")
+        hint = ""
+        if "PermissionError" in tail or "Permission denied" in tail:
+            hint = (
+                "；请检查 content/config/output 对 UID 1000 可写"
+                "（sudo chown -R 1000:1000 content config output）"
+            )
+        print(f"[build] 启动引导构建失败：{tail}{hint}")
 
 
 @asynccontextmanager
