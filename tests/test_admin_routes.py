@@ -3,7 +3,9 @@ import re
 import tempfile
 import types
 import unittest
+import urllib.parse
 from pathlib import Path
+from unittest import mock
 
 from fastapi.testclient import TestClient
 
@@ -198,6 +200,21 @@ class AdminRoutesTest(unittest.TestCase):
                 "/admin/login", headers={"X-Forwarded-For": "203.0.113.10"}
             )
             self.assertEqual(r.status_code, 200)
+
+    def test_config_save_write_failure_redirects_not_500(self):
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            with mock.patch(
+                "admin.content.save_yaml", side_effect=OSError("readonly fs")
+            ):
+                r = client.post(
+                    "/admin/config/brand",
+                    data={"_csrf": csrf},
+                    follow_redirects=False,
+                )
+            self.assertEqual(r.status_code, 303)
+            location = urllib.parse.unquote(r.headers.get("location", ""))
+            self.assertIn("不可写", location)
 
     def test_rewrite_preview_html_rewrites_assets(self):
         html = (

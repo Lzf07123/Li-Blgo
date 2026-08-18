@@ -407,8 +407,14 @@ def setup_basic_submit(
     brand.update({"name": site_name, "tagline": tagline, "promise": promise, "persona": persona})
     profile = store.load_yaml("profile")
     profile.update({"name": name, "identity": identity, "direction": direction, "goal": goal})
-    store.save_yaml("brand", brand)
-    store.save_yaml("profile", profile)
+    try:
+        store.save_yaml("brand", brand)
+        store.save_yaml("profile", profile)
+    except OSError as exc:
+        return RedirectResponse(
+            ap(f"/setup/basic?error=保存失败，config 目录不可写（{exc}）"),
+            status_code=303,
+        )
     return RedirectResponse(ap("/setup/account"), status_code=303)
 
 
@@ -1488,5 +1494,11 @@ async def config_save(request: Request, name: str, csrf_token: str = Form("", al
     if name == "brand":
         data["icp_icon"] = store.sanitize_inline_svg(data.get("icp_icon", ""))
         data["police_icon"] = store.sanitize_inline_svg(data.get("police_icon", ""))
-    store.save_yaml(name, data)
+    try:
+        store.save_yaml(name, data)
+    except OSError as exc:
+        return RedirectResponse(
+            ap(f"/config/{name}?error=保存失败，config 目录不可写（{exc}）"),
+            status_code=303,
+        )
     return after_build_redirect(f"/config/{name}")
