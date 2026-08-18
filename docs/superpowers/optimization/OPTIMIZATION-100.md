@@ -56,7 +56,7 @@
 | v031 | 内容 | 文章封面图（frontmatter cover + 模板 + 后台字段） | 完成 | 98 测试全绿（新增 cover 保存用例）；构建通过，post-cover/article-cover 样式输出 |
 | v032 | 内容 | 相关文章算法配置（tags/date） | 完成 | [related] 配置生效（tags 权重 80/date 20），Hugo 构建通过 |
 | v033 | 内容 | 标签首页（计数/空状态） | 完成 | /tags/ 输出 288 个 tag-chip 且含计数；新增 taxonomy.html 与 no_tags 文案 |
-| v034 | 内容 | 搜索索引增强（日期/时长/置顶） | 计划 | — |
+| v034 | 内容 | 搜索索引增强（日期/时长/置顶） | 完成 | search/index.json 字段含 date/readingTime/pinned/tags |
 | v035 | 内容 | 搜索结果展示日期/标签 | 计划 | — |
 | v036 | 内容 | 文章列表按年份分组 | 计划 | — |
 | v037 | 内容 | 时间线上一篇/下一篇导航 | 计划 | — |
