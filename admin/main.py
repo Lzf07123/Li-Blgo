@@ -483,7 +483,7 @@ def media_page(request: Request, q: str = ""):
     for it in items:
         month = "/".join(it["rel"].split("/")[:2]) if "/" in it["rel"] else "未分类"
         groups.setdefault(month, []).append(it)
-    grouped = [{"month": m, "items": groups[m]} for m in sorted(groups, reverse=True)]
+    grouped = [{"month": m, "files": groups[m]} for m in sorted(groups, reverse=True)]
     return render(request, "media.html", {"items": items, "groups": grouped, "q": q})
 
 

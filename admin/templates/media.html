@@ -18,7 +18,7 @@
 {% for group in groups %}
 <h2 class="media-month">{{ group.month }}</h2>
 <div class="media-grid">
-  {% for m in group.items %}
+  {% for m in group.files %}
   <figure class="media-item">
     <img src="/{{ admin_path }}/static/img/{{ m.rel }}" alt="{{ m.rel }}" loading="lazy">
     <figcaption>

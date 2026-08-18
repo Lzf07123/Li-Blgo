@@ -23,7 +23,7 @@
 8. **构建约束**：构建必须走 Hugo 分段编排（校验 → `GOMEMLIMIT` 限内存渲染到临时目录 → 发布 → 清理）；发布必须为**目录内逐文件原子同步**（保持目录 inode 稳定，兼容 Docker bind 挂载），禁止整目录 `os.replace` 交换；峰值内存不得超过 `GOMEMLIMIT`（默认 256MiB）；渲染器只用 Hugo（Goldmark + Chroma + shortcodes），后台预览与线上构建共用；禁止引入 Python-Markdown/Pygments 渲染链路。Hugo 使用固定版本二进制（v0.165.0，admin 镜像 Dockerfile 下载并校验 checksum），禁止第三方 Hugo 镜像；构建在容器内执行，不依赖宿主机工具链。
 9. **后台安全**：密码哈希用 stdlib PBKDF2-HMAC-SHA256（600k 迭代，零原生依赖，替代 Argon2/scrypt 以兼容 macOS 自带 Python 与容器）；会话存 SQLite、Cookie 只存随机 id（HttpOnly/SameSite=Lax）；所有 POST 校验 CSRF；登录限速 5 次/60 秒；OIDC 按对接文档契约实现（PKCE、state/nonce、id_token 验签、回程登出 jti 防重放、`sub` 精确匹配单管理员）；OIDC secret 只走环境变量。
    - 媒体上传只允许白名单扩展名（png/jpg/jpeg/gif/webp/avif）、单文件 ≤ 5MB、路径防穿越；上传后触发重建再公开。后台编辑器预览一律走 Hugo 渲染（`preview_raw`），nginx 对 `/admin/` 单独声明 `X-Frame-Options SAMEORIGIN` 以允许同源内嵌预览。
-10. **软件源与运行期依赖**：基础镜像的 apt/pip/Hugo 下载必须通过 `APT_MIRROR` / `PIP_INDEX_URL` / `HUGO_DOWNLOAD_URL` / `HUGO_CHECKSUM_URL` 变量（.env.example 提供模板）；运行期禁止引入外部 CDN/远程字体/远程 JS；Fuse.js 等前端库必须本地化并提交。内容/配置/输出/数据用仓库 bind 挂载，beacon 日志为命名卷。
+10. **软件源与运行期依赖**：基础镜像的 apt/pip/Hugo 下载必须通过 `APT_MIRROR` / `PIP_INDEX_URL` / `HUGO_DOWNLOAD_URL` / `HUGO_CHECKSUM_URL` 变量（.env.example 提供模板）；运行期禁止引入外部 CDN/远程字体/远程 JS；Fuse.js 等前端库必须本地化并提交。内容/配置/输出/数据/媒体目录（`themes/blog-theme/static/img`）用仓库 bind 挂载，beacon 日志为命名卷。
 11. **React 效果层**：效果运行时源码在 `web/`（React + motion，esbuild 打包），产物 `themes/blog-theme/static/js/effects-react.js` 必须提交（Hugo 静态复制）；改效果后执行 `cd web && npm run build` 再重建站点；文章页（`data-ambient=none`）不得加载该包；公开站仍保持零交互栏目。
 
 ## 协作规范
