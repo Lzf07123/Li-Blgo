@@ -780,6 +780,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--liblog-muted);
   text-align: center;
 }
+.search-empty-state[hidden] { display: none; }
 .search-empty-state svg { width: 36px; height: 36px; color: var(--liblog-primary); opacity: 0.6; }
 .search-empty-state a { font-weight: 600; }
 .search-modal-hints {
