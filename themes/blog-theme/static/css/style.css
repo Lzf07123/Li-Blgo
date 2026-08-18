@@ -676,9 +676,6 @@ input:focus, select:focus, textarea:focus {
 .related-posts { margin-top: 40px; }
 .back-top { margin-top: 32px; text-align: center; }
 .project-repo { margin: 12px 0 0; }
-.footer-rss { margin: 0; }
-.footer-rss a { color: var(--liblog-muted); }
-.footer-rss a:hover { color: var(--liblog-primary); }
 .hero-skills {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--liblog-border);

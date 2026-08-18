@@ -943,6 +943,8 @@ CONFIG_PAGES = {
             {"name": "icp_url", "label": "ICP 备案链接", "type": "text"},
             {"name": "police", "label": "公网安备号（未备案留空）", "type": "text"},
             {"name": "police_url", "label": "公安备案链接", "type": "text"},
+            {"name": "icp_icon", "label": "ICP 图标 SVG（可改，留空则只留空位）", "type": "textarea"},
+            {"name": "police_icon", "label": "公安图标 SVG（可改，留空则只留空位）", "type": "textarea"},
             {"name": "logo", "label": "Logo 图片路径", "type": "text", "help": "先把图片传到媒体库，再填 /img/… 路径"},
             {"name": "favicon", "label": "Favicon 路径", "type": "text", "help": "先传到媒体库，再填 /img/… 路径"},
         ],

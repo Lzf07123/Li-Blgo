@@ -44,6 +44,8 @@
         <input type="checkbox" name="{{ field.name }}" value="1" {% if field.value %}checked{% endif %}>
       {% elif field.type == "number" %}
         <input type="number" name="{{ field.name }}" value="{{ field.value }}">
+      {% elif field.type == "textarea" %}
+        <textarea name="{{ field.name }}" rows="4">{{ field.value }}</textarea>
       {% else %}
         <input type="text" name="{{ field.name }}" value="{{ field.value }}">
       {% endif %}

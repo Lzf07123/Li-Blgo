@@ -114,6 +114,7 @@
 | 站点名称/定位/承诺 | brand.yaml | 品牌 |
 | Logo / favicon | brand.yaml + static/img | 品牌（上传） |
 | 版权/备案号 | brand.yaml | 品牌 |
+| 备案图标 SVG（ICP/公安） | brand.yaml（`icp_icon` / `police_icon`） | 品牌（可改，留空只留空位） |
 | 导航/区块标题/通用标签 | strings.yaml | 页面文案 |
 | Hero 姓名/身份/方向/目标 | profile.yaml | 关于我 |
 | 技能徽章 | profile.yaml | 关于我 |
