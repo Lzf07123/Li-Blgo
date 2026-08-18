@@ -159,6 +159,15 @@ main:focus { outline: none; }
 .footer-beian { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .footer-beian a { color: var(--liblog-muted); }
 .footer-beian a:hover { color: var(--liblog-primary); }
+.beian-link { display: inline-flex; align-items: center; gap: 6px; }
+.beian-icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--liblog-muted);
+}
+.beian-link:hover .beian-icon { color: var(--liblog-primary); }
+.beian-text { white-space: nowrap; }
 
 /* ---------- 按钮（子模块全规格） ---------- */
 .btn {
