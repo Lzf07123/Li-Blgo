@@ -588,9 +588,14 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   margin: 16px 0 4px;
+}
+.hero-actions .btn {
+  min-height: 36px;
+  padding: 6px 16px;
+  font-size: 0.85rem;
 }
 .hero-inner > * { animation: liblog-fade-up 0.6s var(--liblog-ease-out) both; }
 .hero-inner > *:nth-child(2) { animation-delay: 0.06s; }
