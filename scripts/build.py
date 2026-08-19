@@ -30,6 +30,28 @@ FINGERPRINT_FILES = {
 }
 
 
+def clear_tree(path: pathlib.Path) -> None:
+    """删除目录树；目录为挂载点（tmpfs）时清空内容而非 rmdir。
+
+    compose 将 .build-tmp/.preview-out 挂为 tmpfs，rmdir 挂载点会返回
+    EBUSY（Device or resource busy），导致构建失败；此处先尝试整树删除，
+    失败则回退为仅清空目录内容。
+    """
+    try:
+        shutil.rmtree(path)
+    except OSError:
+        if not path.exists():
+            return
+        for child in list(path.iterdir()):
+            if child.is_dir() and not child.is_symlink():
+                shutil.rmtree(child, ignore_errors=True)
+            else:
+                try:
+                    child.unlink()
+                except OSError:
+                    pass
+
+
 def validate_content(root):
     """校验 content/ 下所有 Markdown 的 frontmatter 可解析。返回错误列表。"""
     import yaml
@@ -274,8 +296,8 @@ def build(args):
         )
     tmp = ROOT / ".build-tmp"
     if tmp.exists():
-        shutil.rmtree(tmp)
-    tmp.mkdir()
+        clear_tree(tmp)
+    tmp.mkdir(exist_ok=True)
 
     try:
         run_build(
@@ -321,12 +343,12 @@ def build(args):
                 encoding="utf-8",
             )
         if tmp.exists():
-            shutil.rmtree(tmp)
+            clear_tree(tmp)
         print(f"ERROR: {exc}", file=sys.stderr)
         sys.exit(2)
     finally:
         if not args.keep_tmp and tmp.exists():
-            shutil.rmtree(tmp)
+            clear_tree(tmp)
 
 
 def main():

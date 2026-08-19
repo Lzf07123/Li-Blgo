@@ -4,6 +4,21 @@
 > 基线：前两轮（OPTIMIZATION-50.md、OPTIMIZATION-100.md）已完成；本轮基线 114 项单元测试全绿、Hugo v0.165.0 构建通过、工作区干净（main 分支）。
 > 外部对标（2026-08-19 检索）：Ghost（编辑器卡片/内置 SEO 工具/分析看板/回收站）、WordPress（仪表盘待办与最近活动、回收站、复制为新草稿、批量标签）、Hugo 生态（partialCached 构建提速、模板一致性、AEO/结构化数据）、静态 CMS（Decap/Keystatic 的 Git 工作流、内容体检）、Docker 安全基线（no-new-privileges/只读根文件系统/资源限制）。
 
+## 热修复（2026-08-19，v200 之后）
+
+**现象：** 部署新 compose（只读根文件系统 + tmpfs）后，所有预览/全量构建失败。
+
+**根因（两层，均已实测复现）：**
+1. `scripts/build.py` 对 `.build-tmp`/`.preview-out` 执行 `shutil.rmtree`，目录为 tmpfs 挂载点时 `rmdir` 返回 `EBUSY`（Device or resource busy），构建直接退出码 2。
+2. tmpfs 默认 root 属主，应用以 UID 1000 运行时 Hugo 对目标目录 `chtimes` 报 `operation not permitted`。
+
+**修复：**
+- `scripts/build.py` 新增 `clear_tree()`：整树删除失败时回退为仅清空目录内容；`tmp.mkdir(exist_ok=True)` 兼容保留的挂载点。
+- `compose.yaml` tmpfs 显式 `uid=1000,gid=1000`；`scripts/docker-entrypoint.sh` 把 `/app/.build-tmp` 纳入属主修复循环。
+- 后台预览失败 flash 附带构建 stderr 末尾 200 字，便于后续定位。
+
+**验证：** 126 项测试全绿（新增 `test_clear_tree_tolerates_mountpoint`）；tmpfs+uid/gid 场景 `--preview` 与 `--full` 均 `build OK`（357 页/534 文件）；`docker compose config -q` 通过；新镜像 `liblog-admin:round3-fix` 内置脚本复测通过。
+
 ## 系列路线图
 
 | 版本区间 | 系列 | 主题 |

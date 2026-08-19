@@ -2252,14 +2252,16 @@ def section_save(
         result, elapsed = build.run_preview()
         if result.returncode != 0:
             edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
-            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败"), status_code=303)
+            detail = (result.stderr or result.stdout or "").strip()[-200:]
+            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败：{detail}"), status_code=303)
         preview_path = f"/{section}" if SECTIONS[section]["single"] else f"/{section}/{slug}"
         return RedirectResponse(ap(f"/preview{preview_path}?raw=1"), status_code=303)
     if action == "preview":
         result, elapsed = build.run_preview()
         if result.returncode != 0:
             edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
-            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败"), status_code=303)
+            detail = (result.stderr or result.stdout or "").strip()[-200:]
+            return RedirectResponse(ap(f"{edit_path}?error=预览构建失败：{detail}"), status_code=303)
         preview_path = f"/{section}" if SECTIONS[section]["single"] else f"/{section}/{slug}"
         return RedirectResponse(ap(f"/preview{preview_path}"), status_code=303)
     if action == "save_stay":

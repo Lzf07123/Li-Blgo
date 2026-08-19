@@ -36,8 +36,8 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m
-      - /app/.build-tmp:size=512m
-      - /app/.preview-out:size=128m
+      - /app/.build-tmp:size=512m,uid=1000,gid=1000
+      - /app/.preview-out:size=128m,uid=1000,gid=1000
     stop_grace_period: 30s
     logging:
       driver: json-file

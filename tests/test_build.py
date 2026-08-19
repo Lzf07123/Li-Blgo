@@ -7,6 +7,7 @@ from unittest import mock
 
 from scripts.build import (
     build,
+    clear_tree,
     publish,
     validate_content,
     validate_content_links,
@@ -146,6 +147,20 @@ class TestBuild(unittest.TestCase):
             text = target.read_text(encoding="utf-8")
             self.assertIn("tokens:", text)
             self.assertIn("built_at:", text)
+
+    def test_clear_tree_tolerates_mountpoint(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            mount = root / "mnt"
+            mount.mkdir()
+            (mount / "x.html").write_text("x", encoding="utf-8")
+            with mock.patch(
+                "shutil.rmtree",
+                side_effect=OSError(16, "Device or resource busy"),
+            ):
+                clear_tree(mount)
+            self.assertTrue(mount.exists())
+            self.assertFalse((mount / "x.html").exists())
 
     def test_build_failure_cleans_tmp_and_exits_2(self):
         with tempfile.TemporaryDirectory() as d:
