@@ -12,6 +12,8 @@ nav:
 home:
   hero_title: 你好，我是
   goal_title: 当前目标
+  read_blog: 阅读博客
+  about_me: 关于我
   journey_title: 学习历程
   skills_title: 技能栈
   projects_title: 项目集

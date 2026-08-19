@@ -141,6 +141,7 @@
 | 技能徽章图标 | profile.yaml（`icon` slug）+ themes/blog-theme/static/assets/badges/*.svg | 关于我资料（图标 slug） |
 | 兄弟项目徽章 | projects frontmatter | 项目 |
 | 首页精选/数量/开关 | homepage.yaml | 首页设置 |
+| 首页 CTA 按钮（阅读博客/关于我） | strings.yaml（home.read_blog / home.about_me） | 页面文案 |
 | 文章全字段 | posts Markdown | 文章 |
 | 文章封面图 | posts frontmatter `cover` | 文章编辑（封面选择） |
 | 项目卡全字段 | projects Markdown | 项目 |
