@@ -2,8 +2,10 @@
 {{ $footer := hugo.Data.strings.footer }}
 <footer class="site-footer">
   <div class="footer-inner">
-    <p class="footer-copyright">{{ replace $brand.copyright "{year}" (now.Format "2006") }}</p>
-    <p class="footer-statement">{{ $footer.statement }}</p>
+    <div class="footer-copy">
+      <p class="footer-copyright">{{ replace $brand.copyright "{year}" (now.Format "2006") }}</p>
+      <p class="footer-statement">{{ $footer.statement }}</p>
+    </div>
     <div class="footer-beian">
       {{ with $brand.icp }}
       <a class="beian-link" href="{{ $brand.icp_url }}" rel="nofollow">
