@@ -944,6 +944,11 @@ label .custom-select { display: block; }
   border-radius: 8px;
   background: var(--liblog-surface-2);
 }
+.table-thumb-missing::after {
+  content: "图片缺失";
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+}
 .media-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

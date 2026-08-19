@@ -30,6 +30,8 @@
 - Nginx 匿名打点统计：仅路径与时间戳，不收集访客个人信息
 - 后台深浅色切换、分栏 Hugo 预览、README 风格技能徽章（本地渲染）
 - SEO 全套：页面级 description、BreadcrumbList/Article/WebSite JSON-LD、llms.txt、security.txt、RSS 定制
+- 第三轮增强：归档页、公开列表按年分组、OG 图片尺寸、ItemList/ProfilePage JSON-LD、自动缓存指纹
+- 后台工作流：回收站（软删除/恢复/清空）、复制为新草稿、定时发布状态、SEO 检查面板、预览设备切换、未引用媒体筛选、批量标签、导航过滤
 - 效果层按需加载：React 仅首页，栏目页 CSS-only；文章页零动效
 
 ## 本地运行
@@ -50,6 +52,8 @@ Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 
 部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
 
 admin 容器以 UID 1000 运行应用；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`），自动继承 UID 1000 所有权，宿主机无需创建目录；`content/ config/ output/` 为 bind 挂载，容器入口以 root 启动并自动修复挂载目录属主（仅当 UID 1000 不可写时），随后降权运行，**全新部署无需手动 chown**。
+
+compose 已启用 `no-new-privileges`、`pids_limit`、只读根文件系统与 tmpfs 运行时目录（admin 构建目录、nginx 缓存）；构建锁与 Hugo 缓存分别落到 `data/` 卷与 `/tmp`，公开站与后台运行面更小。
 
 旧 bind 挂载部署迁移到命名卷（一次性，`data/` 与 `media/` 有数据时执行）：
 

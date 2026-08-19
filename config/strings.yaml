@@ -50,6 +50,7 @@ common:
   repo: 仓库
   no_related: 暂无相关文章
   links_title: 更多链接
+  license_prefix: 本文采用
   toc: 目录
   post_nav: 文章导航
   timeline_nav: 时间线导航

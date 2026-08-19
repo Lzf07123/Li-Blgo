@@ -2,6 +2,14 @@ services:
   nginx:
     image: ${DOCKER_MIRROR_PREFIX:-}nginx:alpine
     mem_limit: 128m
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+      - /var/cache/nginx:size=32m
+      - /var/run:size=8m
     logging:
       driver: json-file
       options:
@@ -22,6 +30,14 @@ services:
     profiles: ["admin"]
     mem_limit: 512m
     cpus: 2
+    pids_limit: 512
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+      - /app/.build-tmp:size=512m
+      - /app/.preview-out:size=128m
     stop_grace_period: 30s
     logging:
       driver: json-file
@@ -44,6 +60,8 @@ services:
       GOMEMLIMIT: ${GOMEMLIMIT:-256MiB}
       HUGO_NUMWORKERMULTIPLIER: ${HUGO_NUMWORKERMULTIPLIER:-0.5}
       HUGO_BIN: hugo
+      HUGO_CACHEDIR: /tmp/hugo-cache
+      BUILD_LOCK_PATH: /app/data/.build.lock
       BEACON_LOG: /app/beacon/beacon.log
     volumes:
       - ./content:/app/content

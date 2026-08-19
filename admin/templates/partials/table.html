@@ -42,7 +42,8 @@
         </td>
         {% elif col.type == 'image' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
-          <img class="table-thumb" src="{{ row[col.key ~ '_src'] }}" alt="{{ row[col.key] }}" loading="lazy">
+          <img class="table-thumb" src="{{ row[col.key ~ '_src'] }}" alt="{{ row[col.key] }}" loading="lazy"
+               onerror="this.closest('td').classList.add('table-thumb-missing'); this.hidden = true;">
         </td>
         {% elif col.type == 'badge' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">

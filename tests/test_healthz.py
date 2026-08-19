@@ -21,7 +21,8 @@ class TestHealthz(unittest.TestCase):
         with TestClient(app) as client:
             resp = client.get("/healthz")
             self.assertEqual(resp.status_code, 200)
-            self.assertEqual(resp.json(), {"status": "ok"})
+        self.assertEqual(resp.json()["status"], "ok")
+        self.assertIn("build", resp.json())
 
 
 if __name__ == "__main__":

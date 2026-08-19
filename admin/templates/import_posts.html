@@ -27,6 +27,8 @@
   <h2>导入结果</h2>
   <p>导入 {{ result.imported }} 篇，跳过 {{ result.skipped }} 篇，失败 {{ result.errors|length }} 个文件{% if build_elapsed %}（重建 {{ build_elapsed }}s）{% endif %}。</p>
   {% if result.files %}
+  <details open>
+  <summary>成功导入 {{ result.files|length }} 个文件</summary>
   <div class="table-shell-wrap">
     <table class="table-shell table-shell--cards">
       <thead>
@@ -51,14 +53,18 @@
       </tbody>
     </table>
   </div>
+  </details>
   {% endif %}
   {% if result.errors %}
+  <details>
+  <summary>失败明细（{{ result.errors|length }} 个）</summary>
   <ul class="import-errors">
     {% for err in result.errors[:20] %}
     <li>{{ err }}</li>
     {% endfor %}
     {% if result.errors|length > 20 %}<li>… 还有 {{ result.errors|length - 20 }} 条错误未显示</li>{% endif %}
   </ul>
+  </details>
   {% endif %}
   {% if result.imported %}
   <div class="form-actions">

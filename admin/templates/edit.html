@@ -114,10 +114,10 @@
     <div class="revision-list">
       <p class="editor-preview-head">修订历史（最近 {{ revisions|length }} 份）</p>
       <ul>
-        {% for ts in revisions[:10] %}
+        {% for rev in revision_display[:10] %}
         <li>
-          <a href="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ ts }}" target="_blank" rel="noopener">{{ ts }}</a>
-          <form method="post" action="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ ts }}/restore" data-busy>
+          <a href="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ rev.ts }}" target="_blank" rel="noopener">{{ rev.label }}</a>
+          <form method="post" action="/{{ admin_path }}/posts/{{ slug }}/revisions/{{ rev.ts }}/restore" data-busy>
             <input type="hidden" name="_csrf" value="{{ csrf }}">
             <button type="submit" class="btn-link">恢复</button>
           </form>
@@ -467,6 +467,15 @@
         localStorage.removeItem(DRAFT_KEY);
       }
     });
+  })();
+
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var previewPath = "{{ preview_path }}";
+    var frame = document.getElementById("preview-frame");
+    if (params.get("ok") && previewPath && frame) {
+      frame.src = "/{{ admin_path }}" + previewPath + "?raw=1&t=" + Date.now();
+    }
   })();
 </script>
 {% endblock %}

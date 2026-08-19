@@ -71,36 +71,36 @@
 | v148 | 内容 | RSS 全文/摘要开关 | 完成 | hugo.toml `rss_full=false`；输出验证无 content:encoded |
 | v149 | 内容 | 404 页补时间线入口 | 完成 | 404 导航补历程链接（strings.nav.timeline） |
 | v150 | 内容 | 搜索无结果时推荐标签 | 完成 | 无结果时按出现频次推荐 6 个标签链接 |
-| v151 | 安全 | 登录成功会话 id 轮换（防固定） | 待办 | |
-| v152 | 安全 | admin 中间件补 CSP 响应头 | 待办 | |
-| v153 | 安全 | 上传文件名规范强化（控制字符） | 待办 | |
-| v154 | 安全 | 删除/恢复操作审计补恢复类型 | 待办 | |
-| v155 | 构建 | build.py --report JSON 输出 | 待办 | |
-| v156 | 构建 | 校验 sitemap 不含草稿/未来 URL | 待办 | |
-| v157 | 部署 | compose 安全加固（no-new-privileges/pids_limit） | 待办 | |
-| v158 | 部署 | admin 只读根文件系统 + tmpfs 运行时目录 | 待办 | |
-| v159 | 部署 | Dockerfile 依赖固定版本与哈希 | 待办 | |
-| v160 | 部署 | nginx 安全头补 upgrade-insecure-requests | 待办 | |
-| v161 | 测试 | 新增回收站/复制/SEO 检查路由测试 | 待办 | |
-| v162 | 测试 | 新增构建校验测试（草稿泄漏/指纹） | 待办 | |
-| v163 | 文档 | README 第三轮特性同步 | 待办 | |
-| v164 | 文档 | MASTER.md 覆盖审计同步 | 待办 | |
-| v165 | 文档 | BRAND.md/AGENTS.md 边界同步 | 待办 | |
-| v166 | 文档 | .env.example 新变量说明 | 待办 | |
-| v167 | 依赖 | requirements.txt 固定版本 | 待办 | |
-| v168 | 前端 | web 构建校验与体积报告 | 待办 | |
-| v169 | 前端 | effects-react.js 产物回归构建 | 待办 | |
-| v170 | 可观测 | healthz 补构建清单/版本信息 | 待办 | |
-| v171 | 可观测 | 健康检查补媒体引用完整性 | 待办 | |
-| v172 | 可观测 | 操作日志分页与筛选 | 待办 | |
-| v173 | 可观测 | 统计 CSV 文件名带筛选范围 | 待办 | |
-| v174 | 内容 | 内容体检补封面引用缺失 | 待办 | |
-| v175 | 内容 | 内容体检补未来日期提示 | 待办 | |
-| v176 | 内容 | 文章编辑页显示修订数量与最新时间 | 待办 | |
-| v177 | 内容 | 导入结果按成功/失败分组可折叠 | 待办 | |
-| v178 | 内容 | 媒体库缩略图加载失败占位 | 待办 | |
-| v179 | 内容 | 编辑器预览滚动同步 | 待办 | |
-| v180 | 内容 | 公开站文章底部补许可声明 | 待办 | |
+| v151 | 安全 | 登录成功清理匿名会话（防会话残留） | 完成 | 本地/OIDC 登录后删除 anon session；125 测试全绿 |
+| v152 | 安全 | admin 中间件补 CSP 响应头 | 完成 | 后台响应含 form-action/frame-src 白名单 CSP |
+| v153 | 安全 | 上传文件名规范强化（控制字符） | 完成 | slugify 过滤控制字符并限长 80 |
+| v154 | 安全 | 修订恢复审计补齐 | 完成 | revision_restore 写入 audit_log |
+| v155 | 构建 | build.py --report JSON 输出 | 完成 | 成功/失败报告文件；测试参数同步 |
+| v156 | 构建 | 校验 sitemap 不含草稿 URL | 完成 | verify_output 扫 sitemap loc；新增 1 项测试 |
+| v157 | 部署 | compose 安全加固（no-new-privileges/pids_limit） | 完成 | 双服务 security_opt + pids_limit；compose config 通过 |
+| v158 | 部署 | admin/nginx 只读根文件系统 + tmpfs | 完成 | read_only + tmpfs（build-tmp/preview-out/nginx 缓存）；构建锁与 Hugo 缓存落 data 卷与 /tmp |
+| v159 | 部署 | Dockerfile pip check + compileall | 完成 | builder pip check；runtime compileall admin/scripts |
+| v160 | 部署 | nginx CSP 补 upgrade-insecure-requests | 完成 | nginx -t 通过 |
+| v161 | 测试 | 新增仪表盘/统计映射/日志筛选路由测试 | 完成 | 3 项新测试（dashboard/stats/logs） |
+| v162 | 测试 | 新增构建校验测试（sitemap 草稿） | 完成 | 1 项新测试；125 项全绿 |
+| v163 | 文档 | README 第三轮特性同步 | 完成 | 归档/回收站/SEO 面板/只读加固入特性清单 |
+| v164 | 文档 | MASTER.md 覆盖审计同步 | 完成 | archive/trash/seo-panel/device-preview 入组件与覆盖表 |
+| v165 | 文档 | BRAND.md/AGENTS.md 边界同步 | 完成 | 派生内容口径 + make 验证命令 |
+| v166 | 文档 | .env.example 新变量说明 | 完成 | HUGO_CACHEDIR/BUILD_LOCK_PATH + build.yaml 说明 |
+| v167 | 依赖 | requirements.txt 固定版本审计 + pip check | 完成 | 10 个依赖全版本固定；Dockerfile pip check |
+| v168 | 前端 | web 构建校验与体积报告 | 完成 | Makefile web-verify；npm build 40ms/278.5kb |
+| v169 | 前端 | effects-react.js 产物回归构建 | 完成 | 重建后 git 无差异（确定性产物） |
+| v170 | 可观测 | healthz 补构建清单信息 | 完成 | /healthz 返回 build.built_at/asset_count；测试更新 |
+| v171 | 可观测 | 健康检查补媒体引用完整性 | 完成 | 缺失引用与未引用计数入 /admin/health |
+| v172 | 可观测 | 操作日志分页与筛选 | 完成 | kind 筛选 + 100/页分页；2 项测试 |
+| v173 | 可观测 | 统计 CSV 文件名带筛选范围 | 完成 | liblog-stats-{start}-{end}.csv |
+| v174 | 内容 | 内容体检补封面引用缺失 | 完成 | 封面 /img|/assets 缺失入 danger |
+| v175 | 内容 | 内容体检补未来日期提示 | 完成 | 未来日期文章入 warning |
+| v176 | 内容 | 编辑页修订历史显示可读时间 | 完成 | YYYYMMDD-HHMMSS → 格式化标签 |
+| v177 | 内容 | 导入结果按成功/失败分组可折叠 | 完成 | details/summary 折叠成功表与失败明细 |
+| v178 | 内容 | 媒体库缩略图加载失败占位 | 完成 | onerror 加 table-thumb-missing「图片缺失」 |
+| v179 | 内容 | 保存留在本页后预览自动刷新 | 完成 | 带 ok 参数时 iframe 载入 preview_path?raw=1 |
+| v180 | 内容 | 公开站文章底部补许可声明 | 完成 | strings.common.license_prefix + 页脚许可链接 |
 | v181 | 回归 | 公开站 375/768px 新组件走查 | 待办 | |
 | v182 | 回归 | 后台移动端新组件走查 | 待办 | |
 | v183 | 回归 | 深浅色新组件走查 | 待办 | |

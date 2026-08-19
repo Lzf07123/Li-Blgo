@@ -107,13 +107,34 @@ async def admin_headers(request: Request, call_next):
         response.headers["Permissions-Policy"] = (
             "geolocation=(), microphone=(), camera=(), payment=()"
         )
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+            "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+            "connect-src 'self'; font-src 'self'; object-src 'none'; "
+            "base-uri 'self'; frame-src 'self'; form-action 'self'"
+        )
     return response
 
 
 @app.get("/healthz")
 def healthz():
     """容器健康检查：不经过后台鉴权，仅容器网络内可达。"""
-    return {"status": "ok"}
+    return {"status": "ok", "build": _build_info()}
+
+
+def _build_info() -> dict:
+    try:
+        data = yaml.safe_load(
+            (settings.config_root / "build.yaml").read_text(encoding="utf-8")
+        ) or {}
+    except Exception:
+        data = {}
+    css = data.get("css") or {}
+    js = data.get("js") or {}
+    return {
+        "built_at": data.get("built_at", ""),
+        "asset_count": len(css) + len(js),
+    }
 
 
 templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
@@ -434,6 +455,9 @@ def login_submit(
         record_audit(conn, "login_fail", f"username={username}", client_ip(request))
         conn.close()
         return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    old = current_session(request)
+    if old and old["kind"] == "anon":
+        delete_session(old["id"])
     conn = connect()
     record_audit(conn, "login_ok", f"username={username}", client_ip(request))
     conn.close()
@@ -484,6 +508,9 @@ async def oidc_callback(request: Request):
         return RedirectResponse(ap("/login?error=该账号不是本后台管理员"), status_code=302)
     if status == "bound":
         return RedirectResponse(ap("/setup/oidc?bound=1"), status_code=302)
+    old = current_session(request)
+    if old and old["kind"] == "anon":
+        delete_session(old["id"])
     response = RedirectResponse(ap("/"), status_code=302)
     response.set_cookie(
         COOKIE, session_id, httponly=True, samesite="lax",
@@ -1145,7 +1172,11 @@ def stats_export(request: Request, start: str = "", end: str = ""):
     return Response(
         content="\n".join(lines) + "\n",
         media_type="text/csv; charset=utf-8",
-        headers={"Content-Disposition": 'attachment; filename="liblog-stats.csv"'},
+        headers={
+            "Content-Disposition": (
+                f'attachment; filename="liblog-stats-{start or "all"}-{end or "now"}.csv"'
+            )
+        },
     )
 
 
@@ -1200,11 +1231,22 @@ def audit_page(request: Request):
 
 
 @app.get(ap("/logs"), response_class=HTMLResponse)
-def logs_page(request: Request):
+def logs_page(request: Request, kind: str = "", page: int = 1):
     require_login(request)
     conn = connect()
+    per_page = 100
+    params: list = []
+    where = ""
+    if kind:
+        where = " WHERE kind = ?"
+        params.append(kind)
+    total = conn.execute(f"SELECT COUNT(*) AS n FROM audit_log{where}", params).fetchone()["n"]
+    pages = max(1, ceil(total / per_page))
+    page = min(max(1, page), pages)
+    offset = (page - 1) * per_page
     rows = conn.execute(
-        "SELECT at, kind, detail, ip FROM audit_log ORDER BY id DESC LIMIT 200"
+        f"SELECT at, kind, detail, ip FROM audit_log{where} ORDER BY id DESC LIMIT ? OFFSET ?",
+        params + [per_page, offset],
     ).fetchall()
     conn.close()
     columns = [
@@ -1243,8 +1285,15 @@ def logs_page(request: Request):
         ],
         "empty": "暂无日志",
         "striped": True,
+        "pagination": {
+            "page": page,
+            "pages": pages,
+            "total": total,
+            "prev_url": ap(f"/logs?page={page - 1}{'&kind=' + kind if kind else ''}") if page > 1 else "",
+            "next_url": ap(f"/logs?page={page + 1}{'&kind=' + kind if kind else ''}") if page < pages else "",
+        },
     }
-    return render(request, "logs.html", {"table": table})
+    return render(request, "logs.html", {"table": table, "kind": kind})
 
 
 @app.get(ap("/health"), response_class=HTMLResponse)
@@ -1279,6 +1328,17 @@ def admin_health_page(request: Request):
     check("Hugo 二进制可用", bool(hugo_bin), hugo_bin or "未找到（容器内应内置）")
     check("GOMEMLIMIT 已设置", bool(os.environ.get("GOMEMLIMIT")), os.environ.get("GOMEMLIMIT", ""))
     check("beacon 日志可读", os.path.exists(settings.beacon_log), str(settings.beacon_log))
+    media_files = media_store.list_media()
+    referenced = _media_referenced()
+    media_urls = {it["url"] for it in media_files}
+    missing_refs = sorted(r for r in referenced if r not in media_urls)
+    check(
+        "媒体引用完整",
+        not missing_refs,
+        f"{len(missing_refs)} 处引用缺失" if missing_refs else f"{len(referenced)} 处引用",
+    )
+    unused_media = sum(1 for it in media_files if it["url"] not in referenced)
+    check("未引用媒体", True, f"{unused_media} 张未引用")
     try:
         conn = connect()
         conn.execute("SELECT 1 FROM audit_log LIMIT 1").fetchone()
@@ -2025,6 +2085,14 @@ def section_slug_edit(request: Request, section: str, slug: str):
         fm, body = store.read_markdown(section, slug)
     except (ValueError, FileNotFoundError):
         raise HTTPException(404)
+    revision_items = revisions.list_revisions("posts", slug)
+    revision_display = []
+    for ts in revision_items:
+        try:
+            label = datetime.datetime.strptime(ts[:15], "%Y%m%d-%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            label = ts
+        revision_display.append({"ts": ts, "label": label})
     return render(
         request,
         "edit.html",
@@ -2034,7 +2102,8 @@ def section_slug_edit(request: Request, section: str, slug: str):
             "label": SECTIONS[section]["label"],
             "fields": _edit_fields(section, fm),
             "all_tags": store.all_tags(),
-            "revisions": revisions.list_revisions("posts", slug),
+            "revisions": revision_items,
+            "revision_display": revision_display,
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}/{slug}",
@@ -2185,6 +2254,7 @@ def revision_restore(
         fm, body = revisions.read_revision("posts", slug, ts)
         store.write_markdown("posts", slug, fm, body)
         revisions.save_revision("posts", slug, fm, body)
+        _audit("revision_restore", f"{slug}@{ts}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts/{slug}/edit?error={exc}"), status_code=303)
     result, elapsed = build.run_full()

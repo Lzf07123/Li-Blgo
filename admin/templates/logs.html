@@ -10,5 +10,15 @@
   <h1>操作日志</h1>
 </div>
 <p class="field-help">记录登录成功/失败/限速、密码修改与会话撤销；日志只存后台数据库，不对外公开。</p>
+<form class="list-filters" method="get" action="/{{ admin_path }}/logs">
+  <select name="kind" aria-label="按事件筛选" data-custom-dropdown>
+    <option value="">全部事件</option>
+    {% for k in ["login_ok", "login_fail", "login_limited", "password_changed", "session_revoked", "content_save", "content_delete", "content_trash", "content_duplicate", "trash_restore", "trash_delete", "trash_empty", "posts_bulk", "tags_apply", "media_upload", "media_delete", "backup_download", "backup_restore", "revision_restore", "rebuild"] %}
+    <option value="{{ k }}" {% if kind == k %}selected{% endif %}>{{ k }}</option>
+    {% endfor %}
+  </select>
+  <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
+  {% if kind %}<a class="btn-link" href="/{{ admin_path }}/logs">清除</a>{% endif %}
+</form>
 {% with table = table %}{% include "partials/table.html" %}{% endwith %}
 {% endblock %}

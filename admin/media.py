@@ -29,9 +29,10 @@ _SAFE_RE = re.compile(r"[^a-z0-9-]+")
 
 def slugify(name: str) -> str:
     stem = Path(name or "image").stem.lower()
+    stem = "".join(ch for ch in stem if ord(ch) >= 32 and ch != "\x7f")
     stem = unicodedata.normalize("NFKD", stem).encode("ascii", "ignore").decode()
     stem = _SAFE_RE.sub("-", stem).strip("-")
-    return stem or "image"
+    return (stem or "image")[:80]
 
 
 def safe_media_path(rel: str) -> Path:

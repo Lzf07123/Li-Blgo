@@ -1,5 +1,6 @@
 """内容体检：扫描内部链接/图片缺失、空正文、短摘要、重复标题与超长标题。"""
 
+import datetime
 import re
 from pathlib import Path
 
@@ -132,6 +133,34 @@ def audit_content(root=None) -> list[dict]:
                     "message": f"标题过长（{len(page['title'])} 字）",
                 }
             )
+        if page["section"] == "posts":
+            cover = page["fm"].get("cover")
+            if cover and str(cover).startswith(("/img/", "/assets/")):
+                rel = str(cover).lstrip("/")
+                if not any((base / rel).exists() for base in (theme_static, site_static)):
+                    issues.append(
+                        {
+                            "severity": "danger",
+                            "section": page["section"],
+                            "slug": page["slug"],
+                            "title": page["title"],
+                            "message": f"封面图缺失：{cover}",
+                        }
+                    )
+            try:
+                date_text = str(page["fm"].get("date", ""))[:10]
+                if date_text and datetime.date.fromisoformat(date_text) > datetime.date.today():
+                    issues.append(
+                        {
+                            "severity": "warning",
+                            "section": page["section"],
+                            "slug": page["slug"],
+                            "title": page["title"],
+                            "message": f"未来日期（{date_text}），未到时间不会公开",
+                        }
+                    )
+            except ValueError:
+                pass
         seen = titles.setdefault(page["section"], {})
         if page["title"] in seen:
             issues.append(

@@ -33,6 +33,14 @@
 - 不做破坏性操作；不动他人未提交的改动；不擅自切分支或合并。
 - 验收以证据为准，不接受无证据的"完成"。
 
+## 常用验证命令（第三轮补充）
+
+- 单元测试：`make test`（等价 `.venv/bin/python -m unittest discover -s tests -q`）
+- 硬编码/对比度审计：`make check`
+- 全量构建：`make build`（容器内走 `scripts/build.py --full`，本地需 `HUGO_BIN` 指向同版本二进制或容器内执行）
+- 效果层重建：`make web-verify`
+- 构建报告：`scripts/build.py --full --report /tmp/build-report.json`
+
 ## 多 Agents 协作（首次设计/实现期）
 
 参照 Li-Design 方案第 8 章：任务卡写明 Consumes 与 Produces（精确到文件）、验收标准可独立验证；root 负责拆解、指派与验收；槽位类需人拍板的决策禁止用猜测代替调查。

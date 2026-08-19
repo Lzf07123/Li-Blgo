@@ -323,6 +323,57 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertIn("可放心清理", r.text)
             self.assertIn("全部图片", r.text)
 
+    def test_dashboard_widgets(self):
+        store.write_markdown(
+            "posts",
+            "future",
+            {"title": "未来文章", "date": "2099-01-01", "status": "published"},
+            "正文",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/")
+            self.assertIn("最近活动", r.text)
+            self.assertIn("内容体检", r.text)
+            self.assertIn("定时文章", r.text)
+            self.assertIn("未来文章", r.text)
+
+    def test_stats_path_maps_to_title(self):
+        store.write_markdown(
+            "posts",
+            "mapped",
+            {"title": "可读标题", "date": "2026-08-18"},
+            "正文",
+        )
+        conn = connect()
+        conn.execute(
+            "INSERT INTO stats (path, day, views) VALUES (?, ?, 1)",
+            ("/posts/mapped/", "2026-08-19"),
+        )
+        conn.commit()
+        conn.close()
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/stats")
+            self.assertIn("可读标题", r.text)
+            self.assertIn("/posts/mapped/", r.text)
+
+    def test_logs_kind_filter_and_pagination(self):
+        conn = connect()
+        for i in range(3):
+            conn.execute(
+                "INSERT INTO audit_log (at, kind, detail) VALUES (?, ?, ?)",
+                (1000 + i, "content_save", f"posts/{i}"),
+            )
+        conn.commit()
+        conn.close()
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/logs?kind=content_save")
+            self.assertIn("posts/0", r.text)
+            r = client.get("/admin/logs?kind=login_ok")
+            self.assertNotIn("posts/0", r.text)
+
     def test_post_save_writes_cover_field(self):
         store.write_markdown(
             "posts",

@@ -1,4 +1,4 @@
-.PHONY: test check build preview web-build audit clean
+.PHONY: test check build preview web-build web-verify audit clean
 
 # Li&Blog 常用开发入口（容器内构建仍走 scripts/build.py）
 
@@ -19,6 +19,10 @@ preview:
 
 web-build:
 	cd web && npm run build
+
+web-verify:
+	cd web && npm run build && test -s ../themes/blog-theme/static/js/effects-react.js
+	@echo "effects-react.js OK: $$(wc -c < themes/blog-theme/static/js/effects-react.js) bytes"
 
 audit:
 	$(PY) scripts/check_hardcoded.py

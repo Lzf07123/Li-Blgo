@@ -108,8 +108,13 @@ def run_build(root, dst, hugo_cmd="hugo", memory_limit="256MiB", extra=(), metri
     site_baseurl = os.environ.get("SITE_BASEURL", "").strip()
     if site_baseurl:
         extra += ["--baseURL", site_baseurl]
+    cache_dir = os.environ.get("HUGO_CACHEDIR", "").strip()
+    if cache_dir:
+        extra += ["--cacheDir", cache_dir]
     if metrics:
         extra += ["--templateMetrics", "--templateMetricsHints"]
+    # 并发串行由本编排的 flock 保证，不再让 Hugo 写工作目录锁文件（兼容只读根文件系统）
+    extra += ["--noBuildLock"]
     subprocess.run(
         [hugo_cmd, "--gc", "--minify", "--destination", str(dst), *extra],
         cwd=root,
@@ -185,6 +190,10 @@ def verify_output(dst, expect_absolute_urls=False, content_root=None):
         import datetime as _dt
         import yaml as _yaml
 
+        sitemap_text = ""
+        sitemap = dst / "sitemap.xml"
+        if sitemap.exists():
+            sitemap_text = sitemap.read_text(encoding="utf-8", errors="replace")
         for p in sorted((content_root / "posts").glob("*.md")):
             text = p.read_text(encoding="utf-8")
             if not text.startswith("---"):
@@ -196,6 +205,8 @@ def verify_output(dst, expect_absolute_urls=False, content_root=None):
             rel = f"posts/{p.stem}/index.html"
             if fm.get("status") == "draft" and (dst / rel).exists():
                 errors.append(f"草稿泄漏到公开产物: {rel}")
+            if fm.get("status") == "draft" and f"/posts/{p.stem}/" in sitemap_text:
+                errors.append(f"sitemap 包含草稿 URL: /posts/{p.stem}/")
             try:
                 date_text = str(fm.get("date", "")).strip()
                 if date_text:
@@ -288,10 +299,27 @@ def build(args):
         total = sum(p.stat().st_size for p in dst.rglob("*") if p.is_file())
         count = sum(1 for p in dst.rglob("*") if p.is_file())
         elapsed = round(time.time() - started, 2)
+        if args.report:
+            report = {
+                "ok": True,
+                "destination": str(dst),
+                "files": count,
+                "bytes": total,
+                "elapsed_s": elapsed,
+                "preview": bool(args.preview),
+            }
+            pathlib.Path(args.report).write_text(
+                json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+            )
         print(
             f"build OK -> {dst} ({count} files, {total / 1024 / 1024:.2f} MB, {elapsed}s)"
         )
     except Exception as exc:  # noqa: BLE001 - 失败统一清理并给出可读退出码
+        if args.report:
+            pathlib.Path(args.report).write_text(
+                json.dumps({"ok": False, "error": str(exc)}, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
         if tmp.exists():
             shutil.rmtree(tmp)
         print(f"ERROR: {exc}", file=sys.stderr)
@@ -311,9 +339,12 @@ def main():
         action="store_true",
         help="附加 Hugo --templateMetrics / --templateMetricsHints 输出",
     )
+    parser.add_argument("--report", metavar="PATH", help="构建结果 JSON 报告输出路径")
     args = parser.parse_args()
 
-    lock_path = ROOT / ".build.lock"
+    lock_path = pathlib.Path(
+        os.environ.get("BUILD_LOCK_PATH", str(ROOT / ".build.lock"))
+    )
     with lock_path.open("a+", encoding="utf-8") as lock_file:
         fcntl.flock(lock_file, fcntl.LOCK_EX)
         build(args)

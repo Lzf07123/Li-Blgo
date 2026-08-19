@@ -118,6 +118,22 @@ class TestBuild(unittest.TestCase):
             self.assertTrue(any("草稿泄漏" in e for e in errors))
             self.assertTrue(any("未来日期" in e for e in errors))
 
+    def test_verify_output_rejects_draft_in_sitemap(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            content = root / "content" / "posts"
+            content.mkdir(parents=True)
+            (content / "hidden.md").write_text(
+                "---\ntitle: H\nstatus: draft\n---\n正文\n", encoding="utf-8"
+            )
+            out = root / "out"
+            out.mkdir()
+            (out / "sitemap.xml").write_text(
+                "<urlset><loc>https://x/posts/hidden/</loc></urlset>", encoding="utf-8"
+            )
+            errors = verify_output(out, content_root=root / "content")
+            self.assertTrue(any("sitemap 包含草稿" in e for e in errors))
+
     def test_write_fingerprint_creates_build_yaml(self):
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d)
@@ -138,7 +154,7 @@ class TestBuild(unittest.TestCase):
                 "scripts.build.run_build", side_effect=RuntimeError("boom")
             ):
                 args = types.SimpleNamespace(
-                    preview=False, full=False, keep_tmp=False, metrics=False
+                    preview=False, full=False, keep_tmp=False, metrics=False, report=None
                 )
                 with self.assertRaises(SystemExit) as cm:
                     build(args)

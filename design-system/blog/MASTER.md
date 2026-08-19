@@ -72,6 +72,10 @@
 | theme-toggle | 后台主题切换 |
 | admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |
 | search-page | 全站弹出式搜索（Fuse.js 7 本地文件 + 构建期 JSON 索引，导航/404 均可唤起，Ctrl/Cmd+K 快捷打开，零服务端、零外链） |
+| archive-page | 归档页 `/archive/`：按年分组与计数，纯派生内容，页脚入口（文案走 strings.nav.archive） |
+| trash | 文章回收站：软删除到 `data/trash/`，可恢复/彻底删除/清空（系统栏目，仅后台） |
+| seo-panel | 编辑器 SEO 检查：标题长度/摘要/标签/封面/slug/字数 |
+| device-preview | 预览 iframe 桌面/平板/手机宽度切换 |
 | list-filters | 列表页搜索/状态筛选/分页（50 条/页）与空状态引导 |
 | structured-config | 品牌/文案/首页/资料结构化表单：数字、勾选、技能/链接行编辑，不再手写 YAML |
 | post-cover | 文章封面图：文章卡/详情/OG/JSON-LD 全链路，编辑页可选择媒体 |
@@ -152,6 +156,9 @@
 | 标签 | posts frontmatter `tags` | 标签管理（重命名/合并/删除） |
 | 操作日志/会话/健康 | data/blog.db + 环境 | 系统栏目（操作日志/账号设置/健康检查） |
 | 媒体图片（Logo/正文插图） | blog-media 命名卷（容器内 static/img，公开 /img/） | 媒体库（上传后重建公开站） |
+| 归档页（派生：文章按年分组） | posts Markdown | 文章 |
+| 回收站（系统数据） | data/trash | 系统 → 回收站 |
+| 页脚归档入口 | strings.yaml（nav.archive） | 页面文案 |
 | 文章正文预览 | 编辑器正文 | 编辑页"生成预览"（Hugo 渲染） |
 
 验收：逐页对照本表，任何可见内容必须能在后台找到编辑入口；模板零硬编码可见文案。

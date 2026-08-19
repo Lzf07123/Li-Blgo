@@ -25,6 +25,7 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -i "${PIP_INDEX_URL}" -r /tmp/requirements.txt \
+    && pip check \
     && rm -f /tmp/requirements.txt
 
 FROM ${DOCKER_MIRROR_PREFIX}python:3.12-slim AS runtime
@@ -60,6 +61,8 @@ COPY --chown=app:app content/ content/
 COPY --chown=app:app hugo.toml requirements.txt ./
 COPY scripts/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+RUN python -m compileall -q /app/admin /app/scripts
 
 RUN mkdir -p /app/beacon /app/data /app/output /app/.preview-out /app/.build-tmp \
     /app/themes/blog-theme/static/img \
