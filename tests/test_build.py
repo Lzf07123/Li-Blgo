@@ -7,7 +7,9 @@ from unittest import mock
 
 from scripts.build import (
     build,
+    build_tmp_root,
     clear_tree,
+    preview_output_root,
     publish,
     validate_content,
     validate_content_links,
@@ -161,6 +163,18 @@ class TestBuild(unittest.TestCase):
                 clear_tree(mount)
             self.assertTrue(mount.exists())
             self.assertFalse((mount / "x.html").exists())
+
+    def test_build_tmp_and_preview_env_overrides(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            self.assertEqual(build_tmp_root(root), root / ".build-tmp")
+            self.assertEqual(preview_output_root(root), root / ".preview-out")
+            with mock.patch.dict(
+                os.environ,
+                {"BUILD_TMP_ROOT": "/x/tmp", "PREVIEW_ROOT": "/x/preview"},
+            ):
+                self.assertEqual(build_tmp_root(root), pathlib.Path("/x/tmp"))
+                self.assertEqual(preview_output_root(root), pathlib.Path("/x/preview"))
 
     def test_build_failure_cleans_tmp_and_exits_2(self):
         with tempfile.TemporaryDirectory() as d:

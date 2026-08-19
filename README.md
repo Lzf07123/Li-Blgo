@@ -51,9 +51,9 @@ Hugo v0.165.0 二进制随仓库提交于 `bin/hugo/`（linux amd64/arm64，附 
 
 部署前在 `.env` 中设置 `SITE_BASEURL=https://你的域名/`（禁止 example.com 占位）；启用 HTTPS 后再把 `COOKIE_SECURE` 改为 `1`，否则 HTTP 下 Secure Cookie 会导致后台无法登录。
 
-admin 容器以 UID 1000 运行应用；`data/ media/` 使用 Docker 命名卷（`blog-data`/`blog-media`），自动继承 UID 1000 所有权，宿主机无需创建目录；`content/ config/ output/` 为 bind 挂载，容器入口以 root 启动并自动修复挂载目录属主（仅当 UID 1000 不可写时），随后降权运行，**全新部署无需手动 chown**。
+admin 容器以 UID 1000 运行应用；`data/ media/ resources/` 使用 Docker 命名卷（`blog-data`/`blog-media`/`blog-resources`），自动继承 UID 1000 所有权，宿主机无需创建目录；`content/ config/ output/` 为 bind 挂载，容器入口以 root 启动并自动修复挂载目录属主（仅当 UID 1000 不可写时），随后降权运行，**全新部署无需手动 chown**。
 
-compose 已启用 `no-new-privileges`、`pids_limit`、只读根文件系统与 tmpfs 运行时目录（admin 构建目录、nginx 缓存）；构建锁与 Hugo 缓存分别落到 `data/` 卷与 `/tmp`，公开站与后台运行面更小。
+compose 已启用 `no-new-privileges`、`pids_limit` 与只读根文件系统；admin 的构建临时目录、预览输出、Hugo 缓存与构建锁全部落在 `data/` 命名卷，不依赖 tmpfs 或根文件系统可写，公开站与后台运行面更小。
 
 旧 bind 挂载部署迁移到命名卷（一次性，`data/` 与 `media/` 有数据时执行）：
 

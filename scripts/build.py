@@ -30,6 +30,19 @@ FINGERPRINT_FILES = {
 }
 
 
+def build_tmp_root(root):
+    """构建临时目录：默认仓库 .build-tmp，可用 BUILD_TMP_ROOT 覆盖。
+
+    只读根文件系统/无 tmpfs 的部署应指向可写卷（如 /app/data/.build-tmp）。
+    """
+    return pathlib.Path(os.environ.get("BUILD_TMP_ROOT", str(root / ".build-tmp")))
+
+
+def preview_output_root(root):
+    """预览输出目录：默认仓库 .preview-out，可用 PREVIEW_ROOT 覆盖（与后台一致）。"""
+    return pathlib.Path(os.environ.get("PREVIEW_ROOT", str(root / ".preview-out")))
+
+
 def clear_tree(path: pathlib.Path) -> None:
     """删除目录树；目录为挂载点（tmpfs）时清空内容而非 rmdir。
 
@@ -288,13 +301,13 @@ def build(args):
     hugo_cmd = os.environ.get("HUGO_BIN", "hugo")
     memory_limit = os.environ.get("GOMEMLIMIT", "256MiB")
     extra = ("--buildDrafts",) if args.preview else ()
-    dst = ROOT / (".preview-out" if args.preview else "output")
+    dst = preview_output_root(ROOT) if args.preview else ROOT / "output"
     if args.full and not os.environ.get("SITE_BASEURL", "").strip():
         print(
             "WARNING: SITE_BASEURL 未设置，canonical/OG/RSS 将使用相对 baseURL；部署前必须配置真实域名",
             file=sys.stderr,
         )
-    tmp = ROOT / ".build-tmp"
+    tmp = build_tmp_root(ROOT)
     if tmp.exists():
         clear_tree(tmp)
     tmp.mkdir(exist_ok=True)

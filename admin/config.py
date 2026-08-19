@@ -14,7 +14,9 @@ class Settings:
         self.content_root = Path(os.getenv("CONTENT_ROOT", str(ROOT / "content")))
         self.config_root = Path(os.getenv("CONFIG_ROOT", str(ROOT / "config")))
         self.output_root = Path(os.getenv("OUTPUT_ROOT", str(ROOT / "output")))
-        self.preview_root = Path(os.getenv("PREVIEW_ROOT", str(ROOT / ".preview-out")))
+        self.preview_root = Path(
+            os.getenv("PREVIEW_ROOT", str(ROOT / ".preview-out"))
+        )
         self.beacon_log = os.getenv("BEACON_LOG", str(ROOT / "data" / "beacon.log"))
         self.import_max_files = int(os.getenv("IMPORT_MAX_FILES", "200"))
         self.import_max_file_bytes = int(os.getenv("IMPORT_MAX_FILE_BYTES", str(2 * 1024 * 1024)))

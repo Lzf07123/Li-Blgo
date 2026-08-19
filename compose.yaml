@@ -36,8 +36,6 @@ services:
     read_only: true
     tmpfs:
       - /tmp:size=64m
-      - /app/.build-tmp:size=512m,uid=1000,gid=1000
-      - /app/.preview-out:size=128m,uid=1000,gid=1000
     stop_grace_period: 30s
     logging:
       driver: json-file
@@ -60,13 +58,16 @@ services:
       GOMEMLIMIT: ${GOMEMLIMIT:-256MiB}
       HUGO_NUMWORKERMULTIPLIER: ${HUGO_NUMWORKERMULTIPLIER:-0.5}
       HUGO_BIN: hugo
-      HUGO_CACHEDIR: /tmp/hugo-cache
+      HUGO_CACHEDIR: /app/data/hugo-cache
+      BUILD_TMP_ROOT: /app/data/.build-tmp
+      PREVIEW_ROOT: /app/data/.preview-out
       BUILD_LOCK_PATH: /app/data/.build.lock
       BEACON_LOG: /app/beacon/beacon.log
     volumes:
       - ./content:/app/content
       - ./config:/app/config
       - blog-data:/app/data
+      - blog-resources:/app/resources
       - ./output:/app/output
       - blog-media:/app/themes/blog-theme/static/img
       - beacon-log:/app/beacon
@@ -75,4 +76,5 @@ services:
 volumes:
   beacon-log:
   blog-data:
+  blog-resources:
   blog-media:

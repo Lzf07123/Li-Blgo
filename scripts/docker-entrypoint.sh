@@ -5,7 +5,7 @@ set -eu
 if [ "$(id -u)" -eq 0 ]; then
   for d in \
     /app/content /app/config /app/output /app/data /app/.build-tmp /app/.preview-out \
-    /app/themes/blog-theme/static/img /app/beacon; do
+    /app/resources /app/themes/blog-theme/static/img /app/beacon; do
     if [ -d "$d" ] && ! setpriv --reuid=1000 --regid=1000 --clear-groups test -w "$d"; then
       echo "[entrypoint] fixing ownership of $d"
       chown -R app:app "$d" || echo "[entrypoint] warning: cannot chown $d"

@@ -6,18 +6,20 @@
 
 ## 热修复（2026-08-19，v200 之后）
 
-**现象：** 部署新 compose（只读根文件系统 + tmpfs）后，所有预览/全量构建失败。
+**现象：** 部署新 compose（只读根文件系统）后，所有预览/全量构建失败；修复一轮后仍报 `read-only file system`。
 
-**根因（两层，均已实测复现）：**
+**根因（多层，均已实测复现）：**
 1. `scripts/build.py` 对 `.build-tmp`/`.preview-out` 执行 `shutil.rmtree`，目录为 tmpfs 挂载点时 `rmdir` 返回 `EBUSY`（Device or resource busy），构建直接退出码 2。
 2. tmpfs 默认 root 属主，应用以 UID 1000 运行时 Hugo 对目标目录 `chtimes` 报 `operation not permitted`。
+3. 只读根文件系统且无 tmpfs 的部署中，Hugo 默认缓存 `/tmp/hugo_cache`、`--cacheDir` 目标、`--gc` 的 `/app/resources` 基目录均不可写，报 `read-only file system`。
 
 **修复：**
 - `scripts/build.py` 新增 `clear_tree()`：整树删除失败时回退为仅清空目录内容；`tmp.mkdir(exist_ok=True)` 兼容保留的挂载点。
-- `compose.yaml` tmpfs 显式 `uid=1000,gid=1000`；`scripts/docker-entrypoint.sh` 把 `/app/.build-tmp` 纳入属主修复循环。
+- 构建临时目录（`BUILD_TMP_ROOT`）、预览输出（`PREVIEW_ROOT`）、Hugo 缓存（`HUGO_CACHEDIR`）全部改为环境变量可控并指向 `data/` 命名卷；compose 不再依赖 tmpfs。
+- `compose.yaml` 新增 `blog-resources` 命名卷挂载到 `/app/resources`，满足 Hugo `--gc` 的可写基目录；`scripts/docker-entrypoint.sh` 把 `/app/.build-tmp`、`/app/resources` 纳入属主修复循环。
 - 后台预览失败 flash 附带构建 stderr 末尾 200 字，便于后续定位。
 
-**验证：** 126 项测试全绿（新增 `test_clear_tree_tolerates_mountpoint`）；tmpfs+uid/gid 场景 `--preview` 与 `--full` 均 `build OK`（357 页/534 文件）；`docker compose config -q` 通过；新镜像 `liblog-admin:round3-fix` 内置脚本复测通过。
+**验证：** 127 项测试全绿（新增 `test_clear_tree_tolerates_mountpoint`、`test_build_tmp_and_preview_env_overrides`）；只读根文件系统 + 无 tmpfs + data/resources 卷挂载场景 `--preview` 与 `--full` 均 `build OK`（357 页/534 文件）；`docker compose config -q` 通过；新镜像 `liblog-admin:round3-fix2` 复测通过。
 
 ## 系列路线图
 
