@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ label }} · Li&Blog 后台{% endblock %}
 {% block content %}
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
@@ -48,8 +49,16 @@
     <option value="draft">批量转草稿</option>
     <option value="pin">批量置顶</option>
     <option value="unpin">批量取消置顶</option>
+    <option value="add_tag">批量加标签</option>
+    <option value="remove_tag">批量移除标签</option>
     <option value="delete">批量删除</option>
   </select>
+  <input type="text" name="tag" list="bulk-tag-options" placeholder="标签（加/移除时必填）" aria-label="批量标签">
+  {% if all_tags %}
+  <datalist id="bulk-tag-options">
+    {% for t in all_tags %}<option value="{{ t }}"></option>{% endfor %}
+  </datalist>
+  {% endif %}
   <button type="submit" class="btn btn-secondary btn-sm">执行</button>
   <span id="bulk-count" class="bulk-count">已选 0 篇</span>
 </form>
@@ -72,6 +81,10 @@
       if (!n) { e.preventDefault(); return; }
       if (action === "delete" && !confirm("确定删除选中的 " + n + " 篇文章？删除后立即重建公开站。")) {
         e.preventDefault();
+      }
+      if ((action === "add_tag" || action === "remove_tag") && !form.querySelector('input[name="tag"]').value.trim()) {
+        e.preventDefault();
+        form.querySelector('input[name="tag"]').focus();
       }
     });
   })();

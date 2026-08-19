@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}预览 · Li&Blog 后台{% endblock %}
 {% block content %}
 {% set edit_url = '/' + admin_path + '/' + section + '/edit' if not slug else '/' + admin_path + '/' + section + '/' + slug + '/edit' %}
 <nav class="admin-breadcrumb" aria-label="面包屑">

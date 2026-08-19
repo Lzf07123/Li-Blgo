@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ label }} · Li&Blog 后台{% endblock %}
 {% block content %}
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
@@ -27,6 +28,7 @@
       <label>标识（slug，新建时必填，小写字母数字与连字符）
         <input type="text" name="new_slug" required pattern="[a-z0-9][a-z0-9-]{0,63}">
       </label>
+      <small id="slug-hint" class="field-help" role="status"></small>
       {% endif %}
       {% for field in fields %}
         {% set name, label, ftype, value = field[0], field[1], field[2], field[3] %}
@@ -49,6 +51,7 @@
         <button type="button" class="btn btn-sm btn-secondary" id="cover-pick">从媒体库选择封面</button>
         {% endif %}
       {% endfor %}
+      <small id="title-hint" class="field-help" role="status" hidden></small>
       {% if section == "posts" and all_tags %}
       <datalist id="tag-options">
         {% for t in all_tags %}<option value="{{ t }}"></option>{% endfor %}
@@ -63,8 +66,10 @@
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="code" title="行内代码">&lt;/&gt;</button>
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="quote" title="引用">引用</button>
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="list" title="列表">列表</button>
+          <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="table" title="插入表格">表格</button>
           <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
           <button type="button" id="editor-fullscreen" class="btn btn-sm btn-secondary">全屏</button>
+          <button type="button" id="shortcuts-help" class="btn btn-sm btn-secondary">快捷键</button>
           <span id="body-count" class="editor-count"></span>
           <span id="upload-progress-inline" class="upload-progress-inline" hidden><i id="upload-progress-inline-bar" class="upload-progress-bar"></i></span>
         </div>
@@ -81,12 +86,30 @@
   <aside class="editor-preview">
     <div class="editor-preview-head">
       <span>Hugo 预览</span>
+      <span class="preview-devices" role="group" aria-label="预览宽度">
+        <button type="button" class="is-active" data-preview-width="100%">桌面</button>
+        <button type="button" data-preview-width="768px">平板</button>
+        <button type="button" data-preview-width="390px">手机</button>
+      </span>
       {% if preview_path %}
       <a id="preview-open" class="btn-link" href="/{{ admin_path }}{{ preview_path }}?raw=1" target="_blank" rel="noopener">新窗口打开</a>
       {% endif %}
     </div>
     <p id="preview-loading" class="flash preview-loading" hidden>正在生成预览…</p>
     <iframe id="preview-frame" name="preview-frame" title="Hugo 预览" class="preview-frame"></iframe>
+    {% if seo %}
+    <div class="seo-panel">
+      <p class="editor-preview-head">SEO 检查</p>
+      <ul class="seo-list">
+        <li class="{{ 'ok' if seo.title_ok else 'warn' }}">标题 {{ seo.title_len }} 字（10–60 最佳）</li>
+        <li class="{{ 'ok' if seo.has_summary else 'warn' }}">{{ "已填摘要" if seo.has_summary else "缺少摘要" }}</li>
+        <li class="{{ 'ok' if seo.has_tags else 'warn' }}">{{ "已有标签" if seo.has_tags else "缺少标签" }}</li>
+        <li class="{{ 'ok' if seo.has_cover else 'warn' }}">{{ "已有封面" if seo.has_cover else "无封面（可选）" }}</li>
+        <li class="{{ 'ok' if seo.slug_ok else 'warn' }}">{{ "标识合法" if seo.slug_ok else "标识待填/非法" }}</li>
+        <li>正文字数约 {{ seo.word_count }} 词</li>
+      </ul>
+    </div>
+    {% endif %}
     {% if revisions %}
     <div class="revision-list">
       <p class="editor-preview-head">修订历史（最近 {{ revisions|length }} 份）</p>
@@ -134,6 +157,25 @@
   </form>
 </dialog>
 
+<dialog id="shortcuts-dialog" class="media-dialog">
+  <form method="dialog">
+    <h2>编辑器快捷键</h2>
+    <table class="table-shell">
+      <tbody>
+        <tr><td><kbd>Ctrl/Cmd + S</kbd></td><td>保存并留在本页</td></tr>
+        <tr><td><kbd>Ctrl/Cmd + B</kbd></td><td>加粗</td></tr>
+        <tr><td><kbd>Ctrl/Cmd + I</kbd></td><td>斜体</td></tr>
+        <tr><td><kbd>Ctrl/Cmd + K</kbd></td><td>插入链接</td></tr>
+        <tr><td><kbd>Ctrl/Cmd + Shift + X</kbd></td><td>行内代码</td></tr>
+        <tr><td><kbd>?</kbd></td><td>打开本帮助</td></tr>
+      </tbody>
+    </table>
+    <div class="form-actions">
+      <button type="button" class="btn" onclick="document.getElementById('shortcuts-dialog').close()">关闭</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
   (function () {
     var form = document.getElementById("edit-form");
@@ -145,6 +187,7 @@
     var slugInput = form.querySelector('input[name="new_slug"]');
     var titleInput = form.querySelector('input[name="title"]');
     var slugAuto = false;
+    var POST_TITLES = {{ post_titles | tojson }};
     if (slugInput && titleInput) {
       titleInput.addEventListener("input", function () {
         if (slugInput.value && !slugAuto) return;
@@ -155,6 +198,40 @@
         }
       });
       slugInput.addEventListener("input", function () { slugAuto = false; });
+    }
+
+    var slugHint = document.getElementById("slug-hint");
+    var slugCheckTimer = null;
+    if (slugInput && slugHint) {
+      slugInput.addEventListener("input", function () {
+        window.clearTimeout(slugCheckTimer);
+        var value = slugInput.value.trim();
+        if (!value) { slugHint.textContent = ""; return; }
+        slugCheckTimer = window.setTimeout(function () {
+          fetch("/{{ admin_path }}/" + "{{ section }}" + "/slug-check?slug=" + encodeURIComponent(value))
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+              if (!res.valid) slugHint.textContent = "标识格式不合法";
+              else if (res.exists) slugHint.textContent = "该标识已存在";
+              else slugHint.textContent = "标识可用";
+            })
+            .catch(function () { slugHint.textContent = ""; });
+        }, 250);
+      });
+    }
+
+    var titleHint = document.getElementById("title-hint");
+    if (titleInput && titleHint && POST_TITLES.length) {
+      var currentSlug = "{{ slug }}";
+      titleInput.addEventListener("input", function () {
+        var value = titleInput.value.trim();
+        var dup = null;
+        POST_TITLES.forEach(function (p) {
+          if (p.title === value && p.slug !== currentSlug) dup = p;
+        });
+        titleHint.hidden = !dup;
+        titleHint.textContent = dup ? "已有同名文章：" + dup.slug : "";
+      });
     }
 
     function saveDraft() {
@@ -195,9 +272,11 @@
 
     function updateCount() {
       var text = body.value;
-      var words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      var cjk = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+      var latin = text.trim() ? text.trim().split(/\s+/).filter(function (s) { return !/^[\u4e00-\u9fff]+$/.test(s); }).length : 0;
+      var words = cjk + latin;
       var minutes = Math.max(1, Math.round(text.length / 400));
-      count.textContent = text.length + " 字符 / " + words + " 词 / 约 " + minutes + " 分钟";
+      count.textContent = text.length + " 字符 / 约 " + words + " 词（含中文 " + cjk + " 字）/ 约 " + minutes + " 分钟";
     }
     body.addEventListener("input", updateCount);
     updateCount();
@@ -230,6 +309,29 @@
         if (mode === "code") wrapSelection("`", "`", "code");
         if (mode === "quote") wrapSelection("\n> ", "\n", "引用文字");
         if (mode === "list") wrapSelection("\n- ", "\n", "列表项");
+        if (mode === "table") insertAtCursor("\n| 列 1 | 列 2 |\n| --- | --- |\n|  |  |\n");
+      });
+    });
+
+    var shortcutsDialog = document.getElementById("shortcuts-dialog");
+    document.getElementById("shortcuts-help").addEventListener("click", function () {
+      shortcutsDialog.showModal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "?" && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && shortcutsDialog) {
+        e.preventDefault();
+        shortcutsDialog.showModal();
+      }
+    });
+
+    document.querySelectorAll(".preview-devices button").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var frame = document.getElementById("preview-frame");
+        document.querySelectorAll(".preview-devices button").forEach(function (b) {
+          b.classList.toggle("is-active", b === btn);
+        });
+        frame.style.width = btn.dataset.previewWidth;
+        frame.parentElement.classList.toggle("preview-narrow", btn.dataset.previewWidth !== "100%");
       });
     });
 
@@ -351,6 +453,19 @@
       form.submit();
       form.target = "_self";
       form.removeChild(input);
+    });
+
+    window.addEventListener("storage", function (e) {
+      if (e.key !== DRAFT_KEY || e.newValue === null) return;
+      var other = null;
+      try { other = JSON.parse(e.newValue); } catch (err) {}
+      if (!other || !other.body || other.body === body.value) return;
+      if (window.confirm("另一个标签页保存了更新草稿，是否加载？")) {
+        body.value = other.body;
+        if (titleInput && other.title) titleInput.value = other.title;
+        updateCount();
+        localStorage.removeItem(DRAFT_KEY);
+      }
     });
   })();
 </script>

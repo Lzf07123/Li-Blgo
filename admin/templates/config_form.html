@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}{{ label }} · Li&Blog 后台{% endblock %}
 {% block content %}
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
@@ -55,13 +56,35 @@
     {% endif %}
   {% endfor %}
   <div class="form-actions">
-    <button type="submit" class="btn">保存并重建</button>
+    <button type="submit" class="btn" data-busy>保存并重建</button>
     <a class="btn btn-ghost" href="/{{ admin_path }}/">返回仪表盘</a>
     <a class="btn btn-ghost" href="/" target="_blank" rel="noopener">查看公开站首页</a>
   </div>
 </form>
 <script>
   (function () {
+    document.querySelectorAll('textarea[name]').forEach(function (ta) {
+      ta.dataset.yamlCheck = "1";
+      var hint = document.createElement("small");
+      hint.className = "field-help";
+      hint.textContent = "";
+      ta.parentElement.appendChild(hint);
+      ta.addEventListener("input", function () {
+        var lines = ta.value.split("\n");
+        var bad = lines.findIndex(function (line) {
+          var s = line.trim();
+          if (!s || s.startsWith("#") || s.startsWith(" ") || s.startsWith("-") || s.startsWith("[") || s.startsWith("{")) return false;
+          return !/^[A-Za-z0-9_.-]+:(\s|$)/.test(s);
+        });
+        if (bad >= 0) {
+          ta.classList.add("is-invalid");
+          hint.textContent = "第 " + (bad + 1) + " 行格式可能不正确（应为 key: value）";
+        } else {
+          ta.classList.remove("is-invalid");
+          hint.textContent = "";
+        }
+      });
+    });
     function attachRemove(button) {
       button.addEventListener("click", function () {
         var tr = button.closest("tr");

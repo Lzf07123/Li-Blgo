@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}站点备份 · Li&Blog 后台{% endblock %}
 {% block content %}
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
@@ -10,6 +11,20 @@
 </div>
 <p class="field-help">备份包含 content/、config/、媒体图片（media/）、data/blog.db 与 hugo.toml，打包为一个 ZIP。备份内含后台数据库，请妥善保管，不要公开分享。</p>
 <a class="btn" href="/{{ admin_path }}/backup/download">下载备份 ZIP</a>
+{% if records %}
+<div class="admin-card">
+  <h2>最近备份记录</h2>
+  <ul class="draft-list">
+    {% for r in records %}
+    <li>
+      <span class="admin-tag {{ 'admin-tag--pinned' if r.kind == '恢复' else 'admin-tag--muted' }}">{{ r.kind }}</span>
+      {{ r.detail }}
+      <time>{{ r.at }}</time>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endif %}
 <div class="admin-card">
 <h2>从备份恢复</h2>
 <p class="field-help">上传备份 ZIP 会覆盖 content/、config/、媒体图片、data/blog.db 与 hugo.toml；恢复前会自动在 data/restore-backups/ 生成一份当前站点安全备份，恢复后会清除旧登录会话。</p>

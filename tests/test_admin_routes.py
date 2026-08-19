@@ -213,6 +213,116 @@ class AdminRoutesTest(unittest.TestCase):
         self.assertFalse(fm["show_on_home"])
         self.assertEqual(fm["tech"], ["Docker"])
 
+    def test_trash_restore_cycle(self):
+        store.write_markdown(
+            "posts",
+            "trash-me",
+            {"title": "Trash", "date": "2026-08-18", "status": "published"},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/trash-me/trash",
+                data={"_csrf": csrf},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertFalse((settings.content_root / "posts" / "trash-me.md").exists())
+            self.assertEqual(len(store.list_trash()), 1)
+            r = client.get("/admin/trash")
+            self.assertIn("Trash", r.text)
+            r = client.post(
+                "/admin/trash/posts/trash-me/restore",
+                data={"_csrf": csrf},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertTrue((settings.content_root / "posts" / "trash-me.md").exists())
+            self.assertEqual(store.list_trash(), [])
+
+    def test_duplicate_creates_draft(self):
+        store.write_markdown(
+            "posts",
+            "source",
+            {"title": "Source", "date": "2026-08-18", "status": "published"},
+            "正文内容",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/source/duplicate",
+                data={"_csrf": csrf},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, body = store.read_markdown("posts", "source-2")
+        self.assertEqual(fm["status"], "draft")
+        self.assertEqual(body.strip(), "正文内容")
+        self.assertIn("副本", fm["title"])
+
+    def test_slug_check_json(self):
+        store.write_markdown(
+            "posts",
+            "exists",
+            {"title": "E", "date": "2026-08-18"},
+            "正文",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts/slug-check?slug=exists")
+            self.assertEqual(r.status_code, 200)
+            self.assertEqual(r.json(), {"valid": True, "exists": True})
+            r = client.get("/admin/posts/slug-check?slug=free")
+            self.assertEqual(r.json(), {"valid": True, "exists": False})
+            r = client.get("/admin/posts/slug-check?slug=BAD SLUG")
+            self.assertEqual(r.json(), {"valid": False, "exists": False})
+
+    def test_bulk_add_remove_tag(self):
+        for slug in ("a", "b"):
+            store.write_markdown(
+                "posts",
+                slug,
+                {"title": slug, "date": "2026-08-18", "tags": ["old"]},
+                "正文",
+            )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/bulk",
+                data={"_csrf": csrf, "action": "add_tag", "tag": "new", "slugs": ["a", "b"]},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            fm, _ = store.read_markdown("posts", "a")
+            self.assertIn("new", fm["tags"])
+            r = client.post(
+                "/admin/posts/bulk",
+                data={"_csrf": csrf, "action": "remove_tag", "tag": "old", "slugs": ["a", "b"]},
+                follow_redirects=False,
+            )
+            fm, _ = store.read_markdown("posts", "b")
+            self.assertNotIn("old", fm["tags"])
+
+    def test_media_unused_filter(self):
+        (media.MEDIA_ROOT / "unused.png").write_bytes(b"png")
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/media?unused=1")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("unused.png", r.text)
+            self.assertIn("可放心清理", r.text)
+            self.assertIn("全部图片", r.text)
+
     def test_post_save_writes_cover_field(self):
         store.write_markdown(
             "posts",

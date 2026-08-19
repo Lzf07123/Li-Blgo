@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}仪表盘 · Li&Blog 后台{% endblock %}
 {% block content %}
 <div class="dashboard-head">
   <h1>仪表盘</h1>
@@ -44,6 +45,23 @@
   {% endfor %}
 </ul>
 {% endif %}
+{% if scheduled %}
+<h2>定时文章（{{ scheduled|length }}）</h2>
+<ul class="draft-list">
+  {% for d in scheduled[:5] %}
+  <li>
+    <a href="/{{ admin_path }}/posts/{{ d.slug }}/edit">{{ d.title }}</a>
+    <time>{{ d.date }}</time>
+  </li>
+  {% endfor %}
+</ul>
+{% endif %}
+<div class="admin-card build-card">
+  <h2>内容体检</h2>
+  <p>
+    <a href="/{{ admin_path }}/audit">严重 {{ audit_danger }} 项 · 提醒 {{ audit_warning }} 项</a>
+  </p>
+</div>
 {% if top_rows %}
 <h2>访问 TOP5</h2>
 <div class="stat-bars">
@@ -71,6 +89,18 @@
 {% if recent_posts %}
 <h2>最近文章</h2>
 {% with table = recent_table %}{% include "partials/table.html" %}{% endwith %}
+{% endif %}
+{% if recent_activity %}
+<h2>最近活动</h2>
+<ul class="draft-list">
+  {% for r in recent_activity %}
+  <li>
+    <span class="admin-tag admin-tag--muted">{{ r["kind"] }}</span>
+    {{ r["detail"] }}
+    <time>{{ r["at"] }}</time>
+  </li>
+  {% endfor %}
+</ul>
 {% endif %}
 <h2>访问统计（最近）</h2>
 {% with table = stats_table %}{% include "partials/table.html" %}{% endwith %}

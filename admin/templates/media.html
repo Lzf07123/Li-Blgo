@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% block title %}媒体库 · Li&Blog 后台{% endblock %}
 {% block content %}
 <div class="list-head">
   <h1>媒体库（{{ items|length }}）</h1>
@@ -12,8 +13,16 @@
   <label class="visually-hidden" for="q">按文件名搜索</label>
   <input id="q" type="search" name="q" value="{{ q }}" placeholder="按文件名搜索">
   <button type="submit" class="btn btn-secondary btn-sm">搜索</button>
+  {% if unused == "1" %}
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/media{% if q %}?q={{ q|urlencode }}{% endif %}">全部图片</a>
+  {% else %}
+  <a class="btn btn-secondary btn-sm" href="/{{ admin_path }}/media?unused=1{% if q %}&q={{ q|urlencode }}{% endif %}">只看未引用（{{ unused_count }}）</a>
+  {% endif %}
   {% if q %}<a class="btn-link" href="/{{ admin_path }}/media">清除</a>{% endif %}
 </form>
+{% if unused == "1" %}
+<p class="flash">当前只看未被文章/配置引用的图片，可放心清理。</p>
+{% endif %}
 <form id="upload-form" class="upload-box" data-busy>
   <input type="hidden" name="_csrf" value="{{ csrf }}">
   <input type="file" name="file" accept=".png,.jpg,.jpeg,.gif,.webp,.avif" multiple required>

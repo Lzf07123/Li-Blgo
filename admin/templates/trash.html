@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}回收站 · Li&Blog 后台{% endblock %}
+{% block content %}
+<nav class="admin-breadcrumb" aria-label="面包屑">
+  <a href="/{{ admin_path }}/">仪表盘</a>
+  <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
+  <span aria-current="page">回收站</span>
+</nav>
+<div class="list-head">
+  <h1>回收站（{{ count }}）</h1>
+  {% if count %}
+  <form method="post" action="/{{ admin_path }}/trash/empty" data-busy
+        onsubmit="return confirm('确定清空回收站？此操作不可恢复。')">
+    <input type="hidden" name="_csrf" value="{{ csrf }}">
+    <button type="submit" class="btn btn-secondary btn-sm">清空回收站</button>
+  </form>
+  {% endif %}
+</div>
+<p class="field-help">文章移入回收站后不会出现在公开站；可随时恢复，或彻底删除。</p>
+{% with table = table %}{% include "partials/table.html" %}{% endwith %}
+{% endblock %}

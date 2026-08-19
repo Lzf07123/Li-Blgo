@@ -1,6 +1,8 @@
 """内容读写层：Markdown/YAML 文件是唯一事实来源，路径一律防穿越。"""
 
 import re
+import shutil
+import time
 from pathlib import Path
 
 import yaml
@@ -96,7 +98,7 @@ def list_markdown(
             or ql in it["slug"].lower()
             or any(ql in str(t).lower() for t in it["tags"])
         ]
-    if status and section == "posts":
+    if status and section == "posts" and status in ("published", "draft"):
         items = [it for it in items if it["status"] == status]
     if sort in ("title", "date", "status", "slug"):
         reverse = order == "desc"
@@ -178,6 +180,81 @@ def delete_markdown(section: str, slug: str) -> None:
     p = safe_resolve(settings.content_root, f"{section}/{slug}.md")
     if p.exists():
         p.unlink()
+
+
+def trash_markdown(section: str, slug: str) -> None:
+    """把文章移入回收站（data/trash/<section>/），支持跨文件系统移动。"""
+    if not SLUG_RE.match(slug):
+        raise ValueError("bad slug")
+    p = safe_resolve(settings.content_root, f"{section}/{slug}.md")
+    if not p.exists():
+        raise FileNotFoundError("文件不存在")
+    trash_dir = settings.db_path.parent / "trash" / section
+    trash_dir.mkdir(parents=True, exist_ok=True)
+    target = trash_dir / f"{slug}.md"
+    if target.exists():
+        target = trash_dir / f"{slug}-{int(time.time())}.md"
+    shutil.move(str(p), str(target))
+
+
+def list_trash() -> list[dict]:
+    """列出回收站内容：section、slug、原标题、移入时间。"""
+    trash_root = settings.db_path.parent / "trash"
+    if not trash_root.exists():
+        return []
+    items = []
+    for section_dir in sorted(trash_root.iterdir()):
+        if not section_dir.is_dir():
+            continue
+        section = section_dir.name
+        for p in sorted(section_dir.glob("*.md")):
+            fm = _read_frontmatter(p)
+            items.append(
+                {
+                    "section": section,
+                    "slug": p.stem,
+                    "title": fm.get("title") or p.stem,
+                    "mtime": p.stat().st_mtime,
+                }
+            )
+    items.sort(key=lambda it: it["mtime"], reverse=True)
+    return items
+
+
+def restore_trash(section: str, slug: str) -> str:
+    """把回收站文件恢复到原栏目，返回恢复后的 slug（含时间戳时截断）。"""
+    trash_dir = settings.db_path.parent / "trash" / section
+    candidates = [trash_dir / f"{slug}.md"]
+    if not any(c.exists() for c in candidates):
+        # slug 可能带时间戳后缀，按前缀匹配
+        if trash_dir.exists():
+            candidates = [
+                p
+                for p in trash_dir.glob("*.md")
+                if p.stem == slug or p.stem.startswith(slug + "-")
+            ]
+    if not candidates or not any(c.exists() for c in candidates):
+        raise FileNotFoundError("回收站中不存在该文件")
+    src = next(c for c in candidates if c.exists())
+    clean_slug = src.stem.split("-")[0] if src.stem != slug else slug
+    if not SLUG_RE.match(clean_slug):
+        raise ValueError("bad slug")
+    target = safe_resolve(settings.content_root, f"{section}/{clean_slug}.md")
+    if target.exists():
+        raise ValueError("同名文件已存在，请先处理后再恢复")
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move(str(src), str(target))
+    return clean_slug
+
+
+def empty_trash() -> int:
+    """清空回收站，返回删除的文件数。"""
+    trash_root = settings.db_path.parent / "trash"
+    if not trash_root.exists():
+        return 0
+    count = sum(1 for p in trash_root.rglob("*.md") if p.is_file())
+    shutil.rmtree(trash_root)
+    return count
 
 
 def remove_image_references(rel: str) -> list[str]:

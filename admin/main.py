@@ -2,6 +2,7 @@
 
 import datetime
 import os
+import re
 from contextlib import asynccontextmanager
 from math import ceil
 from typing import Optional
@@ -123,6 +124,7 @@ ADMIN_BADGE_VARIANTS = {
     "published": "admin-badge--published",
     "draft": "admin-badge--draft",
     "active": "admin-badge--active",
+    "scheduled": "admin-badge--active",
 }
 ADMIN_NAV = [
     {
@@ -130,6 +132,7 @@ ADMIN_NAV = [
         "items": [
             {"label": "文章", "path": "/posts", "icon": "file"},
             {"label": "标签", "path": "/tags", "icon": "text"},
+            {"label": "回收站", "path": "/trash", "icon": "archive"},
             {"label": "项目", "path": "/projects", "icon": "folder"},
             {"label": "时间线", "path": "/timeline", "icon": "clock"},
             {"label": "关于我", "path": "/about", "icon": "user"},
@@ -208,6 +211,65 @@ def safe_stats_href(path: str) -> str:
     if len(decoded) > 512 or any(ord(ch) < 32 or ch.isspace() for ch in decoded):
         return ""
     return path
+
+
+def _is_future(date_text: str) -> bool:
+    try:
+        if not date_text:
+            return False
+        return datetime.date.fromisoformat(str(date_text)[:10]) > datetime.date.today()
+    except ValueError:
+        return False
+
+
+def _path_title_map() -> dict:
+    """统计路径 → 内容标题映射，用于把访问统计变成可读标题。"""
+    titles: dict[str, str] = {}
+    for section in ("posts", "projects", "timeline"):
+        base = settings.content_root / section
+        if not base.exists():
+            continue
+        for p in base.glob("*.md"):
+            if p.stem in ("_index", "index"):
+                continue
+            fm = store._read_frontmatter(p)
+            titles[f"/{section}/{p.stem}/"] = str(fm.get("title") or p.stem)
+    for name in ("about", "resources"):
+        p = settings.content_root / f"{name}.md"
+        if p.exists():
+            fm = store._read_frontmatter(p)
+            titles[f"/{name}/"] = str(fm.get("title") or name)
+    return titles
+
+
+def _media_referenced() -> set:
+    """扫描 content/ 与 config/ 中的 /img/ 引用，供媒体库未引用筛选。"""
+    refs: set[str] = set()
+    content_root = settings.content_root
+    if content_root.exists():
+        md_re = re.compile(r"!\[[^\]]*\]\((/img/[^)\s]+)")
+        attr_re = re.compile(r'(?:src|href)\s*=\s*["\'](/img/[^"\']+)["\']', re.IGNORECASE)
+        for p in content_root.rglob("*.md"):
+            text = p.read_text(encoding="utf-8")
+            refs.update(md_re.findall(text))
+            refs.update(attr_re.findall(text))
+    config_root = settings.config_root
+    if config_root.exists():
+        def walk(node) -> None:
+            if isinstance(node, dict):
+                for v in node.values():
+                    walk(v)
+            elif isinstance(node, list):
+                for v in node:
+                    walk(v)
+            elif isinstance(node, str) and node.startswith("/img/"):
+                refs.add(node)
+        for p in config_root.glob("*.yaml"):
+            try:
+                walk(yaml.safe_load(p.read_text(encoding="utf-8")) or {})
+            except Exception:
+                continue
+    return refs
 
 
 def client_ip(request: Request) -> str:
@@ -614,6 +676,7 @@ def dashboard(request: Request):
     posts = store.list_markdown("posts")
     posts.sort(key=lambda it: not it.get("pinned", False))
     drafts = [p for p in posts if p.get("status") == "draft"]
+    scheduled = [p for p in posts if p.get("status") != "draft" and _is_future(str(p.get("date") or ""))]
     recent_posts = posts[:5]
     conn = connect()
     stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
@@ -635,6 +698,7 @@ def dashboard(request: Request):
     if index_file.exists():
         last_build = datetime.datetime.fromtimestamp(index_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
     output_info = build.output_info()
+    path_titles = _path_title_map()
     top_rows = [{"path": display_path(r["path"]), "views": r["views"]} for r in stats[:5]]
     top_max = max((r["views"] for r in top_rows), default=0)
     for r in top_rows:
@@ -664,19 +728,50 @@ def dashboard(request: Request):
     ]
     stats_rows = [
         {
-            "path": display_path(r["path"]),
+            "path": path_titles.get(display_path(r["path"]), display_path(r["path"])),
             "path_href": safe_stats_href(r["path"]),
+            "path_tags": (
+                [{"label": display_path(r["path"]), "class": "admin-tag--muted"}]
+                if display_path(r["path"]) in path_titles
+                else []
+            ),
             "day": r["day"],
             "views": r["views"],
         }
         for r in stats
     ]
+    conn2 = connect()
+    recent_activity = conn2.execute(
+        "SELECT at, kind, detail FROM audit_log ORDER BY id DESC LIMIT 8"
+    ).fetchall()
+    conn2.close()
+    recent_activity = [
+        {
+            "at": datetime.datetime.fromtimestamp(r["at"]).strftime("%m-%d %H:%M"),
+            "kind": {
+                "login_ok": "登录",
+                "login_fail": "登录失败",
+                "content_save": "保存",
+                "content_delete": "删除",
+                "content_trash": "回收",
+                "media_upload": "上传",
+                "tags_apply": "标签",
+                "rebuild": "重建",
+            }.get(r["kind"], r["kind"]),
+            "detail": r["detail"],
+        }
+        for r in recent_activity
+    ]
+    audit_issues = audit.audit_content()
+    audit_danger = sum(1 for i in audit_issues if i["severity"] == "danger")
+    audit_warning = len(audit_issues) - audit_danger
     return render(
         request,
         "dashboard.html",
         {
             "counts": counts,
             "drafts": drafts,
+            "scheduled": scheduled,
             "recent_posts": recent_posts,
             "stats": stats,
             "media_count": len(media_store.list_media()),
@@ -697,6 +792,9 @@ def dashboard(request: Request):
                 "rows": stats_rows,
                 "empty": "暂无数据（统计上线后展示）",
             },
+            "recent_activity": recent_activity,
+            "audit_danger": audit_danger,
+            "audit_warning": audit_warning,
         },
     )
 
@@ -760,10 +858,16 @@ def stats_page(
             for r in rows
         ]
     else:
+        path_titles = _path_title_map()
         table_rows = [
             {
-                "path": display_path(r["path"]),
+                "path": path_titles.get(display_path(r["path"]), display_path(r["path"])),
                 "path_href": safe_stats_href(r["path"]),
+                "path_tags": (
+                    [{"label": display_path(r["path"]), "class": "admin-tag--muted"}]
+                    if display_path(r["path"]) in path_titles
+                    else []
+                ),
                 "day": r["day"],
                 "views": r["views"],
             }
@@ -804,7 +908,7 @@ def rebuild(request: Request, csrf_token: str = Form("", alias="_csrf")):
 # ---------- 媒体库 ----------
 
 @app.get(ap("/media"), response_class=HTMLResponse)
-def media_page(request: Request, q: str = ""):
+def media_page(request: Request, q: str = "", unused: str = ""):
     require_login(request)
     items = media_store.list_media()
     total_size = sum(it["size"] for it in items)
@@ -812,6 +916,10 @@ def media_page(request: Request, q: str = ""):
     if q:
         ql = q.lower()
         items = [it for it in items if ql in it["rel"].lower()]
+    referenced = _media_referenced()
+    unused_count = sum(1 for it in items if it["url"] not in referenced)
+    if unused == "1":
+        items = [it for it in items if it["url"] not in referenced]
     groups = {}
     for it in items:
         month = "/".join(it["rel"].split("/")[:2]) if "/" in it["rel"] else "未分类"
@@ -870,7 +978,7 @@ def media_page(request: Request, q: str = ""):
         {
             "month": m,
             "table": {
-                "caption": f"媒体库 {m}",
+                "caption": f"媒体库 {m}（{len(groups[m])} 张）",
                 "columns": media_columns,
                 "rows": media_rows(groups[m]),
                 "empty": "暂无图片",
@@ -886,6 +994,8 @@ def media_page(request: Request, q: str = ""):
             "items": items,
             "groups": grouped,
             "q": q,
+            "unused": unused,
+            "unused_count": unused_count,
             "total_size": total_size,
             "largest": largest,
         },
@@ -1264,6 +1374,145 @@ def tags_apply(
     )
 
 
+# ---------- 回收站（软删除 / 恢复 / 清空） ----------
+
+@app.get(ap("/trash"), response_class=HTMLResponse)
+def trash_page(request: Request):
+    require_login(request)
+    items = store.list_trash()
+    columns = [
+        {"key": "title", "label": "标题", "type": "link"},
+        {"key": "section", "label": "栏目", "type": "text"},
+        {"key": "mtime", "label": "移入时间", "type": "text"},
+        {"key": "actions", "label": "操作", "type": "actions"},
+    ]
+    rows = []
+    for it in items:
+        edit_href = ap(f"/{it['section']}/{it['slug']}/edit")
+        rows.append(
+            {
+                "title": it["title"],
+                "title_href": edit_href,
+                "section": SECTIONS.get(it["section"], {}).get("label", it["section"]),
+                "mtime": datetime.datetime.fromtimestamp(it["mtime"]).strftime("%Y-%m-%d %H:%M"),
+                "actions": [
+                    {
+                        "label": "恢复",
+                        "href": ap(f"/trash/{it['section']}/{it['slug']}/restore"),
+                        "method": "post",
+                    },
+                    {
+                        "label": "彻底删除",
+                        "href": ap(f"/trash/{it['section']}/{it['slug']}/delete"),
+                        "method": "post",
+                        "danger": True,
+                        "confirm": f"确定彻底删除 {it['title']}？此操作不可恢复。",
+                    },
+                ],
+            }
+        )
+    table = {
+        "caption": "回收站",
+        "columns": columns,
+        "rows": rows,
+        "empty": "回收站是空的",
+        "striped": True,
+    }
+    return render(request, "trash.html", {"table": table, "count": len(items)})
+
+
+@app.post(ap("/trash/{section}/{slug}/restore"))
+def trash_restore(request: Request, section: str, slug: str, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if section not in SECTIONS or SECTIONS[section]["single"] or not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/trash?error=会话失效"), status_code=303)
+    try:
+        clean_slug = store.restore_trash(section, slug)
+        _audit("trash_restore", f"{section}/{clean_slug}")
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/trash?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/trash?error=恢复后构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/trash?ok=已恢复 {clean_slug} 并重建（{elapsed}s）"), status_code=303)
+
+
+@app.post(ap("/trash/{section}/{slug}/delete"))
+def trash_delete(request: Request, section: str, slug: str, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/trash?error=会话失效"), status_code=303)
+    trash_root = settings.db_path.parent / "trash" / section
+    try:
+        candidates = [trash_root / f"{slug}.md"] + list(trash_root.glob(f"{slug}-*.md"))
+        deleted = 0
+        for p in candidates:
+            if p.exists() and p.is_file():
+                p.unlink()
+                deleted += 1
+        if not deleted:
+            raise FileNotFoundError("文件不存在")
+        _audit("trash_delete", f"{section}/{slug}")
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/trash?error={exc}"), status_code=303)
+    return RedirectResponse(ap("/trash?ok=已彻底删除"), status_code=303)
+
+
+@app.post(ap("/trash/empty"))
+def trash_empty(request: Request, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/trash?error=会话失效"), status_code=303)
+    count = store.empty_trash()
+    _audit("trash_empty", f"count={count}")
+    return RedirectResponse(ap(f"/trash?ok=已清空 {count} 个文件"), status_code=303)
+
+
+# ---------- 复制为新草稿 / slug 即时检查 ----------
+
+@app.post(ap("/{section}/{slug}/duplicate"))
+def section_duplicate(
+    request: Request,
+    section: str,
+    slug: str,
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if section not in SECTIONS or SECTIONS[section]["single"] or not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
+    try:
+        fm, body = store.read_markdown(section, slug)
+        new_slug = slug
+        i = 2
+        while store.markdown_exists(section, new_slug):
+            new_slug = f"{slug}-{i}"
+            i += 1
+        fm = dict(fm)
+        fm["title"] = f"{fm.get('title', slug)}（副本）"
+        fm["status"] = "draft"
+        fm["date"] = datetime.date.today().isoformat()
+        store.write_markdown(section, new_slug, fm, body)
+        _audit("content_duplicate", f"{section}/{slug}->{new_slug}")
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap(f"/{section}?error=复制后构建失败"), status_code=303)
+    return RedirectResponse(
+        ap(f"/{section}/{new_slug}/edit?ok=已复制为新草稿并重建（{elapsed}s）"), status_code=303
+    )
+
+
+@app.get(ap("/{section}/slug-check"))
+def section_slug_check(request: Request, section: str, slug: str = ""):
+    require_login(request)
+    if section not in SECTIONS or SECTIONS[section]["single"]:
+        raise HTTPException(404)
+    valid = bool(slug) and bool(store.SLUG_RE.match(slug))
+    exists = valid and store.markdown_exists(section, slug)
+    return JSONResponse({"valid": valid, "exists": exists})
+
+
 # ---------- 文章批量导入 ----------
 
 @app.get(ap("/posts/import"), response_class=HTMLResponse)
@@ -1334,7 +1583,21 @@ async def posts_import_submit(
 @app.get(ap("/backup"), response_class=HTMLResponse)
 def backup_page(request: Request):
     require_login(request)
-    return render(request, "backup.html", {})
+    conn = connect()
+    rows = conn.execute(
+        "SELECT at, kind, detail FROM audit_log "
+        "WHERE kind IN ('backup_download','backup_restore') ORDER BY id DESC LIMIT 10"
+    ).fetchall()
+    conn.close()
+    records = [
+        {
+            "at": datetime.datetime.fromtimestamp(r["at"]).strftime("%Y-%m-%d %H:%M:%S"),
+            "kind": "下载" if r["kind"] == "backup_download" else "恢复",
+            "detail": r["detail"],
+        }
+        for r in rows
+    ]
+    return render(request, "backup.html", {"records": records})
 
 
 @app.get(ap("/backup/download"))
@@ -1342,6 +1605,7 @@ def backup_download(request: Request):
     require_login(request)
     data = backup_store.build_backup_zip()
     ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    _audit("backup_download", f"liblog-backup-{ts}.zip")
     return Response(
         content=data,
         media_type="application/zip",
@@ -1364,6 +1628,7 @@ async def backup_restore(
     try:
         data = await read_limited(file, settings.restore_max_bytes)
         restore_store.restore_backup(data, safety=True)
+        _audit("backup_restore", (file.filename or "backup.zip")[:120])
     except ValueError as exc:
         return RedirectResponse(ap(f"/backup?error={exc}"), status_code=303)
     build_result, elapsed = build.run_full()
@@ -1418,6 +1683,25 @@ def _edit_fields(section: str, fm: dict) -> list:
     return [("title", "标题", "text", fm.get("title", ""))]
 
 
+def _seo_panel(section: str, slug: str, fm: dict, body: str = "") -> Optional[dict]:
+    """编辑器 SEO 检查面板数据（仅文章栏目）。"""
+    if section != "posts":
+        return None
+    title = str(fm.get("title") or "")
+    summary = str(fm.get("summary") or "")
+    tags = fm.get("tags") or []
+    cover = str(fm.get("cover") or "")
+    return {
+        "title_len": len(title),
+        "title_ok": 10 <= len(title) <= 60,
+        "has_summary": bool(summary.strip()),
+        "has_tags": bool(tags),
+        "has_cover": bool(cover.strip()),
+        "slug_ok": bool(slug and store.SLUG_RE.match(slug)),
+        "word_count": len(body.split()) if body.strip() else 0,
+    }
+
+
 @app.get(ap("/{section}"), response_class=HTMLResponse)
 def section_list(
     request: Request,
@@ -1440,6 +1724,8 @@ def section_list(
         order = "desc"
     per_page = min(max(int(per_page), 10), 100) if per_page else 50
     items = store.list_markdown(section, q=q, status=status, sort=sort, order=order)
+    if section == "posts" and status == "scheduled":
+        items = [it for it in items if it.get("status") != "draft" and _is_future(str(it.get("date") or ""))]
     if section == "posts":
         items.sort(key=lambda it: not it.get("pinned", False))
     total = len(items)
@@ -1476,6 +1762,7 @@ def section_list(
         actions = [
             {"label": "编辑", "href": ap(f"/{section}/{item['slug']}/edit")},
             {"label": "查看", "href": f"/{section}/{item['slug']}/", "external": True},
+            {"label": "复制", "href": ap(f"/{section}/{item['slug']}/duplicate"), "method": "post"},
         ]
         if section == "posts":
             actions.append(
@@ -1497,13 +1784,19 @@ def section_list(
         if section != "timeline":
             actions.append(
                 {
-                    "label": "删除",
-                    "href": ap(f"/{section}/{item['slug']}/delete"),
+                    "label": "移入回收站",
+                    "href": ap(f"/{section}/{item['slug']}/trash"),
                     "method": "post",
                     "danger": True,
-                    "confirm": "确定删除？删除后会立即重建公开站。",
+                    "confirm": "确定移入回收站？删除后会立即重建公开站。",
                 }
             )
+        is_scheduled = section == "posts" and item.get("status") != "draft" and _is_future(str(item.get("date") or ""))
+        status_label = STATUS_LABELS.get(item["status"], item["status"])
+        status_class = ADMIN_BADGE_VARIANTS.get(item["status"], "admin-badge--muted")
+        if is_scheduled:
+            status_label = STATUS_LABELS["scheduled"]
+            status_class = ADMIN_BADGE_VARIANTS["scheduled"]
         rows.append(
             {
                 "slug": item["slug"],
@@ -1516,11 +1809,16 @@ def section_list(
                 ),
                 "date": item["date"],
                 "status": item["status"],
-                "status_label": STATUS_LABELS.get(item["status"], item["status"]),
-                "status_class": ADMIN_BADGE_VARIANTS.get(item["status"], "admin-badge--muted"),
+                "status_label": status_label,
+                "status_class": status_class,
                 "actions": actions,
             }
         )
+    post_titles = []
+    if section == "posts":
+        post_titles = [
+            {"title": p["title"], "slug": p["slug"]} for p in store.list_markdown("posts")
+        ]
     sort_links = {}
     for key in ("title", "date", "status"):
         if key == "status" and section == "timeline":
@@ -1560,6 +1858,8 @@ def section_list(
             "sort": sort,
             "order": order,
             "table": table,
+            "all_tags": store.all_tags() if section == "posts" else [],
+            "post_titles": post_titles,
         },
     )
 
@@ -1569,13 +1869,16 @@ def posts_bulk(
     request: Request,
     action: str = Form(""),
     slugs: list[str] = Form(default=[]),
+    tag: str = Form(""),
     csrf_token: str = Form("", alias="_csrf"),
 ):
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/posts?error=会话失效"), status_code=303)
-    if action not in ("publish", "draft", "pin", "unpin", "delete"):
+    if action not in ("publish", "draft", "pin", "unpin", "delete", "add_tag", "remove_tag"):
         return RedirectResponse(ap("/posts?error=批量操作不合法"), status_code=303)
+    if action in ("add_tag", "remove_tag") and not tag.strip():
+        return RedirectResponse(ap("/posts?error=请填写标签"), status_code=303)
     changed = 0
     for slug in slugs[:200]:
         if not store.SLUG_RE.match(slug):
@@ -1593,13 +1896,20 @@ def posts_bulk(
                     old["pinned"] = True
                 elif action == "unpin":
                     old["pinned"] = False
+                elif action == "add_tag":
+                    tags = [str(t) for t in (old.get("tags") or [])]
+                    if tag.strip() not in tags:
+                        tags.append(tag.strip())
+                    old["tags"] = tags
+                elif action == "remove_tag":
+                    old["tags"] = [str(t) for t in (old.get("tags") or []) if str(t) != tag.strip()]
                 store.write_markdown("posts", slug, old, body)
             changed += 1
         except (ValueError, FileNotFoundError):
             continue
     if not changed:
         return RedirectResponse(ap("/posts?error=没有可执行的文章"), status_code=303)
-    _audit("posts_bulk", f"{action}:{changed}")
+    _audit("posts_bulk", f"{action}:{tag or ''}:{changed}")
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/posts?error=批量操作后构建失败"), status_code=303)
@@ -1663,6 +1973,13 @@ def section_new(request: Request, section: str):
             "all_tags": store.all_tags(),
             "media_items": media_store.list_media()[:20],
             "preview_path": "",
+            "seo": _seo_panel(section, "", {}, ""),
+            "post_titles": [
+                {"title": p["title"], "slug": p["slug"]}
+                for p in store.list_markdown("posts")
+            ]
+            if section == "posts"
+            else [],
         },
     )
 
@@ -1689,6 +2006,12 @@ def section_edit(request: Request, section: str):
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}" if SECTIONS[section]["single"] else "",
+            "seo": _seo_panel(section, slug, fm, body),
+            "post_titles": (
+                [{"title": p["title"], "slug": p["slug"]} for p in store.list_markdown("posts")]
+                if section == "posts"
+                else []
+            ),
         },
     )
 
@@ -1715,6 +2038,12 @@ def section_slug_edit(request: Request, section: str, slug: str):
             "body": body,
             "media_items": media_store.list_media()[:20],
             "preview_path": f"/preview/{section}/{slug}",
+            "seo": _seo_panel(section, slug, fm, body),
+            "post_titles": (
+                [{"title": p["title"], "slug": p["slug"]} for p in store.list_markdown("posts")]
+                if section == "posts"
+                else []
+            ),
         },
     )
 
@@ -1880,6 +2209,22 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
     if result.returncode != 0:
         return RedirectResponse(ap(f"/{section}?error=删除后构建失败"), status_code=303)
     return RedirectResponse(ap(f"/{section}?ok=已删除并重建({elapsed}s)"), status_code=303)
+
+
+@app.post(ap("/{section}/{slug}/trash"))
+def section_trash(request: Request, section: str, slug: str, csrf_token: str = Form("", alias="_csrf")):
+    require_login(request)
+    if section not in SECTIONS or SECTIONS[section]["single"] or not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
+    try:
+        store.trash_markdown(section, slug)
+        _audit("content_trash", f"{section}/{slug}")
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap(f"/{section}?error=移入回收站后构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/{section}?ok=已移入回收站并重建({elapsed}s)"), status_code=303)
 
 
 def rewrite_preview_html(html: str, admin_path: str) -> str:
