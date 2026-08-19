@@ -1066,7 +1066,58 @@ mark {
 }
 
 /* ---------- 分页 ---------- */
-.pagination { display: flex; gap: 12px; margin-top: 24px; align-items: center; }
+.pagination { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
+.pagination-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px 12px;
+  border: 1px solid var(--liblog-border);
+  border-radius: 8px;
+  color: var(--liblog-fg);
+  text-decoration: none;
+}
+.pagination-link:hover { border-color: var(--liblog-primary); color: var(--liblog-primary); }
+.pagination-current {
+  background: var(--liblog-primary);
+  border-color: var(--liblog-primary);
+  color: var(--liblog-primary-fg);
+  font-weight: 600;
+}
+.pagination-current:hover { color: var(--liblog-primary-fg); }
+.pagination-ellipsis { color: var(--liblog-muted); padding: 0 2px; }
+
+/* ---------- 归档页 ---------- */
+.archive { display: grid; gap: 28px; }
+.archive-year h2 { font-size: 1.15rem; color: var(--liblog-brand-fg); }
+.archive-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.archive-item { display: flex; gap: 16px; align-items: baseline; }
+.archive-item time {
+  flex: none;
+  min-width: 96px;
+  color: var(--liblog-muted);
+  font-variant-numeric: tabular-nums;
+}
+.archive-item a { color: var(--liblog-fg); text-decoration: none; }
+.archive-item a:hover { color: var(--liblog-primary); text-decoration: underline; }
+
+/* ---------- 图片 caption ---------- */
+.article-figure { margin: 20px 0; }
+.article-figure img { display: block; width: 100%; height: auto; border-radius: 8px; }
+.article-figure figcaption {
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--liblog-muted);
+}
 
 /* ---------- 响应式（1024 / 768 / 640 断点，覆盖 375–1440） ---------- */
 @media (max-width: 1024px) {

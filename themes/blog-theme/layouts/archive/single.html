@@ -1,0 +1,24 @@
+{{ define "main" }}
+{{ partial "breadcrumb.html" . }}
+<h1 class="page-title">{{ .Title }}</h1>
+{{ $posts := where .Site.RegularPages "Section" "posts" }}
+{{ if $posts }}
+<div class="archive">
+  {{ range collections.Reverse ($posts.GroupByDate "2006") }}
+  <section class="archive-year">
+    <h2>{{ .Key }}（{{ len .Pages }}）</h2>
+    <ul class="archive-list">
+      {{ range .Pages.ByDate.Reverse }}
+      <li class="archive-item">
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      </li>
+      {{ end }}
+    </ul>
+  </section>
+  {{ end }}
+</div>
+{{ else }}
+<p class="page-intro">{{ hugo.Data.strings.home.no_results }}</p>
+{{ end }}
+{{ end }}

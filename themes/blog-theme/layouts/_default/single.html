@@ -6,18 +6,15 @@
 {{ $has_tags := .Params.tags }}
 <article class="article">
   <div class="reading-progress" aria-hidden="true"></div>
-  <nav class="breadcrumb" aria-label="面包屑">
-    <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
-    {{ with .CurrentSection }}
-    <span aria-hidden="true">/</span>
-    <a href="{{ .RelPermalink }}">{{ .Title }}</a>
-    {{ end }}
-    <span aria-hidden="true">/</span>
-    <span aria-current="page">{{ .Title }}</span>
-  </nav>
+  {{ partial "breadcrumb.html" . }}
   {{ with .Params.cover }}
   <figure class="article-cover">
-    <img src="{{ . | relURL }}" alt="{{ $.Title }}" loading="eager" decoding="async">
+    {{ $cand := "" }}
+    {{ if hasPrefix . "/img/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}
+    {{ else if hasPrefix . "/assets/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}{{ end }}
+    {{ $w := "" }}{{ $h := "" }}
+    {{ if $cand }}{{ if fileExists $cand }}{{ with imageConfig $cand }}{{ $w = .Width }}{{ $h = .Height }}{{ end }}{{ end }}{{ end }}
+    <img src="{{ . | relURL }}" alt="{{ $.Title }}" loading="eager" decoding="async"{{ with $w }} width="{{ . }}"{{ end }}{{ with $h }} height="{{ . }}"{{ end }}>
   </figure>
   {{ end }}
   <h1 class="page-title">{{ .Title }}</h1>
@@ -84,6 +81,6 @@
 {{ end }}
 
 {{ define "scripts" }}
-{{ $av := partial "asset-versions.html" . }}
+{{ $av := partialCached "asset-versions.html" . "asset-versions-v1" }}
 <script defer src="{{ "js/reading-progress.js" | relURL }}?v={{ index $av.js "reading_progress" }}"></script>
 {{ end }}

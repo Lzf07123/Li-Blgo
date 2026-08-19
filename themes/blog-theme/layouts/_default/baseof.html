@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>{{ partial "head.html" . }}</head>
-{{ $density := partial "density.html" . }}
+{{ $density := partialCached "density.html" . .Kind .Section .IsHome }}
 <body data-ambient="{{ $density }}">
-  {{ if eq $density "css" }}{{ partial "css-ambient.html" . }}{{ end }}
+  {{ if eq $density "css" }}{{ partialCached "css-ambient.html" . "css-ambient-v1" }}{{ end }}
   <a class="skip-link" href="#main">{{ hugo.Data.strings.common.skip_to_content }}</a>
   {{ partial "header.html" . }}
   <main id="main" class="page-shell" tabindex="-1">{{ block "main" . }}{{ end }}</main>

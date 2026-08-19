@@ -6,7 +6,11 @@
 {{ if hasPrefix $dest "/img/" }}{{ $cands = $cands | append (printf "static%s" $dest) (printf "themes/blog-theme/static%s" $dest) }}{{ end }}
 {{ if hasPrefix $dest "/assets/" }}{{ $cands = $cands | append (printf "themes/blog-theme/static%s" $dest) (printf "static%s" $dest) }}{{ end }}
 {{ range $cands }}{{ if fileExists . }}{{ with imageConfig . }}{{ $w = .Width }}{{ $h = .Height }}{{ end }}{{ end }}{{ end }}
-<img src="{{ $dest | safeURL }}" alt="{{ .Text }}" loading="lazy" decoding="async"{{ with $w }} width="{{ . }}"{{ end }}{{ with $h }} height="{{ . }}"{{ end }}>
+{{ $alt := .Text }}
+{{ if not $alt }}{{ $alt = path.BaseName $dest }}{{ end }}
+{{ if .Title }}<figure class="article-figure">{{ end }}
+<img src="{{ $dest | safeURL }}" alt="{{ $alt }}" loading="lazy" decoding="async"{{ with $w }} width="{{ . }}"{{ end }}{{ with $h }} height="{{ . }}"{{ end }}>
+{{ if .Title }}<figcaption>{{ .Title }}</figcaption></figure>{{ end }}
 {{ else }}
 <span>[图片地址被过滤]</span>
 {{ end }}

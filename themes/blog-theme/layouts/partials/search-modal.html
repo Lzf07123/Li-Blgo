@@ -1,5 +1,5 @@
 {{ $strings := hugo.Data.strings }}
-{{ $av := partial "asset-versions.html" . }}
+{{ $av := partialCached "asset-versions.html" . "asset-versions-v1" }}
 <div id="search-modal" class="search-modal" hidden>
   <div class="search-modal-backdrop" data-close-search></div>
   <div class="search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" aria-describedby="search-modal-info">
@@ -10,7 +10,8 @@
         <path d="m20 20-3.5-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
       <input id="search-modal-input" class="search-modal-input" type="search"
-             placeholder="{{ $strings.home.search_placeholder }}" autocomplete="off"
+             placeholder="{{ $strings.home.search_placeholder }}" autocomplete="off" autocapitalize="off"
+             autocorrect="off" spellcheck="false" enterkeyhint="search"
              aria-label="{{ $strings.common.search_label }}">
       <button type="button" class="search-modal-close" data-close-search aria-label="{{ $strings.common.close }}">
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -192,6 +193,11 @@
       if (e.key === "Enter" && activeIndex >= 0 && items[activeIndex]) { window.location.href = items[activeIndex].href; }
     });
 
-    input.addEventListener("input", function () { render(input.value.trim()); });
+    var searchTimer = null;
+    input.addEventListener("input", function () {
+      window.clearTimeout(searchTimer);
+      var q = input.value.trim();
+      searchTimer = window.setTimeout(function () { render(q); }, 80);
+    });
   })();
 </script>

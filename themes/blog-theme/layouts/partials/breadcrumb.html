@@ -1,0 +1,12 @@
+{{ $strings := hugo.Data.strings }}
+<nav class="breadcrumb" aria-label="{{ $strings.common.breadcrumb }}">
+  <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
+  {{ with .CurrentSection }}
+  {{ if and (ne . .Site.Home) (ne .Title .Title) }}
+  <span aria-hidden="true">/</span>
+  <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+  {{ end }}
+  {{ end }}
+  <span aria-hidden="true">/</span>
+  <span aria-current="page">{{ .Title }}</span>
+</nav>

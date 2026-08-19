@@ -1,6 +1,7 @@
 <script>(function(){var d=document.documentElement;d.classList.toggle("dark",window.matchMedia("(prefers-color-scheme: dark)").matches)})()</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 {{ $brand := hugo.Data.brand }}
 {{ $page_no := "" }}
 {{ if or (eq .Kind "section") (eq .Kind "taxonomy") (eq .Kind "term") }}{{ with .Paginator }}{{ if gt .PageNumber 1 }}{{ $page_no = printf "（第 %d 页）" .PageNumber }}{{ end }}{{ end }}{{ end }}
@@ -20,12 +21,26 @@
 {{ if ne .Kind "404" }}<meta property="og:url" content="{{ .Permalink }}">{{ end }}
 {{ $og_image := "" }}
 {{ with .Params.cover }}{{ $og_image = . }}{{ else }}{{ with $brand.logo }}{{ $og_image = . }}{{ end }}{{ end }}
-{{ with $og_image }}<meta property="og:image" content="{{ . | absURL }}"><meta property="og:image:alt" content="{{ $brand.name }}">{{ end }}
+{{ $og_dims := dict }}
+{{ with $og_image }}
+  {{ $cand := "" }}
+  {{ if hasPrefix . "/img/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}
+  {{ else if hasPrefix . "/assets/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}
+  {{ end }}
+  {{ if $cand }}{{ if fileExists $cand }}{{ with imageConfig $cand }}{{ $og_dims = dict "w" .Width "h" .Height "t" (strings.TrimPrefix "." (path.Ext $cand)) }}{{ end }}{{ end }}{{ end }}
+  <meta property="og:image" content="{{ . | absURL }}">
+  <meta property="og:image:alt" content="{{ $brand.name }}">
+  {{ with $og_dims.w }}<meta property="og:image:width" content="{{ . }}">{{ end }}
+  {{ with $og_dims.h }}<meta property="og:image:height" content="{{ . }}">{{ end }}
+  {{ with $og_dims.t }}<meta property="og:image:type" content="image/{{ . }}">{{ end }}
+{{ end }}
 {{ if eq .Kind "page" }}
 {{ if gt .Date.Year 1 }}<meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
 {{ if gt .Lastmod.Year 1 }}<meta property="article:modified_time" content="{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">{{ end }}
 {{ with .Params.tags }}{{ range . }}<meta property="article:tag" content="{{ . }}">{{ end }}{{ end }}
+{{ with .CurrentSection }}{{ if ne . .Site.Home }}<meta property="article:section" content="{{ .Title }}">{{ end }}{{ end }}
 <meta name="author" content="{{ hugo.Data.profile.name }}">
+<meta property="article:author" content="{{ hugo.Data.profile.name }}">
 {{ end }}
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }}{{ end }}">
@@ -47,6 +62,12 @@
 <script type="application/ld+json">
 {{ $website | jsonify | safeJS }}
 </script>
+{{ $org := dict "@context" "https://schema.org" "@type" "Organization" "name" $brand.name "url" .Site.Home.Permalink "description" $brand.tagline }}
+{{ with $brand.logo }}{{ $org = merge $org (dict "logo" (. | absURL)) }}{{ end }}
+{{ with $same }}{{ $org = merge $org (dict "sameAs" .) }}{{ end }}
+<script type="application/ld+json">
+{{ $org | jsonify | safeJS }}
+</script>
 {{ else if eq .Kind "page" }}
 {{ $article := dict "@context" "https://schema.org" "@type" "BlogPosting" "headline" .Title "description" (.Summary | plainify | replaceRE "[\\s]+" " " | truncate 160 "…") "url" .Permalink "inLanguage" "zh-CN" "wordCount" .WordCount "mainEntityOfPage" (dict "@type" "WebPage" "@id" .Permalink) }}
 {{ if gt .Date.Year 1 }}{{ $article = merge $article (dict "datePublished" (.Date.Format "2006-01-02T15:04:05Z07:00")) }}{{ end }}
@@ -59,6 +80,26 @@
 {{ with $cover }}{{ $article = merge $article (dict "image" (. | absURL)) }}{{ end }}
 <script type="application/ld+json">
 {{ $article | jsonify | safeJS }}
+</script>
+{{ else if or (eq .Kind "section") (eq .Kind "taxonomy") (eq .Kind "term") }}
+{{ $items := slice }}
+{{ range $i, $p := .Pages }}{{ $items = $items | append (dict "@type" "ListItem" "position" (add $i 1) "name" $p.Title "url" $p.Permalink) }}{{ end }}
+<script type="application/ld+json">
+{{ dict "@context" "https://schema.org" "@type" "ItemList" "name" .Title "numberOfItems" (len $items) "itemListElement" $items | jsonify | safeJS }}
+</script>
+{{ end }}
+{{ if eq .RelPermalink "/about/" }}
+{{ $person := dict "@context" "https://schema.org" "@type" "ProfilePage" "mainEntity" (dict "@type" "Person" "name" hugo.Data.profile.name "alternateName" $brand.name "description" (or .Description $brand.tagline) "url" .Permalink) }}
+{{ $person = merge $person (dict "inLanguage" "zh-CN") }}
+{{ with hugo.Data.profile.identity }}{{ $person = merge $person (dict "jobTitle" .) }}{{ end }}
+{{ $knows := slice }}
+{{ range hugo.Data.profile.skills }}{{ $knows = $knows | append .name }}{{ end }}
+{{ with $knows }}{{ $person = merge $person (dict "knowsAbout" .) }}{{ end }}
+{{ $links := slice }}
+{{ range hugo.Data.profile.links }}{{ if strings.HasPrefix .href "http" }}{{ $links = $links | append .href }}{{ end }}{{ end }}
+{{ with $links }}{{ $person = merge $person (dict "sameAs" .) }}{{ end }}
+<script type="application/ld+json">
+{{ $person | jsonify | safeJS }}
 </script>
 {{ end }}
 {{ if not .IsHome }}
@@ -73,7 +114,7 @@
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":{{ $crumb | jsonify | safeJS }}}
 </script>
 {{ end }}
-{{ $density := partial "density.html" . }}
+{{ $density := partialCached "density.html" . .Kind .Section .IsHome }}
 {{ if eq $density "full" }}<script defer src="{{ "js/effects-react.js" | relURL }}?v={{ index $av.js "effects" }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
 <link rel="stylesheet" href="{{ "css/katex.min.css" | relURL }}">

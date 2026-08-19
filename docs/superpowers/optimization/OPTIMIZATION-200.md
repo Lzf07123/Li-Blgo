@@ -22,25 +22,25 @@
 | # | 系列 | 改动 | 状态 | 验证证据 |
 | --- | --- | --- | --- | --- |
 | v101 | 基建 | 建立本日志与第三轮路线图；记录 114 项测试基线 | 完成 | 本文件；`python -m unittest discover -s tests -q` 114 OK |
-| v102 | 基建 | 新增 Makefile 与 .editorconfig 标准开发入口 | 进行中 | |
-| v103 | 基建 | 构建产物自动缓存指纹（config/build.yaml 替代手写 ?v=） | 进行中 | |
-| v104 | 构建 | verify_output 增加草稿/未来文章泄漏校验 | 进行中 | |
-| v105 | 构建 | build.py 支持 --metrics 模板性能报告 | 进行中 | |
-| v106 | SEO | OG 图片补 width/height/type | 待办 | |
-| v107 | SEO | article:section / article:author 元数据 | 待办 | |
-| v108 | SEO | 关于页 ProfilePage JSON-LD；全站 Organization JSON-LD | 待办 | |
-| v109 | SEO | 列表/标签页 ItemList JSON-LD | 待办 | |
-| v110 | SEO | 列表/标签/项目/时间线页可见面包屑 | 待办 | |
-| v111 | 内容 | 定制分页（首/末页、页码序列、aria） | 待办 | |
-| v112 | 内容 | /archive/ 归档页（按年分组与计数） | 待办 | |
-| v113 | 内容 | 图片渲染钩子支持 caption 与 alt 兜底 | 待办 | |
-| v114 | 内容 | 文章封面/卡片图补 width/height 防 CLS | 待办 | |
-| v115 | 性能 | 页脚/静态资源 partialCached 构建提速 | 待办 | |
-| v116 | 性能 | color-scheme meta；搜索输入 enterkeyhint/spellcheck/role | 待办 | |
-| v117 | 性能 | nginx open_file_cache 与 favicon/robots/llms 缓存 | 待办 | |
-| v118 | 安全 | nginx HTTPS 模板补 http2/TLS 会话/现代套件 | 待办 | |
-| v119 | 性能 | 搜索防抖与计数播报完善 | 待办 | |
-| v120 | 性能 | 搜索索引瘦身（摘要限长/字段裁剪） | 待办 | |
+| v102 | 基建 | 新增 Makefile 与 .editorconfig 标准开发入口 | 完成 | make test/check/build/web-build/audit 可执行；.editorconfig 统一缩进 |
+| v103 | 基建 | 构建产物自动缓存指纹（config/build.yaml 替代手写 ?v=） | 完成 | 产物 index.html 输出 `tokens.css?v=7b86410dbe`；后台 render() 读取同一指纹 |
+| v104 | 构建 | verify_output 增加草稿/未来文章泄漏校验 | 完成 | 新增 2 项测试；输出验证 0 错误 |
+| v105 | 构建 | build.py 支持 --metrics 模板性能报告 | 完成 | `--metrics` 透传 Hugo --templateMetrics/--templateMetricsHints |
+| v106 | SEO | OG 图片补 width/height/type | 完成 | /posts/ 输出 og:image:width/height/type（logo 实测 1265×1265） |
+| v107 | SEO | article:section / article:author 元数据 | 完成 | 文章页输出 section 与 author 元信息 |
+| v108 | SEO | 关于页 ProfilePage JSON-LD；全站 Organization JSON-LD | 完成 | /about/ 含 ProfilePage/Person/knowsAbout；首页含 Organization |
+| v109 | SEO | 列表/标签页 ItemList JSON-LD | 完成 | /posts/、/posts/page/2/、/tags/ 均含 ItemList |
+| v110 | SEO | 列表/标签/项目/时间线页可见面包屑 | 完成 | 5 类列表页输出 class=breadcrumb；aria-label 走 strings.yaml |
+| v111 | 内容 | 定制分页（首/末页、页码序列、aria） | 完成 | /posts/page/2/ 含 rel=prev/next、页码序列与 aria-label |
+| v112 | 内容 | /archive/ 归档页（按年分组与计数） | 完成 | 构建 357 页；/archive/ 输出年份分组与日期列表；页脚加入口 |
+| v113 | 内容 | 图片渲染钩子支持 caption 与 alt 兜底 | 完成 | 构建通过；title 参数渲染 figure/figcaption，空 alt 用文件名 |
+| v114 | 内容 | 文章封面/卡片图补 width/height 防 CLS | 完成 | 单页/卡片封面输出 width/height（imageConfig 实测） |
+| v115 | 性能 | 静态资源 partialCached 构建提速 | 完成 | density/css-ambient/asset-versions 均 partialCached；构建 344ms/357 页 |
+| v116 | 性能 | color-scheme meta；搜索输入 enterkeyhint/spellcheck/role | 完成 | head 输出 color-scheme；搜索框 autocapitalize/autocorrect/spellcheck/enterkeyhint 齐全 |
+| v117 | 性能 | nginx open_file_cache 与 favicon/robots/llms 缓存 | 完成 | open_file_cache 4 项 + 2 条 location 缓存；nginx -t 通过 |
+| v118 | 安全 | nginx HTTPS 模板补 http2/TLS 会话/现代套件 | 完成 | 模板含 http2/会话缓存/现代 cipher/HSTS；nginx -t 通过 |
+| v119 | 性能 | 搜索防抖与计数播报完善 | 完成 | 80ms 防抖；结果计数 role=status 播报保留 |
+| v120 | 性能 | 搜索索引瘦身（摘要限长/字段裁剪） | 完成 | 摘要截断 180 字符；search/index.json 22KB 构建通过 |
 | v121 | 后台 | 仪表盘最近活动（审计日志 8 条） | 待办 | |
 | v122 | 后台 | 仪表盘内容体检提醒卡 | 待办 | |
 | v123 | 后台 | 仪表盘定时/未来文章提示 | 待办 | |

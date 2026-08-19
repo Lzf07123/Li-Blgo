@@ -5,7 +5,12 @@
 <article class="post-card">
   {{ with $p.Params.cover }}
   <a class="post-cover-link" href="{{ $p.RelPermalink }}" tabindex="-1" aria-hidden="true">
-    <img class="post-cover" src="{{ . | relURL }}" alt="" loading="lazy" decoding="async">
+    {{ $cand := "" }}
+    {{ if hasPrefix . "/img/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}
+    {{ else if hasPrefix . "/assets/" }}{{ $cand = printf "themes/blog-theme/static%s" . }}{{ end }}
+    {{ $w := "" }}{{ $h := "" }}
+    {{ if $cand }}{{ if fileExists $cand }}{{ with imageConfig $cand }}{{ $w = .Width }}{{ $h = .Height }}{{ end }}{{ end }}{{ end }}
+    <img class="post-cover" src="{{ . | relURL }}" alt="" loading="lazy" decoding="async"{{ with $w }} width="{{ . }}"{{ end }}{{ with $h }} height="{{ . }}"{{ end }}>
   </a>
   {{ end }}
   {{ if eq $level 3 }}<h3>

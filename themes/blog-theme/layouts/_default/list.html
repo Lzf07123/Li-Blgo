@@ -1,4 +1,5 @@
 {{ define "main" }}
+{{ partial "breadcrumb.html" . }}
 <h1 class="page-title">{{ .Title }}</h1>
 {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
 <div class="post-list">
@@ -7,6 +8,6 @@
   {{ range $pinned.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
   {{ range $normal.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
 </div>
-{{ template "_internal/pagination.html" . }}
+{{ partial "pagination.html" . }}
 
 {{ end }}

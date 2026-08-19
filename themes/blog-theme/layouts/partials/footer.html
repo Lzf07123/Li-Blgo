@@ -29,6 +29,8 @@
       {{ end }}
     </div>
     <p class="footer-meta">
+      <a href="{{ "archive/" | relURL }}">{{ hugo.Data.strings.nav.archive }}</a>
+      <span aria-hidden="true">·</span>
       <a href="{{ $footer.license_url }}" target="_blank" rel="noopener">{{ $footer.license_label }} {{ $footer.license }}</a>
     </p>
   </div>
