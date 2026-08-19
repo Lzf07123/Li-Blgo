@@ -36,8 +36,8 @@
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
 {{ with $brand.favicon }}<link rel="icon" href="{{ . | relURL }}" sizes="any">{{ end }}
 {{ with $brand.logo }}<link rel="apple-touch-icon" href="{{ . | relURL }}">{{ end }}
-<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=37">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=57">
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=38">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=58">
 {{ if .IsHome }}
 {{ $website := dict "@context" "https://schema.org" "@type" "WebSite" "name" $brand.name "url" .Site.Home.Permalink }}
 {{ $same := slice }}

@@ -277,6 +277,40 @@ main:focus { outline: none; }
   48% { transform: translateX(280%) skewX(-16deg); opacity: 1; }
   62%, 100% { transform: translateX(280%) skewX(-16deg); opacity: 0; }
 }
+.btn-light {
+  overflow: hidden;
+  color: var(--liblog-btn-light-fg);
+  background-color: var(--liblog-btn-light-bg);
+  border-color: var(--liblog-btn-light-border);
+  box-shadow: var(--liblog-shadow-md);
+}
+.btn-light:not(:disabled):hover {
+  opacity: 0.92;
+  box-shadow: var(--liblog-shadow-lg);
+}
+.btn-light::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -60%;
+  width: 40%;
+  background: linear-gradient(100deg, transparent, var(--liblog-btn-light-sweep) 45%, var(--liblog-btn-light-sweep) 55%, transparent);
+  transform: translateX(0) skewX(-16deg);
+  opacity: 0;
+  pointer-events: none;
+  animation: liblog-btn-sweep 4s var(--liblog-ease-out) infinite;
+}
+.btn-dark {
+  color: var(--liblog-btn-dark-fg);
+  background-color: var(--liblog-btn-dark-bg);
+  border-color: var(--liblog-btn-dark-border);
+  box-shadow: var(--liblog-shadow-sm);
+}
+.btn-dark:not(:disabled):hover {
+  background-color: var(--liblog-primary-hover);
+  box-shadow: var(--liblog-shadow-md);
+}
 .btn-secondary { border-color: var(--liblog-border); background: var(--liblog-surface); color: var(--liblog-fg); }
 .btn-secondary:not(:disabled):hover { background: var(--liblog-surface-2); }
 .btn-ghost { color: var(--liblog-muted); background: transparent; }

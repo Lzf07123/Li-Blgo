@@ -29,6 +29,15 @@
   --liblog-btn-primary-border: rgba(47, 127, 116, 0.26);
   --liblog-btn-sweep: rgba(255, 255, 255, 0.42);
 
+  /* 首页 CTA：浅色主按钮（明显）+ 深色次按钮 */
+  --liblog-btn-light-bg: #ffffff;
+  --liblog-btn-light-fg: #24433e;
+  --liblog-btn-light-border: rgba(36, 67, 62, 0.28);
+  --liblog-btn-light-sweep: rgba(36, 67, 62, 0.12);
+  --liblog-btn-dark-bg: #17332e;
+  --liblog-btn-dark-fg: #f0f2f4;
+  --liblog-btn-dark-border: rgba(240, 242, 244, 0.14);
+
   /* 语义色（浅） */
   --liblog-secondary: #2f678f;
   --liblog-secondary-soft: #dff1fa;
@@ -131,6 +140,15 @@
   --liblog-btn-primary-bg-hover: rgba(127, 212, 198, 0.21);
   --liblog-btn-primary-border: rgba(127, 212, 198, 0.3);
   --liblog-btn-sweep: rgba(255, 255, 255, 0.18);
+
+  /* 首页 CTA（深色模式下浅色按钮保持浅底深字，深色按钮用品牌深底） */
+  --liblog-btn-light-bg: #f0f2f4;
+  --liblog-btn-light-fg: #17332e;
+  --liblog-btn-light-border: rgba(240, 242, 244, 0.35);
+  --liblog-btn-light-sweep: rgba(23, 51, 46, 0.14);
+  --liblog-btn-dark-bg: #17332e;
+  --liblog-btn-dark-fg: #d7efea;
+  --liblog-btn-dark-border: rgba(215, 239, 234, 0.2);
 
   /* 语义色（深） */
   --liblog-secondary: #a8d4f0;

@@ -17,8 +17,8 @@
     <p class="hero-meta">{{ $profile.identity }} · {{ $profile.direction }}</p>
     <p class="hero-goal">{{ $strings.home.goal_title }}：{{ $profile.goal }}</p>
     <p class="hero-actions">
-      <a class="btn btn-primary" href="{{ "posts/" | relURL }}">{{ $strings.home.read_blog }}</a>
-      <a class="btn btn-secondary" href="{{ "about/" | relURL }}">{{ $strings.home.about_me }}</a>
+      <a class="btn btn-light" href="{{ "posts/" | relURL }}">{{ $strings.home.read_blog }}</a>
+      <a class="btn btn-dark" href="{{ "about/" | relURL }}">{{ $strings.home.about_me }}</a>
     </p>
     {{ if $home.hero.show_skills }}
     <div class="badge-row hero-skills">
