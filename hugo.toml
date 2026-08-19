@@ -71,3 +71,4 @@ notAlternativeFormats = true
 
 [params]
 themeKey = "liblog-theme"
+rss_full = false  # RSS 输出全文（true）或摘要（false）

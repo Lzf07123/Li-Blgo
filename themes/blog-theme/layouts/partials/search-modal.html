@@ -51,6 +51,7 @@
     var COMMON = {{ hugo.Data.strings.common | jsonify }};
     var fuse = null;
     var items = [];
+    var indexItems = [];
     var activeIndex = -1;
     var lastTrigger = null;
     var indexPromise = null;
@@ -89,6 +90,7 @@
         indexPromise = fetch("/search/index.json")
           .then(function (r) { return r.json(); })
           .then(function (posts) {
+            indexItems = posts;
             fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
           })
           .catch(function () { indexPromise = null; });
@@ -108,12 +110,35 @@
       list.innerHTML = "";
       items = [];
       activeIndex = -1;
+      var oldChips = empty.querySelector(".search-tag-chips");
+      if (oldChips) oldChips.remove();
       empty.hidden = true;
       if (!q || !fuse) { info.textContent = ""; return; }
       var found = fuse.search(q).slice(0, 20);
       info.textContent = found.length + " " + STRINGS.result_count;
       if (!found.length) {
+        var tagCount = {};
+        indexItems.forEach(function (it) {
+          (it.tags || []).slice(0, 6).forEach(function (t) {
+            tagCount[t] = (tagCount[t] || 0) + 1;
+          });
+        });
+        var topTags = Object.keys(tagCount).sort(function (a, b) {
+          return tagCount[b] - tagCount[a];
+        }).slice(0, 6);
         emptyText.textContent = STRINGS.no_results;
+        if (topTags.length) {
+          var chips = document.createElement("p");
+          chips.className = "search-tag-chips";
+          topTags.forEach(function (t) {
+            var a = document.createElement("a");
+            a.className = "tag";
+            a.href = "/tags/" + encodeURIComponent(t) + "/";
+            a.textContent = t;
+            chips.appendChild(a);
+          });
+          empty.appendChild(chips);
+        }
         empty.hidden = false;
         return;
       }

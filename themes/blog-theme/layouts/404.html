@@ -8,6 +8,8 @@
     <span class="meta-sep">·</span>
     <a class="more-link" href="{{ "posts/" | relURL }}">{{ $strings.nav.posts }}</a>
     <span class="meta-sep">·</span>
+    <a class="more-link" href="{{ "timeline/" | relURL }}">{{ $strings.nav.timeline }}</a>
+    <span class="meta-sep">·</span>
     <button type="button" class="btn-link" data-open-search>{{ $strings.nav.search }}</button>
   </p>
   {{ $latest := first 3 (where .Site.RegularPages.ByDate.Reverse "Section" "posts") }}

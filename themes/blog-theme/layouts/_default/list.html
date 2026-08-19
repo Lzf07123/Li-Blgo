@@ -6,7 +6,19 @@
   {{ $pinned := where .Paginator.Pages "Params.pinned" true }}
   {{ $normal := where .Paginator.Pages "Params.pinned" "ne" true }}
   {{ range $pinned.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
+  {{ if eq .Section "posts" }}
+  {{ $year := "" }}
+  {{ range $normal.ByDate.Reverse }}
+    {{ $y := .Date.Format "2006" }}
+    {{ if ne $y $year }}
+    <h2 class="list-year-heading">{{ $y }}</h2>
+    {{ $year = $y }}
+    {{ end }}
+    {{ partial "post-card.html" . }}
+  {{ end }}
+  {{ else }}
   {{ range $normal.ByDate.Reverse }}{{ partial "post-card.html" . }}{{ end }}
+  {{ end }}
 </div>
 {{ partial "pagination.html" . }}
 

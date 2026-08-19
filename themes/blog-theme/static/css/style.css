@@ -1064,6 +1064,13 @@ mark {
   padding: 0 2px;
   border-radius: 3px;
 }
+.search-tag-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; }
+.list-year-heading {
+  margin: 24px 0 12px;
+  font-size: 1.1rem;
+  color: var(--liblog-brand-fg);
+}
+.list-year-heading:first-of-type { margin-top: 0; }
 
 /* ---------- 分页 ---------- */
 .pagination { display: flex; gap: 12px; margin-top: 24px; align-items: center; flex-wrap: wrap; }
@@ -1108,6 +1115,10 @@ mark {
 }
 .archive-item a { color: var(--liblog-fg); text-decoration: none; }
 .archive-item a:hover { color: var(--liblog-primary); text-decoration: underline; }
+
+/* ---------- 时间线按年分组 ---------- */
+.timeline-year + .timeline-year { margin-top: 32px; }
+.timeline-year .timeline { margin-top: 12px; }
 
 /* ---------- 图片 caption ---------- */
 .article-figure { margin: 20px 0; }

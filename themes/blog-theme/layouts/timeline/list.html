@@ -2,6 +2,9 @@
 {{ partial "breadcrumb.html" . }}
 <h1 class="page-title">{{ .Title }}</h1>
 {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
+{{ range collections.Reverse (.Pages.GroupByDate "2006") }}
+<section class="timeline-year">
+  <h2 class="section-title">{{ .Key }}</h2>
 <div class="timeline">
   {{ range .Pages.ByDate.Reverse }}
     <div class="timeline-node">
@@ -14,5 +17,7 @@
     </div>
   {{ end }}
 </div>
+</section>
+{{ end }}
 
 {{ end }}
