@@ -272,7 +272,29 @@ def render(request: Request, name: str, context: dict) -> HTMLResponse:
     flash = request.query_params.get("ok") or request.query_params.get("error")
     context.setdefault("flash", flash)
     context.setdefault("flash_type", "error" if request.query_params.get("error") else "ok")
+    context.setdefault("asset_version", _asset_version())
     return templates.TemplateResponse(request, name, context)
+
+
+def _asset_version() -> dict:
+    """读取构建期生成的 config/build.yaml，返回静态资源缓存指纹。"""
+    try:
+        data = yaml.safe_load(
+            (settings.config_root / "build.yaml").read_text(encoding="utf-8")
+        ) or {}
+    except Exception:
+        data = {}
+    css = data.get("css") or {}
+    js = data.get("js") or {}
+    return {
+        "tokens": css.get("tokens", "1"),
+        "style": css.get("style", "1"),
+        "admin": css.get("admin", "1"),
+        "effects": js.get("effects", "1"),
+        "fuse": js.get("fuse", "1"),
+        "reading_progress": js.get("reading_progress", "1"),
+        "admin_dropdown": js.get("admin_dropdown", "1"),
+    }
 
 
 def require_login(request: Request) -> None:

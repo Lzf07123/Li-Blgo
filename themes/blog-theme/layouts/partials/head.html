@@ -36,8 +36,9 @@
 <meta name="theme-color" content="#3a3f45" media="(prefers-color-scheme: dark)">
 {{ with $brand.favicon }}<link rel="icon" href="{{ . | relURL }}" sizes="any">{{ end }}
 {{ with $brand.logo }}<link rel="apple-touch-icon" href="{{ . | relURL }}">{{ end }}
-<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v=38">
-<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v=64">
+{{ $av := partial "asset-versions.html" . }}
+<link rel="stylesheet" href="{{ "css/tokens.css" | relURL }}?v={{ index $av.css "tokens" }}">
+<link rel="stylesheet" href="{{ "css/style.css" | relURL }}?v={{ index $av.css "style" }}">
 {{ if .IsHome }}
 {{ $website := dict "@context" "https://schema.org" "@type" "WebSite" "name" $brand.name "url" .Site.Home.Permalink }}
 {{ $same := slice }}
@@ -73,7 +74,7 @@
 </script>
 {{ end }}
 {{ $density := partial "density.html" . }}
-{{ if eq $density "full" }}<script defer src="{{ "js/effects-react.js" | relURL }}"></script>{{ end }}
+{{ if eq $density "full" }}<script defer src="{{ "js/effects-react.js" | relURL }}?v={{ index $av.js "effects" }}"></script>{{ end }}
 {{ if and .Page.Params.math (fileExists "static/js/katex.min.js") }}
 <link rel="stylesheet" href="{{ "css/katex.min.css" | relURL }}">
 <script defer src="{{ "js/katex.min.js" | relURL }}"></script>

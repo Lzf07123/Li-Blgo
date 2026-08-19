@@ -5,7 +5,14 @@ import types
 import unittest
 from unittest import mock
 
-from scripts.build import build, publish, validate_content, validate_content_links, verify_output
+from scripts.build import (
+    build,
+    publish,
+    validate_content,
+    validate_content_links,
+    verify_output,
+    write_fingerprint,
+)
 
 
 class TestBuild(unittest.TestCase):
@@ -91,6 +98,39 @@ class TestBuild(unittest.TestCase):
             self.assertTrue(any("合法 JSON" in e for e in errors))
             self.assertTrue(any("urlset" in e for e in errors))
 
+    def test_verify_output_rejects_draft_and_future_leak(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            content = root / "content" / "posts"
+            content.mkdir(parents=True)
+            (content / "draft-post.md").write_text(
+                "---\ntitle: D\nstatus: draft\n---\n正文\n", encoding="utf-8"
+            )
+            (content / "future-post.md").write_text(
+                "---\ntitle: F\ndate: 2099-01-01\n---\n正文\n", encoding="utf-8"
+            )
+            out = root / "out"
+            for rel in ("posts/draft-post/index.html", "posts/future-post/index.html"):
+                target = out / rel
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("<html>leak</html>", encoding="utf-8")
+            errors = verify_output(out, content_root=root / "content")
+            self.assertTrue(any("草稿泄漏" in e for e in errors))
+            self.assertTrue(any("未来日期" in e for e in errors))
+
+    def test_write_fingerprint_creates_build_yaml(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = pathlib.Path(d)
+            css = root / "themes" / "blog-theme" / "static" / "css"
+            css.mkdir(parents=True)
+            (css / "tokens.css").write_text(":root{}", encoding="utf-8")
+            (css / "style.css").write_text("body{}", encoding="utf-8")
+            target = write_fingerprint(root)
+            self.assertTrue(target.exists())
+            text = target.read_text(encoding="utf-8")
+            self.assertIn("tokens:", text)
+            self.assertIn("built_at:", text)
+
     def test_build_failure_cleans_tmp_and_exits_2(self):
         with tempfile.TemporaryDirectory() as d:
             root = pathlib.Path(d)
@@ -98,7 +138,7 @@ class TestBuild(unittest.TestCase):
                 "scripts.build.run_build", side_effect=RuntimeError("boom")
             ):
                 args = types.SimpleNamespace(
-                    preview=False, full=False, keep_tmp=False
+                    preview=False, full=False, keep_tmp=False, metrics=False
                 )
                 with self.assertRaises(SystemExit) as cm:
                     build(args)

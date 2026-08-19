@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Li&Blog 后台{% endblock %}</title>
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v=38">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v=64">
-  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v=39">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/tokens.css?v={{ asset_version.tokens }}">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/style.css?v={{ asset_version.style }}">
+  <link rel="stylesheet" href="/{{ admin_path }}/static/css/admin.css?v={{ asset_version.admin }}">
   <script>
     (function () {
       var saved = localStorage.getItem("liblog-admin-theme");
@@ -138,6 +138,6 @@
       }
     })();
   </script>
-  <script src="/{{ admin_path }}/static/js/admin-dropdown.js"></script>
+  <script src="/{{ admin_path }}/static/js/admin-dropdown.js?v={{ asset_version.admin_dropdown }}"></script>
 </body>
 </html>

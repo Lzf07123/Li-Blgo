@@ -1,4 +1,5 @@
 {{ $strings := hugo.Data.strings }}
+{{ $av := partial "asset-versions.html" . }}
 <div id="search-modal" class="search-modal" hidden>
   <div class="search-modal-backdrop" data-close-search></div>
   <div class="search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" aria-describedby="search-modal-info">
@@ -36,7 +37,7 @@
     </div>
   </div>
 </div>
-<script defer src="{{ "js/fuse.min.js" | relURL }}"></script>
+<script defer src="{{ "js/fuse.min.js" | relURL }}?v={{ index $av.js "fuse" }}"></script>
 <script>
   (function () {
     var modal = document.getElementById("search-modal");

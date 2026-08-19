@@ -18,6 +18,9 @@ bin/*
 !bin/hugo/*
 themes/blog-theme/static/img/
 .hugo_build.lock
+.build-tmp/
+.preview-out/
+config/build.yaml
 # 文章内容不入 git（保留本地工作区与栏目索引）
 content/posts/*
 !content/posts/_index.md
