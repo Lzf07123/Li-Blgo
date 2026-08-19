@@ -38,9 +38,9 @@ export default function BlurText({
         <motion.span
           key={index}
           className="inline-block"
-          initial={{ opacity: 0, filter: "blur(8px)", y: 8 }}
-          animate={inView ? { opacity: 1, filter: "blur(0px)", y: 0 } : {}}
-          transition={{ duration: stepDuration, delay: (index * delay) / 1000, ease: "easeOut" }}
+          initial={{ opacity: 0, filter: "blur(14px)", y: 12, scale: 0.98 }}
+          animate={inView ? { opacity: 1, filter: "blur(0px)", y: 0, scale: 1 } : {}}
+          transition={{ duration: stepDuration, delay: (index * delay) / 1000, ease: [0.22, 1, 0.36, 1] }}
         >
           {word}
           {index < words.length - 1 ? "\u00A0" : ""}

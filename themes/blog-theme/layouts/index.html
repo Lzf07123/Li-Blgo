@@ -11,11 +11,11 @@
 
 <header class="hero">
   <div class="hero-inner" id="hero-inner">
-    <p class="hero-kicker">{{ $strings.home.hero_title }}</p>
+    <p class="hero-kicker" data-blur>{{ $strings.home.hero_title }}</p>
     <h1 class="hero-title" data-blur>{{ $profile.name }}</h1>
     <p class="hero-tagline" data-blur>{{ $brand.tagline }}</p>
-    <p class="hero-meta">{{ $profile.identity }} · {{ $profile.direction }}</p>
-    <p class="hero-goal">{{ $strings.home.goal_title }}：{{ $profile.goal }}</p>
+    <p class="hero-meta" data-blur>{{ $profile.identity }} · {{ $profile.direction }}</p>
+    <p class="hero-goal" data-blur>{{ $strings.home.goal_title }}：{{ $profile.goal }}</p>
     <p class="hero-actions">
       <a class="btn btn-light" href="{{ "posts/" | relURL }}">{{ $strings.home.read_blog }}</a>
       <a class="btn btn-dark" href="{{ "about/" | relURL }}">{{ $strings.home.about_me }}</a>

@@ -579,6 +579,20 @@ input:focus, select:focus, textarea:focus {
   width: 100%;
   will-change: transform, opacity, filter;
 }
+.hero-inner::before {
+  content: "";
+  position: absolute;
+  inset: -48px -72px;
+  z-index: -1;
+  border-radius: 40px;
+  background: radial-gradient(
+    ellipse 52% 62% at 50% 50%,
+    var(--liblog-primary-soft),
+    transparent 74%
+  );
+  opacity: 0.6;
+  pointer-events: none;
+}
 .hero .badge-row { justify-content: center; }
 .hero-kicker { color: var(--liblog-muted); margin: 0 0 10px; font-size: 0.95rem; }
 .hero-title { margin: 0 0 10px; font-size: 2.5rem; line-height: 1.2; }
@@ -724,8 +738,8 @@ input:focus, select:focus, textarea:focus {
   inset: -20% 0 0 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(ellipse at 50% 0%, var(--liblog-primary-soft), transparent 68%);
-  opacity: 0.5;
+  background: radial-gradient(ellipse 72% 58% at 50% 36%, var(--liblog-primary-soft), transparent 72%);
+  opacity: 0.75;
 }
 
 /* ---------- 统一卡片规格（圆角16 / surface底 / 细描边 / 轻阴影 / 悬浮上移） ---------- */
