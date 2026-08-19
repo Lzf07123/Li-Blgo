@@ -69,7 +69,7 @@
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="table" title="插入表格">表格</button>
           <button type="button" id="insert-image" class="btn btn-sm btn-secondary">插入图片</button>
           <button type="button" id="editor-fullscreen" class="btn btn-sm btn-secondary">全屏</button>
-          <button type="button" id="shortcuts-help" class="btn btn-sm btn-secondary">快捷键</button>
+          <button type="button" id="shortcuts-help" class="btn btn-sm btn-secondary" aria-keyshortcuts="?">快捷键</button>
           <span id="body-count" class="editor-count"></span>
           <span id="upload-progress-inline" class="upload-progress-inline" hidden><i id="upload-progress-inline-bar" class="upload-progress-bar"></i></span>
         </div>
@@ -107,6 +107,7 @@
         <li class="{{ 'ok' if seo.has_cover else 'warn' }}">{{ "已有封面" if seo.has_cover else "无封面（可选）" }}</li>
         <li class="{{ 'ok' if seo.slug_ok else 'warn' }}">{{ "标识合法" if seo.slug_ok else "标识待填/非法" }}</li>
         <li>正文字数约 {{ seo.word_count }} 词</li>
+        {% if seo.days_until and seo.days_until > 0 %}<li class="warn">距定时发布还有 {{ seo.days_until }} 天</li>{% endif %}
       </ul>
     </div>
     {% endif %}

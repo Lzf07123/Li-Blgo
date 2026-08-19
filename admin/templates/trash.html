@@ -16,6 +16,13 @@
   </form>
   {% endif %}
 </div>
+<div class="stat-cards">
+  {% for section in ["posts", "projects", "timeline"] %}
+  {% if section_counts.get(section, 0) %}
+  <div class="stat-card"><span>{{ {"posts": "文章", "projects": "项目", "timeline": "时间线"}[section] }}</span><strong>{{ section_counts[section] }}</strong></div>
+  {% endif %}
+  {% endfor %}
+</div>
 <p class="field-help">文章移入回收站后不会出现在公开站；可随时恢复，或彻底删除。</p>
 {% with table = table %}{% include "partials/table.html" %}{% endwith %}
 {% endblock %}

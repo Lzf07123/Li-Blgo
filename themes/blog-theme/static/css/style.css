@@ -1215,6 +1215,15 @@ mark {
   .post-cover { height: 140px; }
   .article-cover img { max-height: 240px; }
   .hero { min-height: calc(100svh - var(--header-h) - 24px); }
+  .archive-item { flex-direction: column; gap: 2px; }
+  .archive-item time { min-width: 0; }
+  .article-license { font-size: 0.85rem; }
+  .breadcrumb { flex-wrap: wrap; row-gap: 4px; }
+  .search-modal-panel { inset: 8px; }
+}
+@media print {
+  .breadcrumb,
+  .archive-item time::after { display: none; }
 }
 /* ---------- 打印：正文干净排版，隐藏导航/氛围/打点 ---------- */
 @media print {

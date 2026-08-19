@@ -1,5 +1,14 @@
 /* 后台样式：只使用 --liblog-* 令牌 */
 .admin-body { background: var(--liblog-bg); color: var(--liblog-fg); min-height: 100vh; }
+.admin-body a:focus-visible,
+.admin-body button:focus-visible,
+.admin-body input:focus-visible,
+.admin-body select:focus-visible,
+.admin-body textarea:focus-visible,
+.admin-body summary:focus-visible {
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: 2px;
+}
 
 /* ---------- 侧边栏布局与导航 ---------- */
 .admin-layout {
@@ -1034,6 +1043,9 @@ label .custom-select { display: block; }
     border-radius: 12px;
     box-shadow: var(--liblog-shadow-md);
   }
+  .preview-devices { margin-left: 0; flex-wrap: wrap; }
+  .seo-panel { padding: 10px; }
+  .admin-nav-filter { margin-top: 8px; }
 }
 @media (max-width: 480px) {
   .admin-main { padding: 16px 12px 40px; }

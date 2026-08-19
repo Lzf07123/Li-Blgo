@@ -1143,6 +1143,29 @@ def post_pin(
     )
 
 
+@app.post(ap("/posts/{slug}/publish-now"))
+def post_publish_now(
+    request: Request,
+    slug: str,
+    csrf_token: str = Form("", alias="_csrf"),
+):
+    require_login(request)
+    if not csrf_ok(request, {"_csrf": csrf_token}):
+        return RedirectResponse(ap("/posts?error=会话失效"), status_code=303)
+    try:
+        old, body = store.read_markdown("posts", slug)
+        old["date"] = datetime.date.today().isoformat()
+        old["status"] = "published"
+        store.write_markdown("posts", slug, old, body)
+        _audit("post_publish_now", slug)
+    except (ValueError, FileNotFoundError) as exc:
+        return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
+    result, elapsed = build.run_full()
+    if result.returncode != 0:
+        return RedirectResponse(ap("/posts?error=发布时间更新后构建失败"), status_code=303)
+    return RedirectResponse(ap(f"/posts?ok=已改为今天发布并重建（{elapsed}s）"), status_code=303)
+
+
 @app.get(ap("/stats/export"))
 def stats_export(request: Request, start: str = "", end: str = ""):
     require_login(request)
@@ -1440,6 +1463,9 @@ def tags_apply(
 def trash_page(request: Request):
     require_login(request)
     items = store.list_trash()
+    section_counts: dict[str, int] = {}
+    for it in items:
+        section_counts[it["section"]] = section_counts.get(it["section"], 0) + 1
     columns = [
         {"key": "title", "label": "标题", "type": "link"},
         {"key": "section", "label": "栏目", "type": "text"},
@@ -1478,7 +1504,11 @@ def trash_page(request: Request):
         "empty": "回收站是空的",
         "striped": True,
     }
-    return render(request, "trash.html", {"table": table, "count": len(items)})
+    return render(
+        request,
+        "trash.html",
+        {"table": table, "count": len(items), "section_counts": section_counts},
+    )
 
 
 @app.post(ap("/trash/{section}/{slug}/restore"))
@@ -1751,6 +1781,14 @@ def _seo_panel(section: str, slug: str, fm: dict, body: str = "") -> Optional[di
     summary = str(fm.get("summary") or "")
     tags = fm.get("tags") or []
     cover = str(fm.get("cover") or "")
+    days_until = None
+    try:
+        date_text = str(fm.get("date") or "")[:10]
+        if date_text:
+            pub = datetime.date.fromisoformat(date_text)
+            days_until = (pub - datetime.date.today()).days
+    except ValueError:
+        pass
     return {
         "title_len": len(title),
         "title_ok": 10 <= len(title) <= 60,
@@ -1759,6 +1797,7 @@ def _seo_panel(section: str, slug: str, fm: dict, body: str = "") -> Optional[di
         "has_cover": bool(cover.strip()),
         "slug_ok": bool(slug and store.SLUG_RE.match(slug)),
         "word_count": len(body.split()) if body.strip() else 0,
+        "days_until": days_until,
     }
 
 
@@ -1857,6 +1896,13 @@ def section_list(
         if is_scheduled:
             status_label = STATUS_LABELS["scheduled"]
             status_class = ADMIN_BADGE_VARIANTS["scheduled"]
+            actions.append(
+                {
+                    "label": "立即发布",
+                    "href": ap(f"/posts/{item['slug']}/publish-now"),
+                    "method": "post",
+                }
+            )
         rows.append(
             {
                 "slug": item["slug"],

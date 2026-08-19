@@ -1,6 +1,6 @@
 # Li&Blog 安全审计记录
 
-> 日期：2026-08-19 ｜ 依据：单元测试 + 代码走查 + nginx 配置实测
+> 日期：2026-08-19 ｜ 依据：单元测试 + 代码走查 + nginx 配置实测（第三轮更新）
 
 ## 已验证项
 
@@ -18,6 +18,12 @@
 | 秘密 | OIDC secret/会话密钥仅环境变量或 0600 secret 文件，不入 git | .env.example + config.py |
 | 备案 | 备案号非空才展示，无假占位；页脚链接官方域名 | footer.html + brand.yaml |
 | 隐私 | beacon 仅记录时间+路径，无 IP/UA/Cookie；公开站零交互表单 | nginx log_format + 模板走查 |
+| 会话 | 登录成功后清理匿名会话；会话撤销/过期不变 | test_admin_routes（登录流程）+ session.py |
+| 后台 CSP | admin 中间件补 default-src/script-src/style-src/frame-src/form-action 白名单 | admin/main.py admin_headers |
+| 容器 | no-new-privileges、pids_limit、只读根文件系统 + tmpfs；非 root 运行；无 Docker socket | compose.yaml + Dockerfile |
+| 构建锁 | flock 落到 data 卷（BUILD_LOCK_PATH），Hugo 不写工作目录锁 | scripts/build.py + .env.example |
+| 回收站 | 软删除隔离到 data/trash，恢复做 slug 防穿越与同名保护 | admin/content.py + tests |
+| 文件名 | 上传文件名过滤控制字符并限长 80 | admin/media.py slugify |
 
 ## 结论
 

@@ -374,6 +374,29 @@ class AdminRoutesTest(unittest.TestCase):
             r = client.get("/admin/logs?kind=login_ok")
             self.assertNotIn("posts/0", r.text)
 
+    def test_publish_now_sets_today(self):
+        import datetime
+
+        store.write_markdown(
+            "posts",
+            "future-now",
+            {"title": "F", "date": "2099-01-01", "status": "published"},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/future-now/publish-now",
+                data={"_csrf": csrf},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, _ = store.read_markdown("posts", "future-now")
+        self.assertEqual(fm["date"], datetime.date.today().isoformat())
+
     def test_post_save_writes_cover_field(self):
         store.write_markdown(
             "posts",
