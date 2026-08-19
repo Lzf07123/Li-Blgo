@@ -194,6 +194,17 @@ main:focus { outline: none; }
 }
 .footer-inner > * { white-space: nowrap; }
 .footer-copyright { margin: 0; }
+.footer-statement { margin: 4px 0 0; }
+.footer-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 8px 0 0;
+}
+.footer-meta a { color: var(--liblog-muted); }
+.footer-meta a:hover { color: var(--liblog-primary); }
 .footer-beian { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
 .footer-beian a { color: var(--liblog-muted); }
 .footer-beian a:hover { color: var(--liblog-primary); }
