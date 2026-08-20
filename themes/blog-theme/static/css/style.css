@@ -776,6 +776,78 @@ input:focus, select:focus, textarea:focus {
   box-shadow: var(--liblog-shadow-md);
 }
 
+/* ---------- 卡片聚焦（Spotlight Focus） ----------
+ * 悬停/键盘聚焦时当前卡片提亮抬升，兄弟卡片淡出下沉；
+ * 只使用 --liblog-* 令牌，动效仅 transform/opacity/background-position。 */
+.post-card,
+.project-card {
+  position: relative;
+}
+.post-card h2 a,
+.post-card h3 a,
+.project-card h2 a,
+.project-card h3 a {
+  transition: color var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.post-card::before,
+.project-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 18px;
+  right: 18px;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: var(--liblog-primary);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform var(--liblog-motion-slow) var(--liblog-ease-out);
+  pointer-events: none;
+}
+.post-card:hover::before,
+.post-card:focus-within::before,
+.project-card:hover::before,
+.project-card:focus-within::before {
+  transform: scaleX(1);
+}
+.card-grid > .post-card:hover,
+.card-grid > .post-card:focus-within,
+.card-grid > .project-card:hover,
+.card-grid > .project-card:focus-within,
+.post-list > .post-card:hover,
+.post-list > .post-card:focus-within {
+  transform: translateY(-2px) scale(1.012);
+  box-shadow: var(--liblog-shadow-md);
+  border-color: var(--liblog-primary);
+  transition: transform var(--liblog-motion-base) var(--liblog-ease-spring),
+    box-shadow var(--liblog-motion-base) var(--liblog-ease-out),
+    border-color var(--liblog-motion-fast) var(--liblog-ease-out);
+}
+.post-card:hover h2 a,
+.post-card:hover h3 a,
+.post-card:focus-within h2 a,
+.post-card:focus-within h3 a,
+.project-card:hover h2 a,
+.project-card:hover h3 a,
+.project-card:focus-within h2 a,
+.project-card:focus-within h3 a {
+  color: var(--liblog-primary-hover);
+}
+.post-cover {
+  transition: transform var(--liblog-motion-slow) var(--liblog-ease-out);
+}
+.post-card:hover .post-cover,
+.post-card:focus-within .post-cover {
+  transform: scale(1.03);
+}
+@media (hover: hover) and (pointer: fine) {
+  .card-grid:has(> .post-card:hover, > .post-card:focus-within, > .project-card:hover, > .project-card:focus-within) > :not(:hover, :focus-within),
+  .post-list:has(> .post-card:hover, > .post-card:focus-within) > .post-card:not(:hover, :focus-within) {
+    opacity: 0.55;
+    transform: scale(0.985);
+  }
+}
+
 /* ---------- 文章 / 代码 / 提示块 / 目录 ---------- */
 .section { margin-top: 48px; }
 /* 离屏区块跳过渲染与布局（浏览器支持的场景自动生效） */
@@ -905,8 +977,14 @@ input:focus, select:focus, textarea:focus {
   font: inherit;
   font-size: 0.95rem;
   box-shadow: var(--liblog-shadow-sm);
+  transition: box-shadow var(--liblog-motion-fast) var(--liblog-ease-out);
 }
-.search-modal-input:focus { outline: 2px solid var(--liblog-ring); outline-offset: 1px; }
+.search-modal-input:focus {
+  outline: 2px solid var(--liblog-ring);
+  outline-offset: 1px;
+  box-shadow: var(--liblog-shadow-md),
+    0 0 0 3px color-mix(in srgb, var(--liblog-primary) 18%, transparent);
+}
 .search-modal-close {
   width: 40px;
   height: 40px;
