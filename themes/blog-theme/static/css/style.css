@@ -3,6 +3,8 @@
  */
 
 * { box-sizing: border-box; }
+/* 移动端无横向滚动：装饰层（hero 光晕/氛围光束）允许越界绘制但禁止产生页面横向滚动 */
+html { overflow-x: clip; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   min-height: 100vh;
@@ -260,8 +262,18 @@ main:focus { outline: none; }
   font-weight: 600;
   line-height: 1;
 }
+.filing-icon-placeholder[hidden] { display: none !important; }
 .beian-link:hover .beian-icon { color: var(--liblog-primary); }
 .beian-text { white-space: nowrap; }
+
+/* beacon 打点图：脱离文档流，避免在 footer 内产生额外行盒（保持 V1.5 单行 56px） */
+.site-footer img[src*="beacon"] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  pointer-events: none;
+}
 
 /* ---------- 按钮（子模块全规格） ---------- */
 .btn {
@@ -603,6 +615,7 @@ input:focus, select:focus, textarea:focus {
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
+  overflow-x: clip; /* 裁切光晕伪元素越界绘制，移动端无横向滚动 */
   min-height: calc(100vh - var(--header-h));
   min-height: calc(100svh - var(--header-h));
   display: flex;
