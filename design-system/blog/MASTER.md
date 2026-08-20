@@ -1,13 +1,14 @@
 # Li&Blog 实现速览（MASTER.md）
 
-> 版本：v1.1 ｜ 日期：2026-08-20 ｜ 状态：设计定稿
-> 来源：Li-Design V1.4 子模块（`design-system/Li-Design`）实例化；令牌已与 `reusable-tokens.template.css` 逐值核对，组件按 V1.4 对照表落地
+> 版本：v1.2 ｜ 日期：2026-08-21 ｜ 状态：设计定稿
+> 来源：Li-Design V1.5 子模块（`design-system/Li-Design`）实例化；令牌已与 `reusable-tokens.template.css` 逐值核对（含 V1.5 页脚组件规格），组件按 V1.5 对照表落地
 
 ## 0. 与 Li-Design 子模块对齐
 
-- 模板参考：`design-system/Li-Design`（git 子模块，锁定提交见子模块指针；`reusable-tokens.template.css` 为 V1.4 基准）
-- 令牌校验（2026-08-20）：57 个共有 `--liblog-*` 变量与模板逐值一致，0 差异；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
+- 模板参考：`design-system/Li-Design`（git 子模块，锁定提交 `9ceaa99`；`reusable-tokens.template.css` 为 V1.5 基准）
+- 令牌校验（2026-08-21）：57 个共有 `--liblog-*` 变量与模板逐值一致，0 差异；V1.5 页脚规格以 `--liblog-footer-bg` / `--liblog-footer-border` / `--liblog-footer-blur` 三枚令牌落地（模板 Tailwind 类 → 本站令牌等价，明暗两套）；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
 - 组件差异：原生下拉走 V1.4 `.select` / `.select-sm`（统计页分组筛选），列表筛选其余下拉用 `.custom-select-*`；后台提示为 flash 胶囊，确认弹窗用原生 `confirm` / `<dialog class="media-dialog">`
+- 页脚对齐（V1.5，2026-08-21）：`site-footer` > `site-footer-inner` 契约类名，`mt-auto` 贴底 + 半透明表面 + backdrop-blur，单行高 56px（`min-h-14` 兜底）、字号 12px、图标/备案占位 14×14px、`max-w-7xl` 居中（`px-4` → `lg:px-8`）、移动端换行无横向滚动；版权/备案/归档/许可由 `brand.yaml` + `strings.yaml` 驱动（等价 V1.5 的 brand.ts 单点）；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`）；站点化扩展保留 `footer-copy` / `footer-beian` / `footer-meta` 细分
 
 ## 1. 令牌快照
 
@@ -53,7 +54,7 @@
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |
 | admonition | 提示块（纯 CSS） |
 | toc | 文章目录 |
-| site-footer | 版权 + 备案号 |
+| site-footer | 页脚（Li-Design V1.5 规格）：`mt-auto` 贴底 + 半透明表面（`--liblog-footer-bg`）+ backdrop-blur（`--liblog-footer-blur`），单行高 56px（`min-h-14` 兜底）、字号 12px、备案图标/占位 14×14px、`max-w-7xl` 居中；版权/备案/归档/许可全部由 `brand.yaml` + `strings.yaml` 驱动；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`） |
 | breadcrumb / pagination | 纯导航，无表单 |
 
 ### 后台（仅管理员，交互组件只在此出现）
@@ -147,7 +148,8 @@
 | Logo / favicon | brand.yaml + themes/blog-theme/static/assets/brand/ | 品牌（仓库内置） |
 | 版权/备案号 | brand.yaml | 品牌 |
 | 页脚声明/许可协议 | strings.yaml（footer.*） | 页面文案 |
-| 备案图标 SVG（ICP/公安） | brand.yaml（`icp_icon` / `police_icon`） | 品牌（可改，留空只留空位） |
+| 备案图标 SVG（ICP/公安） | brand.yaml（`icp_icon` / `police_icon`） | 品牌（可改；缺失/加载失败时 `.filing-icon-placeholder` 占位） |
+| 备案图标占位字符 | strings.yaml（`footer.icon_fallback`） | 页面文案 |
 | 导航/区块标题/通用标签 | strings.yaml | 页面文案 |
 | Hero 姓名/身份/方向/目标 | profile.yaml | 关于我 |
 | 技能徽章 | profile.yaml | 关于我 |

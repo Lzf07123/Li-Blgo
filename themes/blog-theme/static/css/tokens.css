@@ -1,6 +1,6 @@
-/* Li&Blog 品牌令牌（实例化自 Li-Design V1.4 子模块 design-system/Li-Design）
+/* Li&Blog 品牌令牌（实例化自 Li-Design V1.5 子模块 design-system/Li-Design）
  * 前缀：--liblog-*
- * 参考：Li-Design reusable-tokens.template.css（V1.4）与家族落地代码事实
+ * 参考：Li-Design reusable-tokens.template.css（V1.5）与家族落地代码事实
  * 规则：颜色/间距/阴影/动效只存在本文件；组件与模板禁止硬编码。
  */
 
@@ -37,6 +37,11 @@
   --liblog-btn-dark-bg: #17332e;
   --liblog-btn-dark-fg: #f0f2f4;
   --liblog-btn-dark-border: rgba(240, 242, 244, 0.14);
+
+  /* 页脚（浅）：Li-Design V1.5 规格（bg-surface/60 + border-border/60 + backdrop-blur） */
+  --liblog-footer-bg: rgba(255, 255, 255, 0.6);
+  --liblog-footer-border: rgba(225, 236, 232, 0.6);
+  --liblog-footer-blur: 8px;
 
   /* 语义色（浅） */
   --liblog-secondary: #2f678f;
@@ -149,6 +154,10 @@
   --liblog-btn-dark-bg: #17332e;
   --liblog-btn-dark-fg: #d7efea;
   --liblog-btn-dark-border: rgba(215, 239, 234, 0.2);
+
+  /* 页脚（深）：Li-Design V1.5 规格 */
+  --liblog-footer-bg: rgba(67, 73, 80, 0.6);
+  --liblog-footer-border: rgba(84, 92, 100, 0.6);
 
   /* 语义色（深） */
   --liblog-secondary: #a8d4f0;
