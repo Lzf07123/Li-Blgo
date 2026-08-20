@@ -8,6 +8,7 @@
 | 实现速览 | design-system/blog/MASTER.md | 令牌、组件、页面模式、内容覆盖审计 |
 | 设计文档 | docs/superpowers/specs/ | 系统设计事实（含本文件引用） |
 | 代码事实 | themes/blog-theme/static/css/tokens.css + config/*.yaml | 令牌与品牌/个人/站点文案唯一出处 |
+| 模板参考 | design-system/Li-Design/（git 子模块） | 家族模板/组件规格/验收清单；仅参考，非运行时依赖 |
 
 冲突时：代码事实优先，必须同步回写 BRAND.md / MASTER.md / 设计文档，防止文档漂移。
 

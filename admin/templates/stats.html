@@ -15,7 +15,7 @@
   <input id="start" type="date" name="start" value="{{ start }}">
   <label class="visually-hidden" for="end">结束日期</label>
   <input id="end" type="date" name="end" value="{{ end }}">
-  <select name="group" aria-label="分组方式">
+  <select class="select select-sm" name="group" aria-label="分组方式">
     <option value="path" {% if group == "path" %}selected{% endif %}>按路径</option>
     <option value="month" {% if group == "month" %}selected{% endif %}>按月</option>
     <option value="year" {% if group == "year" %}selected{% endif %}>按年</option>

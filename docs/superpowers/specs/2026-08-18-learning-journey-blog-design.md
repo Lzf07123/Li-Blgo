@@ -195,12 +195,13 @@ config/
 
 ## 9. 设计系统（Li-Design 实例化）
 
-- 来源：Li-Design V1.2 模板；令牌值参考 Li&Pass / Li&Chat 设计子模块落地代码事实
+- 来源：Li-Design V1.4 模板（git 子模块 `design-system/Li-Design`，`reusable-tokens.template.css`）；令牌值已逐项核对一致，另含打印/代码高亮/CTA 站点扩展
 - 22 槽位已全部填定，见 `design-system/blog/BRAND.md`
 - 文件映射：
 
 | 模板默认 | 本博客落点 |
 | --- | --- |
+| design-system/Li-Design/reusable-tokens.template.css | 家族模板参考（git 子模块，非运行时依赖） |
 | frontend/src/index.css | themes/blog-theme/static/css/tokens.css |
 | frontend/src/lib/brand.ts | config/brand.yaml |
 | frontend/index.html | 站点基础模板 head 区（P1） |

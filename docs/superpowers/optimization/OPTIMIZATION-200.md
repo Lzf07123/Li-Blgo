@@ -21,6 +21,17 @@
 
 **验证：** 127 项测试全绿（新增 `test_clear_tree_tolerates_mountpoint`、`test_build_tmp_and_preview_env_overrides`）；只读根文件系统 + 无 tmpfs + data/resources 卷挂载场景 `--preview` 与 `--full` 均 `build OK`（357 页/534 文件）；`docker compose config -q` 通过；新镜像 `liblog-admin:round3-fix2` 复测通过。
 
+## 视觉对齐（2026-08-20，Li-Design 子模块 V1.4）
+
+**背景：** 引入 `design-system/Li-Design` 子模块（V1.4）后，把 Li&Blog 视觉设计与子模块模板做一次全量对齐：令牌逐值核对、后台原生下拉补 V1.4 视觉、设计文档从 V1.2 升级为 V1.4 来源。
+
+**改动：**
+- `tokens.css`：57 个共有 `--liblog-*` 变量与 `reusable-tokens.template.css` 逐值比对 0 差异；文件头更新为 V1.4 子模块来源。
+- `admin.css`：补齐 V1.4 `.select` / `.select-sm`（令牌双三角 chevron、focus ring、option 配色、disabled 视觉），统计页分组筛选应用该类；列表筛选其余下拉保持 `.custom-select-*`。
+- 文档：BRAND.md / MASTER.md / 设计文档 §9 / AGENTS.md / README 更新为 V1.4 子模块事实；MASTER 组件表修正 toast/modal 为 flash/dialog 代码事实。
+
+**验证：** 128 项测试全绿；`make check` 硬编码与对比度审计通过；令牌变量比对 57/57 一致；容器内 Hugo v0.165.0 全量构建通过（357 页/534 文件，产物含 `.select` 样式）。
+
 ## 系列路线图
 
 | 版本区间 | 系列 | 主题 |
@@ -138,6 +149,7 @@
 | v198 | 收尾 | SEO 面板显示定时倒计时 | 完成 | days_until>0 时提示「距定时发布还有 N 天」 |
 | v199 | 收尾 | 回收站分栏统计卡 | 完成 | 文章/项目/时间线各自回收数量卡片 |
 | v200 | 收尾 | 最终基线提交 | 完成 | 126 测试 + 审计 + 容器构建 + tag v200-optimization |
+| v201 | 视觉 | Li-Design V1.4 子模块对齐：令牌逐值核对、原生 select 模板化、设计文档升级 | 完成 | 57 个共有令牌 0 差异；128 测试全绿；make check 通过；构建复核通过 |
 
 ## 验证标准（每版必过）
 

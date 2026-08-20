@@ -1,6 +1,13 @@
 # Li&Blog 实现速览（MASTER.md）
 
-> 日期：2026-08-18 ｜ 状态：设计定稿
+> 版本：v1.1 ｜ 日期：2026-08-20 ｜ 状态：设计定稿
+> 来源：Li-Design V1.4 子模块（`design-system/Li-Design`）实例化；令牌已与 `reusable-tokens.template.css` 逐值核对，组件按 V1.4 对照表落地
+
+## 0. 与 Li-Design 子模块对齐
+
+- 模板参考：`design-system/Li-Design`（git 子模块，锁定提交见子模块指针；`reusable-tokens.template.css` 为 V1.4 基准）
+- 令牌校验（2026-08-20）：57 个共有 `--liblog-*` 变量与模板逐值一致，0 差异；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
+- 组件差异：原生下拉走 V1.4 `.select` / `.select-sm`（统计页分组筛选），列表筛选其余下拉用 `.custom-select-*`；后台提示为 flash 胶囊，确认弹窗用原生 `confirm` / `<dialog class="media-dialog">`
 
 ## 1. 令牌快照
 
@@ -65,10 +72,11 @@
 | media-library | 媒体库：图片上传/搜索/删除，白名单扩展名 + 5MB 限制 + 路径防穿越；选择文件后立即列出待上传清单（文件名/大小/状态），上传带令牌风进度条与文件列表；过大/过重图片自动缩放到 1600px 内并优化体积（Pillow，动图跳过），上传即重建；删除时同步清理 content Markdown（正文与 frontmatter）和 config YAML 中的引用地址；列表复用内置 table-shell 组件 |
 | upload-progress | 上传进度组件：XHR 实时进度（总体 + 单文件），进度条/状态全部走 `--liblog-*` 令牌，媒体库与编辑器拖拽上传共用 |
 | custom-select | 后台自定义下拉组件（替换原生 select）：列表筛选与编辑表单共用，按钮 + listbox 交互，方向键/回车/Esc 键盘支持，样式走令牌 |
+| select | 原生下拉（V1.4 `.select` / `.select-sm`）：统计页分组筛选，令牌双三角 chevron、focus ring、option 配色，36px 紧凑等高 |
 | batch-import | 文章批量导入：多选 .md/.markdown、直接选择整个文件夹（`webkitdirectory` 自动遍历子文件夹）或上传 ZIP（路径/大小/数量校验），选择后立即列出待导入文件清单（文件夹模式显示相对路径），自动读取元数据（frontmatter title/date/tags，无 frontmatter 时从首个 # 标题与 YYYY-MM-DD 文件名推断），slug 自动规范化（中文/大写/空格兼容，`_index` 等系统文件跳过，非 Markdown 报错），空文件与缺少文件名的上传项拒绝导入并给出错误明细，同名默认跳过可覆盖，导入后合并一次重建并在结果卡片展示每个文件的元数据与失败明细；导入/恢复上限由 `IMPORT_MAX_FILES`、`IMPORT_MAX_FILE_BYTES`、`IMPORT_MAX_ZIP_BYTES`、`RESTORE_MAX_FILES`、`RESTORE_MAX_BYTES` 环境变量配置 |
 | pinned-posts | 文章置顶：后台编辑表单复选框 + 列表“置顶/取消置顶”操作，置顶文章在后台列表、公开站首页与文章列表优先展示，卡片带“置顶”徽章（文案走 strings.yaml） |
 | site-backup | 站点备份/恢复：下载 ZIP（content/config/媒体/data.blog.db 一致性快照/hugo.toml）；后台可从 ZIP 恢复（恢复前自动生成安全备份，覆盖后清除旧会话）；首次建站设置向导支持直接上传备份恢复 |
-| toast / modal | 保存反馈与确认弹窗 |
+| flash / dialog | 操作结果提示（flash 胶囊，`flash--error` 语义色）与确认弹窗（原生 `confirm` / `<dialog class="media-dialog">`） |
 | theme-toggle | 后台主题切换 |
 | admin-theme-toggle | 后台深浅色切换（localStorage 记忆，跟随系统默认） |
 | search-page | 全站弹出式搜索（Fuse.js 7 本地文件 + 构建期 JSON 索引，导航/404 均可唤起，Ctrl/Cmd+K 快捷打开，零服务端、零外链） |

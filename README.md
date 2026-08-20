@@ -72,6 +72,7 @@ beacon 打点日志由 nginx 写入命名卷；admin 启动时只读导入，导
 content/    # Markdown 内容源（文章/项目/时间线/关于/资源）
 config/     # 品牌/个人资料/站点文案/首页设置
 admin/      # FastAPI 管理后台
+design-system/Li-Design/  # Li& 家族设计模板参考（git 子模块，非运行时依赖）
 themes/blog-theme/  # Hugo 主题（模板 + 令牌 CSS）
 scripts/    # 分段构建编排
 web/        # React 效果层源码（esbuild 打包）
