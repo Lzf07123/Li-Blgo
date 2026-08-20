@@ -144,6 +144,18 @@ class TestRestore(unittest.TestCase):
         self.assertNotIn("onload", text)
         self.assertIn("<svg>", text)
 
+    def test_restore_normalizes_hugo_draft_flag(self):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr(
+                "content/posts/a.md",
+                "---\ntitle: A\nstatus: draft\n---\nAAA",
+            )
+        restore.restore_backup(buf.getvalue(), safety=False)
+        fm, _ = restore.content_store.read_markdown("posts", "a")
+        self.assertIs(fm["draft"], True)
+        self.assertEqual(fm["status"], "draft")
+
 
 if __name__ == "__main__":
     unittest.main()

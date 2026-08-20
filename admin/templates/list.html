@@ -63,6 +63,7 @@
   <span id="bulk-count" class="bulk-count">已选 0 篇</span>
 </form>
 {% endif %}
+{% set bulk_form_id = "bulk-form" if section == "posts" else "" %}
 {% include "partials/table.html" %}
 <script>
   {% if section == "posts" %}

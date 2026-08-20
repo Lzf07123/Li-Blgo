@@ -142,7 +142,12 @@ def markdown_exists(section: str, slug: str) -> bool:
 def write_markdown(section: str, slug: str, frontmatter: dict, body: str) -> None:
     if not SLUG_RE.match(slug):
         raise ValueError("bad slug")
-    fm = yaml.safe_dump(frontmatter, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
+    fm = dict(frontmatter)
+    if section == "posts":
+        # Hugo 只认 draft: true，后台以 status: draft 管理草稿；两者必须保持一致，
+        # 否则草稿会被渲染进公开产物并被构建自检拦截。
+        fm["draft"] = fm.get("status") == "draft"
+    fm = yaml.safe_dump(fm, allow_unicode=True, sort_keys=False, default_flow_style=False).strip()
     text = f"---\n{fm}\n---\n\n{body.strip()}\n"
     p = safe_resolve(settings.content_root, f"{section}/{slug}.md")
     p.parent.mkdir(parents=True, exist_ok=True)

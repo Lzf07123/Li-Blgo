@@ -29,7 +29,7 @@
         {% set align_class = ' table-col-right' if col.type == 'number' or col.align == 'right' else '' %}
         {% if col.type == 'select' %}
         <td class="table-col-{{ col.key }}" data-label="{{ col.label }}">
-          <input type="checkbox" class="bulk-check" name="slugs" value="{{ row[col.key] }}">
+          <input type="checkbox" class="bulk-check" name="slugs" value="{{ row[col.key] }}"{% if bulk_form_id %} form="{{ bulk_form_id }}"{% endif %}>
         </td>
         {% elif col.type == 'link' %}
         <td class="table-col-{{ col.key }}{{ align_class }}" data-label="{{ col.label }}">
@@ -53,7 +53,7 @@
         <td class="table-col-actions" data-label="{{ col.label }}">
           {% for act in row.get(col.key, []) %}
             {% if act.method %}
-            <form method="post" action="{{ act.href }}"{% if act.confirm %} onsubmit="return confirm('{{ act.confirm }}')"{% endif %}>
+            <form method="post" action="{{ act.href }}"{% if act.confirm %} data-confirm="{{ act.confirm }}"{% endif %}>
               <input type="hidden" name="_csrf" value="{{ csrf }}">
               {% if act.name %}<input type="hidden" name="{{ act.name }}" value="{{ act.value }}">{% endif %}
               <button type="submit" class="btn-link{{ ' danger' if act.danger else '' }}">{{ act.label }}</button>

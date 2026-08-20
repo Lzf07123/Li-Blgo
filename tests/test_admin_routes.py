@@ -165,6 +165,35 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             self.assertIn("custom-select", r.text)
 
+    def test_bulk_checkboxes_attached_to_bulk_form(self):
+        store.write_markdown(
+            "posts",
+            "bulk-ui",
+            {"title": "Bulk UI", "date": "2026-08-18", "status": "published"},
+            "正文",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('<form id="bulk-form"', r.text)
+            self.assertIn('form="bulk-form"', r.text)
+
+    def test_row_actions_confirm_use_data_attribute(self):
+        store.write_markdown(
+            "posts",
+            "confirm-ui",
+            {"title": "Confirm UI", "date": "2026-08-18", "status": "published"},
+            "正文",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('data-confirm="确定移入回收站', r.text)
+            self.assertIn("form[data-confirm]", r.text)
+            self.assertNotIn('onsubmit="return confirm', r.text)
+
     def test_project_save_preserves_unknown_fields(self):
         store.write_markdown(
             "projects",
@@ -430,6 +459,53 @@ class AdminRoutesTest(unittest.TestCase):
         self.assertTrue(
             (settings.db_path.parent / "revisions" / "posts" / "cover-post").exists()
         )
+
+    def test_save_draft_sets_hugo_draft_flag(self):
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/save",
+                data={
+                    "_csrf": csrf,
+                    "slug": "",
+                    "new_slug": "draft-flag",
+                    "action": "save_stay",
+                    "title": "D",
+                    "date": "2026-08-20",
+                    "status": "draft",
+                    "body": "正文",
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, _ = store.read_markdown("posts", "draft-flag")
+        self.assertIs(fm["draft"], True)
+        self.assertEqual(fm["status"], "draft")
+
+    def test_publish_removes_hugo_draft_flag(self):
+        store.write_markdown(
+            "posts",
+            "draft-flag-2",
+            {"title": "D2", "date": "2026-08-20", "status": "draft"},
+            "正文",
+        )
+        self.assertIs(store.read_markdown("posts", "draft-flag-2")[0]["draft"], True)
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/draft-flag-2/status",
+                data={"_csrf": csrf, "status": "published"},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+        fm, _ = store.read_markdown("posts", "draft-flag-2")
+        self.assertIs(fm["draft"], False)
 
     def test_posts_list_groups_rows_by_year(self):
         store.write_markdown(
