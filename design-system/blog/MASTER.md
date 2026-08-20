@@ -5,10 +5,10 @@
 
 ## 0. 与 Li-Design 子模块对齐
 
-- 模板参考：`design-system/Li-Design`（git 子模块，锁定提交 `9ceaa99`；`reusable-tokens.template.css` 为 V1.5 基准）
-- 令牌校验（2026-08-21）：57 个共有 `--liblog-*` 变量与模板逐值一致，0 差异；V1.5 页脚规格以 `--liblog-footer-bg` / `--liblog-footer-border` / `--liblog-footer-blur` 三枚令牌落地（模板 Tailwind 类 → 本站令牌等价，明暗两套）；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
+- 模板参考：`design-system/Li-Design`（git 子模块，锁定提交 `e899414`；`reusable-tokens.template.css` 为 V1.5 基准，含骨架页脚等高补充）
+- 令牌校验（2026-08-21，1:1）：模板 57 个 `--{{PROJECT_PREFIX}}-*` 变量集合与本站 `--liblog-*` 全量对比，**0 缺失**；57 个共有变量逐值一致；V1.5 页脚规格以 `--liblog-footer-bg` / `--liblog-footer-border` / `--liblog-footer-blur` 三枚令牌落地（模板 Tailwind 类 → 本站令牌等价，明暗两套）；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
 - 组件差异：原生下拉走 V1.4 `.select` / `.select-sm`（统计页分组筛选），列表筛选其余下拉用 `.custom-select-*`；后台提示为 flash 胶囊，确认弹窗用原生 `confirm` / `<dialog class="media-dialog">`
-- 页脚对齐（V1.5，2026-08-21）：`site-footer` > `site-footer-inner` 契约类名，`mt-auto` 贴底 + 半透明表面 + backdrop-blur，单行高 56px（`min-h-14` 兜底）、字号 12px、图标/备案占位 14×14px、`max-w-7xl` 居中（`px-4` → `lg:px-8`）、移动端换行无横向滚动；版权/备案/归档/许可由 `brand.yaml` + `strings.yaml` 驱动（等价 V1.5 的 brand.ts 单点）；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`）；站点化扩展保留 `footer-copy` / `footer-beian` / `footer-meta` 细分
+- 页脚对齐（V1.5，2026-08-21）：`site-footer` > `site-footer-inner` 契约类名，`mt-auto` 贴底 + 半透明表面 + backdrop-blur，单行高 56px（`min-h-14` 兜底）、字号 12px、图标/备案占位 14×14px、`max-w-7xl` 居中（`px-4` → `lg:px-8`）、移动端换行无横向滚动；版权/备案/归档/许可由 `brand.yaml` + `strings.yaml` 驱动（等价 V1.5 的 brand.ts 单点）；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`）；站点化扩展保留 `footer-copy` / `footer-beian` / `footer-meta` 细分；**骨架页脚等高规格（e899414 补充）**：Li&Blog 无运行时骨架屏（公开站纯静态、后台服务端渲染，均无 PageSkeleton），审计为不适用；如未来引入加载骨架，页脚占位必须 `min-h-14` + `text-xs` 与真实页脚等高
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
 
 ## 1. 令牌快照

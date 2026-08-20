@@ -97,7 +97,7 @@
 | --- | --- | --- |
 | 品牌意图 | design-system/blog/BRAND.md（本文件） | 定位、原则、视觉方向、氛围标准 |
 | 实现速览 | design-system/blog/MASTER.md | 令牌、组件、页面模式、覆盖审计 |
-| 模板参考 | design-system/Li-Design/（git 子模块，V1.5，锁定提交 `9ceaa99`） | 家族模板/组件规格/验收清单；仅参考，非运行时依赖 |
+| 模板参考 | design-system/Li-Design/（git 子模块，V1.5，锁定提交 `e899414`） | 家族模板/组件规格/验收清单；仅参考，非运行时依赖 |
 | 代码事实 | themes/blog-theme/static/css/tokens.css | 颜色/阴影/动效令牌唯一出处 |
 | 品牌资产 | config/brand.yaml | 名称/slogan/承诺/Logo/备案唯一出处 |
 | 个人资料 | config/profile.yaml | 姓名/身份/方向/目标/技能唯一出处 |
@@ -107,6 +107,6 @@
 
 ## 7. 使用边界
 
-- 本方案已实例化，Li&Blog 不再依赖 Li-Design 模板仓库作为运行时依赖；`design-system/Li-Design/` 仅作模板参考（git 子模块，已对齐 V1.5 / `9ceaa99`，后续升级需显式更新锁定提交）
+- 本方案已实例化，Li&Blog 不再依赖 Li-Design 模板仓库作为运行时依赖；`design-system/Li-Design/` 仅作模板参考（git 子模块，已对齐 V1.5 / `e899414`，后续升级需显式更新锁定提交）
 - 允许偏离：主色按产品域调校（走家族取色方法）、符号隐喻重映射、确需新模式时先写 spec 再更新 MASTER.md
 - 禁止偏离：五大原则、动效铁律、单一事实来源、无障碍/节能底线、公开站零交互、备案留空规矩
