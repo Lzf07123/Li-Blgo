@@ -23,6 +23,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from admin import (
     audit,
+    buildstate as build_state,
     backup as backup_store,
     build,
     content as store,
@@ -429,11 +430,9 @@ def require_login(request: Request) -> None:
         raise HTTPException(status_code=302, headers={"Location": ap("/login")})
 
 
-def after_build_redirect(base: str) -> RedirectResponse:
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"{base}?error=构建失败"), status_code=303)
-    return RedirectResponse(ap(f"{base}?ok=已保存并重建({elapsed}s)"), status_code=303)
+def after_build_redirect(base: str, ok_msg: str = "已保存，正在后台构建…") -> RedirectResponse:
+    build_state.trigger_build("after_save")
+    return RedirectResponse(ap(f"{base}?ok={ok_msg}"), status_code=303)
 
 
 def query_url(base: str, **params) -> str:
@@ -989,10 +988,15 @@ def rebuild(request: Request, csrf_token: str = Form("", alias="_csrf")):
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/?error=会话失效"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"/?error=构建失败:{result.stderr[-200:]}"), status_code=303)
-    return RedirectResponse(ap(f"/?ok=构建成功({elapsed}s)"), status_code=303)
+    build_state.trigger_build("rebuild")
+    return RedirectResponse(ap("/?ok=构建任务已开始，正在后台构建…"), status_code=303)
+
+
+@app.get(ap("/build/status"))
+def build_status(request: Request):
+    """后台构建进度轮询：POST 不阻塞，前端状态条轮询此接口。"""
+    require_login(request)
+    return JSONResponse(build_state.snapshot())
 
 
 # ---------- 媒体库 ----------
@@ -1107,10 +1111,9 @@ async def media_upload(
         _audit("media_upload", p.relative_to(media_store.MEDIA_ROOT).as_posix())
     except ValueError as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/media?error=已上传但构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/media?ok=已上传 {p.relative_to(media_store.MEDIA_ROOT).as_posix()} 并重建（{elapsed}s）"), status_code=303)
+    build_state.trigger_build("media_upload")
+    rel = p.relative_to(media_store.MEDIA_ROOT).as_posix()
+    return RedirectResponse(ap(f"/media?ok=已上传 {rel}，正在后台构建…"), status_code=303)
 
 
 @app.post(ap("/media/delete"))
@@ -1125,14 +1128,9 @@ def media_delete(request: Request, path: str = Form(""), csrf_token: str = Form(
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/media?error={exc}"), status_code=303)
     _audit("media_delete", path)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/media?error=已删除但构建失败"), status_code=303)
+    build_state.trigger_build("media_delete")
     cleaned = len(cleaned_md) + len(cleaned_cfg)
-    if cleaned:
-        msg = f"已删除并清理 {cleaned} 处引用，已重建（{elapsed}s）"
-    else:
-        msg = f"已删除并重建（{elapsed}s）"
+    msg = f"已删除并清理 {cleaned} 处引用，正在后台构建…" if cleaned else "已删除，正在后台构建…"
     return RedirectResponse(ap(f"/media?ok={msg}"), status_code=303)
 
 
@@ -1176,10 +1174,8 @@ def post_status(
         _audit("post_status", f"{slug}={status}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/posts?error=状态更新后构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/posts?ok=已{('发布' if status == 'published' else '转为草稿')}并重建（{elapsed}s）"), status_code=303)
+    build_state.trigger_build("post_status")
+    return RedirectResponse(ap(f"/posts?ok=已{('发布' if status == 'published' else '转为草稿')}，正在后台构建…"), status_code=303)
 
 
 @app.post(ap("/posts/{slug}/pin"))
@@ -1198,11 +1194,9 @@ def post_pin(
         _audit("post_pin", f"{slug}={'置顶' if old['pinned'] else '取消置顶'}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/posts?error=置顶状态更新后构建失败"), status_code=303)
+    build_state.trigger_build("post_pin")
     return RedirectResponse(
-        ap(f"/posts?ok=已{('取消置顶' if not old['pinned'] else '置顶')}并重建（{elapsed}s）"), status_code=303
+        ap(f"/posts?ok=已{('取消置顶' if not old['pinned'] else '置顶')}，正在后台构建…"), status_code=303
     )
 
 
@@ -1223,10 +1217,8 @@ def post_publish_now(
         _audit("post_publish_now", slug)
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/posts?error=发布时间更新后构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/posts?ok=已改为今天发布并重建（{elapsed}s）"), status_code=303)
+    build_state.trigger_build("post_publish_now")
+    return RedirectResponse(ap("/posts?ok=已改为今天发布，正在后台构建…"), status_code=303)
 
 
 @app.get(ap("/stats/export"))
@@ -1512,11 +1504,9 @@ def tags_apply(
     if not changed:
         return RedirectResponse(ap("/tags?error=没有文章使用该标签"), status_code=303)
     _audit("tags_apply", f"{action}:{old_tag}->{new_tag or '删除'}")
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/tags?error=标签更新后构建失败"), status_code=303)
+    build_state.trigger_build("tags_apply")
     return RedirectResponse(
-        ap(f"/tags?ok=已更新 {changed} 篇文章并重建（{elapsed}s）"), status_code=303
+        ap(f"/tags?ok=已更新 {changed} 篇文章，正在后台构建…"), status_code=303
     )
 
 
@@ -1584,10 +1574,8 @@ def trash_restore(request: Request, section: str, slug: str, csrf_token: str = F
         _audit("trash_restore", f"{section}/{clean_slug}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/trash?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/trash?error=恢复后构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/trash?ok=已恢复 {clean_slug} 并重建（{elapsed}s）"), status_code=303)
+    build_state.trigger_build("trash_restore")
+    return RedirectResponse(ap(f"/trash?ok=已恢复 {clean_slug}，正在后台构建…"), status_code=303)
 
 
 @app.post(ap("/trash/{section}/{slug}/delete"))
@@ -1648,11 +1636,9 @@ def section_duplicate(
         _audit("content_duplicate", f"{section}/{slug}->{new_slug}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"/{section}?error=复制后构建失败"), status_code=303)
+    build_state.trigger_build("duplicate")
     return RedirectResponse(
-        ap(f"/{section}/{new_slug}/edit?ok=已复制为新草稿并重建（{elapsed}s）"), status_code=303
+        ap(f"/{section}/{new_slug}/edit?ok=已复制为新草稿，正在后台构建…"), status_code=303
     )
 
 
@@ -1743,13 +1729,11 @@ async def posts_import_submit(
             "import_posts.html",
             {"label": "批量导入文章", "result": import_result},
         )
-    build_result, elapsed = build.run_full()
-    if build_result.returncode != 0:
-        return RedirectResponse(ap("/posts/import?error=导入完成但构建失败"), status_code=303)
+    build_state.trigger_build("posts_import")
     return render(
         request,
         "import_posts.html",
-        {"label": "批量导入文章", "result": import_result, "build_elapsed": elapsed},
+        {"label": "批量导入文章", "result": import_result, "build_pending": True},
     )
 
 
@@ -1806,11 +1790,9 @@ async def backup_restore(
         _audit("backup_restore", (file.filename or "backup.zip")[:120])
     except ValueError as exc:
         return RedirectResponse(ap(f"/backup?error={exc}"), status_code=303)
-    build_result, elapsed = build.run_full()
-    if build_result.returncode != 0:
-        return RedirectResponse(ap("/backup?error=已恢复但构建失败，请检查备份内容"), status_code=303)
+    build_state.trigger_build("backup_restore")
     return RedirectResponse(
-        ap("/login?ok=已从备份恢复并重建，请重新登录"), status_code=303
+        ap("/login?ok=已从备份恢复，正在后台构建，请重新登录"), status_code=303
     )
 
 
@@ -2129,10 +2111,8 @@ def posts_bulk(
     if not changed:
         return RedirectResponse(ap("/posts?error=没有可执行的文章"), status_code=303)
     _audit("posts_bulk", f"{action}:{tag or ''}:{changed}:scope={scope or 'manual'}")
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap("/posts?error=批量操作后构建失败"), status_code=303)
-    message = f"已批量处理 {changed} 篇并重建（{elapsed}s）"
+    build_state.trigger_build("posts_bulk")
+    message = f"已批量处理 {changed} 篇，正在后台构建…"
     if overflow > 0:
         message += f"（另有 {overflow} 篇超出单次上限未处理）"
     return RedirectResponse(ap(f"/posts?ok={message}"), status_code=303)
@@ -2385,12 +2365,9 @@ def section_save(
         preview_path = f"/{section}" if SECTIONS[section]["single"] else f"/{section}/{slug}"
         return RedirectResponse(ap(f"/preview{preview_path}"), status_code=303)
     if action == "save_stay":
-        result, elapsed = build.run_full()
-        if result.returncode != 0:
-            edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
-            return RedirectResponse(ap(f"{edit_path}?error=构建失败"), status_code=303)
+        build_state.trigger_build("save_stay")
         edit_path = f"/{section}/edit" if SECTIONS[section]["single"] else f"/{section}/{slug}/edit"
-        return RedirectResponse(ap(f"{edit_path}?ok=已保存并重建（{elapsed}s）"), status_code=303)
+        return RedirectResponse(ap(f"{edit_path}?ok=已保存，正在后台构建…"), status_code=303)
     return after_build_redirect(f"/{section}")
 
 
@@ -2425,11 +2402,9 @@ def revision_restore(
         _audit("revision_restore", f"{slug}@{ts}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/posts/{slug}/edit?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"/posts/{slug}/edit?error=恢复后构建失败"), status_code=303)
+    build_state.trigger_build("revision_restore")
     return RedirectResponse(
-        ap(f"/posts/{slug}/edit?ok=已恢复 {ts} 版本并重建（{elapsed}s）"), status_code=303
+        ap(f"/posts/{slug}/edit?ok=已恢复 {ts} 版本，正在后台构建…"), status_code=303
     )
 
 
@@ -2443,10 +2418,8 @@ def section_delete(request: Request, section: str, slug: str, csrf_token: str = 
         _audit("content_delete", f"{section}/{slug}")
     except ValueError:
         return RedirectResponse(ap(f"/{section}?error=非法标识"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"/{section}?error=删除后构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/{section}?ok=已删除并重建({elapsed}s)"), status_code=303)
+    build_state.trigger_build("section_delete")
+    return RedirectResponse(ap(f"/{section}?ok=已删除，正在后台构建…"), status_code=303)
 
 
 @app.post(ap("/{section}/{slug}/trash"))
@@ -2459,10 +2432,8 @@ def section_trash(request: Request, section: str, slug: str, csrf_token: str = F
         _audit("content_trash", f"{section}/{slug}")
     except (ValueError, FileNotFoundError) as exc:
         return RedirectResponse(ap(f"/{section}?error={exc}"), status_code=303)
-    result, elapsed = build.run_full()
-    if result.returncode != 0:
-        return RedirectResponse(ap(f"/{section}?error=移入回收站后构建失败"), status_code=303)
-    return RedirectResponse(ap(f"/{section}?ok=已移入回收站并重建({elapsed}s)"), status_code=303)
+    build_state.trigger_build("section_trash")
+    return RedirectResponse(ap(f"/{section}?ok=已移入回收站，正在后台构建…"), status_code=303)
 
 
 def rewrite_preview_html(html: str, admin_path: str) -> str:

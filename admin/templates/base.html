@@ -57,6 +57,11 @@
     </aside>
     <main class="admin-main">
       {% if flash %}<p class="flash{{ ' flash--error' if flash_type == 'error' else '' }}" role="status">{{ flash }}</p>{% endif %}
+      <div id="build-banner" class="flash build-banner" hidden role="status" aria-live="polite">
+        <span id="build-banner-text"></span>
+        <button id="build-banner-refresh" type="button" class="btn-link" hidden>刷新</button>
+        <button id="build-banner-close" type="button" class="btn-link">关闭</button>
+      </div>
       {% block content %}{% endblock %}
     </main>
   </div>
@@ -170,6 +175,56 @@
           }
         });
       }
+    })();
+  </script>
+  <script>
+    (function () {
+      var banner = document.getElementById("build-banner");
+      if (!banner) return;
+      var text = document.getElementById("build-banner-text");
+      var refreshBtn = document.getElementById("build-banner-refresh");
+      var closeBtn = document.getElementById("build-banner-close");
+      var SUCCESS_KEEP = 20000;
+      var FAILURE_KEEP = 60000;
+      function render(s) {
+        var now = Date.now();
+        if (s.status === "queued" || s.status === "running") {
+          banner.hidden = false;
+          refreshBtn.hidden = true;
+          banner.classList.remove("flash--error");
+          text.textContent = "正在后台构建…（已 " + (s.elapsed != null ? s.elapsed : 0) + " 秒）";
+          return;
+        }
+        if (s.status === "success") {
+          var age = s.finished_at ? now - s.finished_at * 1000 : 0;
+          if (age > SUCCESS_KEEP) { banner.hidden = true; return; }
+          banner.hidden = false;
+          refreshBtn.hidden = false;
+          banner.classList.remove("flash--error");
+          text.textContent = "构建完成（" + (s.elapsed != null ? s.elapsed : "?") + " 秒）";
+          return;
+        }
+        if (s.status === "failed") {
+          var age2 = s.finished_at ? now - s.finished_at * 1000 : 0;
+          if (age2 > FAILURE_KEEP) { banner.hidden = true; return; }
+          banner.hidden = false;
+          refreshBtn.hidden = false;
+          banner.classList.add("flash--error");
+          text.textContent = "构建失败" + (s.error ? "：" + s.error : "");
+          return;
+        }
+        banner.hidden = true;
+      }
+      function poll() {
+        fetch("/{{ admin_path }}/build/status")
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .then(function (s) { if (s) render(s); })
+          .catch(function () {});
+      }
+      refreshBtn.addEventListener("click", function () { location.reload(); });
+      closeBtn.addEventListener("click", function () { banner.hidden = true; });
+      poll();
+      window.setInterval(poll, 2500);
     })();
   </script>
   <script src="/{{ admin_path }}/static/js/admin-dropdown.js?v={{ asset_version.admin_dropdown }}"></script>

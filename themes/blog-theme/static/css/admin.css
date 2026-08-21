@@ -276,6 +276,8 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
 .field-help { display: block; margin-top: 4px; color: var(--liblog-muted); font-weight: 400; font-size: 0.8rem; }
 .form-actions { margin-top: 20px; display: flex; gap: 12px; flex-wrap: wrap; }
 .flash { background: var(--liblog-primary-soft); color: var(--liblog-brand-fg); border-radius: 8px; padding: 10px 14px; }
+.build-banner { display: flex; align-items: center; gap: 12px; margin: 12px 0; flex-wrap: wrap; }
+.build-banner .btn-link { min-height: auto; padding: 0; }
 .auth-divider { text-align: center; color: var(--liblog-muted); margin: 16px 0 8px; }
 .visually-hidden {
   position: absolute;
