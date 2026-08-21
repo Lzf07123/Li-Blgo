@@ -896,28 +896,21 @@ input:focus, select:focus, textarea:focus {
 .article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
 .article-body th { background: var(--liblog-surface-2); }
 .article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
-/* 文章正文 + 左侧固定目录（识别 Markdown h2/h3 标题） */
+/* 文章正文 + 左侧固定目录（识别 Markdown h2/h3 标题）
+ * 目录悬浮在内容区外侧的视口留白处，不占用正文空间；
+ * 屏幕不足够宽时（≤1280px）自动折回正文上方。 */
 .article-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 232px) minmax(0, 1fr);
-  gap: 36px;
-  align-items: start;
   margin-top: 16px;
 }
-.article-layout > .toc {
-  grid-column: 1;
-  grid-row: 1;
-  min-width: 0;
-}
 .article-layout > .article-body {
-  grid-column: 2;
-  grid-row: 1;
   margin-top: 0;
-  min-width: 0;
 }
 .toc {
-  position: sticky;
+  position: fixed;
+  left: max(16px, calc(50vw - 628px));
   top: calc(var(--header-h) + 20px);
+  z-index: 10;
+  width: 232px;
   max-height: calc(100vh - var(--header-h) - 40px);
   overflow-y: auto;
   font-size: 0.85rem;
@@ -1246,17 +1239,20 @@ mark {
   color: var(--liblog-muted);
 }
 
-/* ---------- 响应式（1024 / 768 / 640 断点，覆盖 375–1440） ---------- */
-@media (max-width: 1024px) {
-  .page-shell { width: min(880px, calc(100% - 28px)); }
-  .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-  /* 侧边目录在小屏折叠为正文上方 */
+/* ---------- 响应式（1280 目录折叠 / 1024 / 768 / 640 断点） ---------- */
+@media (max-width: 1280px) {
+  /* 悬浮目录在窄屏折叠为正文上方，避免遮挡正文 */
   .article-layout { display: block; }
   .toc {
     position: static;
+    width: auto;
     max-height: 320px;
     margin-bottom: 18px;
   }
+}
+@media (max-width: 1024px) {
+  .page-shell { width: min(880px, calc(100% - 28px)); }
+  .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
 @media (max-width: 768px) {
   /* 移动端导航：保留横向滚动（Panel 无导航，博客内容站扩展；不侵入 Tailwind 布局） */
