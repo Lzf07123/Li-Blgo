@@ -896,21 +896,23 @@ input:focus, select:focus, textarea:focus {
 .article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
 .article-body th { background: var(--liblog-surface-2); }
 .article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
-/* 文章正文 + 右侧固定目录（识别 Markdown h2/h3 标题） */
+/* 文章正文 + 左侧固定目录（识别 Markdown h2/h3 标题） */
 .article-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 232px);
+  grid-template-columns: minmax(0, 232px) minmax(0, 1fr);
   gap: 36px;
   align-items: start;
   margin-top: 16px;
 }
-.article-layout > .article-body {
+.article-layout > .toc {
   grid-column: 1;
-  margin-top: 0;
+  grid-row: 1;
   min-width: 0;
 }
-.article-layout > .toc {
+.article-layout > .article-body {
   grid-column: 2;
+  grid-row: 1;
+  margin-top: 0;
   min-width: 0;
 }
 .toc {
