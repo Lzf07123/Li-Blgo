@@ -49,7 +49,7 @@
   <input type="hidden" name="order" value="{{ order }}">
   <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
 {% if q or status or tag or pinned or sort != "date" or order != "desc" or per_page != 50 %}
-  <a class="btn-link" href="/{{ admin_path }}/{{ section }}">清除</a>
+  <a class="btn-link" href="/{{ admin_path }}/{{ section }}" data-clear-filters>清除</a>
   {% endif %}
 </form>
 {% if section == "posts" %}
@@ -154,6 +154,12 @@
       return params.has(k);
     });
     var form = document.querySelector(".list-filters");
+    var clearLink = document.querySelector(".list-filters a[data-clear-filters]");
+    if (clearLink) {
+      clearLink.addEventListener("click", function () {
+        localStorage.removeItem(key);
+      });
+    }
     if (!hasFilter) {
       var saved = localStorage.getItem(key);
       if (saved) {
