@@ -24,6 +24,11 @@ lineNumbersInTable = false
 noClasses = false
 style = "friendly"
 
+# 文章侧边目录：识别 Markdown 二级/三级标题（自动生成锚点）
+[markup.tableOfContents]
+startLevel = 2
+endLevel = 3
+
 [outputs]
 home = ["HTML", "RSS", "LLMS", "Security", "Humans"]
 

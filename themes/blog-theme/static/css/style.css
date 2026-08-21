@@ -896,7 +896,48 @@ input:focus, select:focus, textarea:focus {
 .article-body th, .article-body td { border: 1px solid var(--liblog-border); padding: 8px 12px; text-align: left; }
 .article-body th { background: var(--liblog-surface-2); }
 .article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
-.toc { background: var(--liblog-surface); border: 1px solid var(--liblog-border); border-radius: 8px; padding: 12px 20px; margin-top: 12px; font-size: 0.9rem; }
+/* 文章正文 + 右侧固定目录（识别 Markdown h2/h3 标题） */
+.article-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 232px);
+  gap: 36px;
+  align-items: start;
+  margin-top: 16px;
+}
+.article-layout > .article-body {
+  grid-column: 1;
+  margin-top: 0;
+  min-width: 0;
+}
+.article-layout > .toc {
+  grid-column: 2;
+  min-width: 0;
+}
+.toc {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  max-height: calc(100vh - var(--header-h) - 40px);
+  overflow-y: auto;
+  font-size: 0.85rem;
+  border-left: 2px solid var(--liblog-border);
+  padding-left: 14px;
+  scrollbar-width: thin;
+}
+.toc-title {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: var(--liblog-fg);
+}
+.toc ul { list-style: none; margin: 0; padding: 0; }
+.toc ul ul { padding-left: 12px; }
+.toc li { margin: 4px 0; line-height: 1.45; }
+.toc a {
+  display: block;
+  padding: 2px 0;
+  border-radius: 4px;
+  color: var(--liblog-muted);
+}
+.toc a:hover { color: var(--liblog-primary-hover); }
 .admonition, .notice {
   display: flex;
   align-items: flex-start;
@@ -1207,6 +1248,13 @@ mark {
 @media (max-width: 1024px) {
   .page-shell { width: min(880px, calc(100% - 28px)); }
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+  /* 侧边目录在小屏折叠为正文上方 */
+  .article-layout { display: block; }
+  .toc {
+    position: static;
+    max-height: 320px;
+    margin-bottom: 18px;
+  }
 }
 @media (max-width: 768px) {
   /* 移动端导航：保留横向滚动（Panel 无导航，博客内容站扩展；不侵入 Tailwind 布局） */
@@ -1311,12 +1359,13 @@ mark {
   .project-card,
   .post-card,
   .journey-panel,
-  .post-nav-item,
-  .toc {
+  .post-nav-item {
     border: 0;
     background: none;
     box-shadow: none;
   }
+  .article-layout { display: block; }
+  .toc { display: none; }
   .article-body {
     max-width: none;
   }

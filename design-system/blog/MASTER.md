@@ -209,6 +209,8 @@
 
 **批量导入容错 + 文章批量筛选（2026-08-22）：** 批量导入改为逐文件容错——坏 ZIP、ZIP 内非法路径/超大/加密条目、超大文件、空内容、解析失败、数量超限等均单独跳过并记入失败明细，不再中断整批导入；`extract_zip` 返回 `(entries, errors)`。文章列表新增标签、置顶筛选（`tag`/`pinned`），批量操作支持“全选当前筛选结果”（`scope=all` 复用同一过滤逻辑，单次上限 1000 篇），导出 CSV 同步携带新筛选；无头 Chromium 实测筛选渲染、全选计数与提交参数正确，146 项单测通过。
 
+**文章侧边目录（2026-08-22）：** 文章页目录改为右侧固定侧边栏（`article-layout` 两栏栅格 + `position: sticky`），自动识别 Markdown 二级/三级标题（`hugo.toml` 显式 `[markup.tableOfContents] startLevel=2 endLevel=3`）；有标题即显示（不再要求 ≥300 词）；≤1024px 折叠为正文上方目录框，打印隐藏目录。纯 CSS、零 JS，动效尊重 `prefers-reduced-motion`；Hugo v0.165.0 构建 + 无头 Chromium 实测通过。
+
 ## 6. 文件映射（模板 → 本博客）
 
 | 模板默认 | 本博客落点 |

@@ -34,8 +34,17 @@
     {{ with .Params.tags }}{{ range . }}<a class="tag" href="{{ printf "/tags/%s/" (urlize .) | relURL }}">{{ . }}</a>{{ end }}{{ end }}
   </p>
   {{ end }}
-  {{ if and .TableOfContents (ge .WordCount 300) }}<nav class="toc" aria-label="{{ $strings.common.toc }}">{{ .TableOfContents }}</nav>{{ end }}
+  {{ if .TableOfContents }}
+  <div class="article-layout">
+    <aside class="toc" aria-label="{{ $strings.common.toc }}">
+      <p class="toc-title">{{ $strings.common.toc }}</p>
+      {{ .TableOfContents }}
+    </aside>
+    <div class="article-body">{{ .Content }}</div>
+  </div>
+  {{ else }}
   <div class="article-body">{{ .Content }}</div>
+  {{ end }}
   {{ with $strings.footer.license }}
   <p class="article-license">{{ $strings.common.license_prefix }} <a href="{{ $strings.footer.license_url }}" target="_blank" rel="noopener">{{ . }}</a></p>
   {{ end }}
