@@ -752,6 +752,25 @@ input:focus, select:focus, textarea:focus {
 .project-card {
   position: relative;
 }
+
+/* ---------- 整卡可点击（Stretched Link） ----------
+ * 标题链接拉伸覆盖整张卡片，点击卡片任意位置即可进入详情；
+ * 卡内其他交互元素（封面链接/标签/仓库按钮）提升层级，保持原有点击行为。 */
+.post-card > h2 a::after,
+.post-card > h3 a::after,
+.project-card > h2 a::after,
+.project-card > h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.post-card .post-cover-link,
+.post-card .tag,
+.project-card .project-repo a {
+  position: relative;
+  z-index: 1;
+}
 .post-card h2 a,
 .post-card h3 a,
 .project-card h2 a,
