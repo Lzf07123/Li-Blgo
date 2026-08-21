@@ -79,8 +79,11 @@ class TestImporter(unittest.TestCase):
         original_bytes = settings.import_max_file_bytes
         try:
             settings.import_max_files = 1
-            with self.assertRaises(ValueError):
-                importer.import_posts([("a.md", b"x"), ("b.md", b"y")])
+            result = importer.import_posts([("a.md", b"---\ntitle: A\n---\n"), ("b.md", b"x")])
+            self.assertEqual(result["imported"], 1)
+            self.assertTrue(
+                any("超过单次导入数量上限" in err for err in result["errors"])
+            )
             settings.import_max_files = original_files
             settings.import_max_file_bytes = 3
             result = importer.import_posts([("a.md", b"1234")])
@@ -158,20 +161,48 @@ class TestImporter(unittest.TestCase):
         self.assertEqual(result["imported"], 0)
         self.assertEqual(len(result["errors"]), 1)
 
-    def test_extract_zip_rejects_traversal(self):
+    def test_extract_zip_skips_traversal_keeps_safe_members(self):
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr("../evil.md", "---\ntitle: x\n---\n")
-        with self.assertRaises(ValueError):
-            importer.extract_zip(buf.getvalue())
+            zf.writestr("ok.md", "---\ntitle: OK\n---\n")
+        entries, errors = importer.extract_zip(buf.getvalue())
+        self.assertEqual([n for n, _ in entries], ["ok.md"])
+        self.assertTrue(any("非法路径" in err for err in errors))
+
+    def test_extract_zip_too_many_files_keeps_first(self):
+        original = settings.import_max_files
+        try:
+            settings.import_max_files = 1
+            buf = io.BytesIO()
+            with zipfile.ZipFile(buf, "w") as zf:
+                zf.writestr("a.md", "---\ntitle: A\n---\n")
+                zf.writestr("b.md", "---\ntitle: B\n---\n")
+            entries, errors = importer.extract_zip(buf.getvalue())
+            self.assertEqual([n for n, _ in entries], ["a.md"])
+            self.assertTrue(any("数量超过限制" in err for err in errors))
+        finally:
+            settings.import_max_files = original
 
     def test_extract_zip_returns_markdown_only(self):
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zf:
             zf.writestr("posts/a.md", "---\ntitle: A\n---\n")
             zf.writestr("ignore.txt", "x")
-        entries = importer.extract_zip(buf.getvalue())
+        entries, errors = importer.extract_zip(buf.getvalue())
         self.assertEqual([n for n, _ in entries], ["a.md"])
+        self.assertEqual(errors, [])
+
+    def test_import_skips_bad_entry_keeps_good(self):
+        result = importer.import_posts(
+            [
+                ("bad.md", "---\ntitle: x\nslug: !!!\n---\n".encode("utf-8")),
+                ("good.md", "---\ntitle: Good\n---\n正文".encode("utf-8")),
+            ]
+        )
+        self.assertEqual(result["imported"], 1)
+        self.assertEqual(len(result["errors"]), 1)
+        self.assertTrue((settings.content_root / "posts" / "good.md").exists())
 
 
 if __name__ == "__main__":

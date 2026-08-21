@@ -433,6 +433,16 @@ textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consola
   color: var(--liblog-muted);
   font-size: 0.8rem;
 }
+.bulk-select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--liblog-muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.bulk-select-all input { margin: 0; }
 .table-col-actions .btn-link,
 .table-col-actions form {
   margin-left: 12px;

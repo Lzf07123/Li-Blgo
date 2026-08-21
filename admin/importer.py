@@ -88,9 +88,14 @@ def _infer_date(stem: str) -> str:
     return date.today().isoformat()
 
 
-def extract_zip(data: bytes) -> list[tuple[str, bytes]]:
-    """从 ZIP 中取出全部 Markdown 文件（扁平化，校验路径安全与大小）。"""
-    out = []
+def extract_zip(data: bytes) -> tuple[list[tuple[str, bytes]], list[str]]:
+    """从 ZIP 中取出全部 Markdown 文件（扁平化，校验路径安全与大小）。
+
+    返回 (entries, errors)：不合规的单个条目直接跳过并记入 errors，
+    不中断其余条目的提取；仅 ZIP 容器本身无法解析时抛 ValueError。
+    """
+    out: list[tuple[str, bytes]] = []
+    errors: list[str] = []
     total = 0
     try:
         zf = zipfile.ZipFile(io.BytesIO(data))
@@ -103,30 +108,41 @@ def extract_zip(data: bytes) -> list[tuple[str, bytes]]:
             name = info.filename
             p = PurePosixPath(name)
             if p.is_absolute() or ".." in p.parts:
-                raise ValueError(f"ZIP 含非法路径: {name}")
+                errors.append(f"ZIP 含非法路径，已跳过: {name}")
+                continue
             if not name.lower().endswith(MD_SUFFIXES):
                 continue
             if info.file_size > settings.import_max_file_bytes:
-                raise ValueError(f"{name} 超过单文件大小限制")
+                errors.append(f"{name} 超过单文件大小限制，已跳过")
+                continue
+            if len(out) >= settings.import_max_files:
+                errors.append(f"ZIP 内 Markdown 文件数量超过限制，其余已跳过")
+                break
             total += info.file_size
             if total > settings.import_max_zip_bytes:
-                raise ValueError("ZIP 解压后超过大小限制")
-            if len(out) >= settings.import_max_files:
-                raise ValueError("ZIP 内 Markdown 文件数量超过限制")
+                errors.append("ZIP 解压后超过大小限制，后续文件已跳过")
+                break
             try:
                 out.append((p.name, zf.read(info)))
             except (RuntimeError, NotImplementedError) as exc:
-                raise ValueError(f"{name}: 无法读取（加密或损坏）") from exc
-    return out
+                errors.append(f"{name}: 无法读取（加密或损坏），已跳过")
+    return out, errors
 
 
 def import_posts(
     entries: list[tuple[str, bytes]], overwrite: bool = False
 ) -> dict:
-    """写入文章并返回 {imported, skipped, errors}。"""
-    if len(entries) > settings.import_max_files:
-        raise ValueError(f"一次最多导入 {settings.import_max_files} 个文件")
+    """写入文章并返回 {imported, skipped, errors}。
+
+    每个文件独立校验：不符合导入要求的条目逐项跳过并记入 errors，
+    不中断其余文件的导入；超过单次数量上限时仅处理前 N 个并记录提示。
+    """
     result = {"imported": 0, "skipped": 0, "errors": [], "files": []}
+    if len(entries) > settings.import_max_files:
+        result["errors"].append(
+            f"超过单次导入数量上限（{settings.import_max_files}），其余文件已跳过"
+        )
+        entries = entries[: settings.import_max_files]
     seen = set()
     for filename, data in entries:
         if not filename.strip():

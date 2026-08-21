@@ -14,7 +14,7 @@
     {% endif %}
     {% if section == "posts" %}
     <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/import">批量导入</a>
-    <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/export?q={{ q|urlencode }}&status={{ status }}&sort={{ sort }}&order={{ order }}">导出 CSV</a>
+    <a class="btn btn-sm btn-secondary" href="/{{ admin_path }}/posts/export?q={{ q|urlencode }}&status={{ status }}&tag={{ tag|urlencode }}&pinned={{ pinned }}&sort={{ sort }}&order={{ order }}">导出 CSV</a>
     {% endif %}
     <a class="btn btn-sm btn-ghost" href="/{{ section }}/" target="_blank" rel="noopener">查看公开页</a>
   </div>
@@ -28,6 +28,17 @@
     <option value="published" {% if status == "published" %}selected{% endif %}>已发布</option>
     <option value="draft" {% if status == "draft" %}selected{% endif %}>草稿</option>
   </select>
+  <select name="tag" aria-label="按标签筛选" data-custom-dropdown>
+    <option value="">全部标签</option>
+    {% for t in all_tags %}
+    <option value="{{ t }}" {% if tag == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+  </select>
+  <select name="pinned" aria-label="按置顶筛选" data-custom-dropdown>
+    <option value="">全部文章</option>
+    <option value="1" {% if pinned == "1" %}selected{% endif %}>已置顶</option>
+    <option value="0" {% if pinned == "0" %}selected{% endif %}>未置顶</option>
+  </select>
   {% endif %}
   <select name="per_page" aria-label="每页条数" data-custom-dropdown>
     {% for n in [20, 50, 100] %}
@@ -37,7 +48,7 @@
   <input type="hidden" name="sort" value="{{ sort }}">
   <input type="hidden" name="order" value="{{ order }}">
   <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
-{% if q or status or sort != "date" or order != "desc" or per_page != 50 %}
+{% if q or status or tag or pinned or sort != "date" or order != "desc" or per_page != 50 %}
   <a class="btn-link" href="/{{ admin_path }}/{{ section }}">清除</a>
   {% endif %}
 </form>
@@ -60,6 +71,10 @@
   </datalist>
   {% endif %}
   <button type="submit" class="btn btn-secondary btn-sm">执行</button>
+  <label class="bulk-select-all">
+    <input type="checkbox" id="bulk-select-all">
+    <span>全选当前筛选结果（<span id="bulk-filter-total">{{ total }}</span> 篇）</span>
+  </label>
   <span id="bulk-count" class="bulk-count">已选 0 篇</span>
 </form>
 {% endif %}
@@ -71,16 +86,48 @@
     var checks = document.querySelectorAll(".bulk-check");
     var count = document.getElementById("bulk-count");
     var form = document.getElementById("bulk-form");
+    var selectAll = document.getElementById("bulk-select-all");
+    var filterTotalEl = document.getElementById("bulk-filter-total");
+    var filterTotal = filterTotalEl ? parseInt(filterTotalEl.textContent, 10) || 0 : 0;
     function update() {
       var n = document.querySelectorAll(".bulk-check:checked").length;
-      count.textContent = "已选 " + n + " 篇";
+      if (selectAll && selectAll.checked) {
+        count.textContent = "将对当前筛选的全部 " + filterTotal + " 篇执行";
+      } else {
+        count.textContent = "已选 " + n + " 篇";
+      }
     }
     checks.forEach(function (cb) { cb.addEventListener("change", update); });
+    if (selectAll) { selectAll.addEventListener("change", update); }
     form.addEventListener("submit", function (e) {
       var action = form.querySelector('select[name="action"]').value;
       var n = document.querySelectorAll(".bulk-check:checked").length;
-      if (!n) { e.preventDefault(); return; }
-      if (action === "delete" && !confirm("确定删除选中的 " + n + " 篇文章？删除后立即重建公开站。")) {
+      var all = !!(selectAll && selectAll.checked);
+      var target = all ? filterTotal : n;
+      if (!target) { e.preventDefault(); return; }
+      if (all) {
+        form.querySelectorAll('input[type="hidden"][data-filter]').forEach(function (h) { h.remove(); });
+        var filterForm = document.querySelector(".list-filters");
+        var map = { q: "q", status: "status", tag: "filter_tag", pinned: "pinned" };
+        Object.keys(map).forEach(function (name) {
+          var el = filterForm.querySelector('[name="' + name + '"]');
+          if (el && el.value) {
+            var input = document.createElement("input");
+            input.type = "hidden";
+            input.name = map[name];
+            input.value = el.value;
+            input.dataset.filter = "1";
+            form.appendChild(input);
+          }
+        });
+        var scope = document.createElement("input");
+        scope.type = "hidden";
+        scope.name = "scope";
+        scope.value = "all";
+        scope.dataset.filter = "1";
+        form.appendChild(scope);
+      }
+      if (action === "delete" && !confirm("确定删除" + (all ? "当前筛选的全部 " + target + " 篇" : "选中的 " + target + " 篇") + "文章？删除后立即重建公开站。")) {
         e.preventDefault();
       }
       if ((action === "add_tag" || action === "remove_tag") && !form.querySelector('input[name="tag"]').value.trim()) {
@@ -103,7 +150,7 @@
     var section = "{{ section }}";
     var key = "liblog-list-" + section;
     var params = new URLSearchParams(location.search);
-    var hasFilter = ["q", "status", "sort", "order", "per_page"].some(function (k) {
+    var hasFilter = ["q", "status", "tag", "pinned", "sort", "order", "per_page"].some(function (k) {
       return params.has(k);
     });
     var form = document.querySelector(".list-filters");
@@ -118,7 +165,7 @@
       }
     } else if (form) {
       var qs = new URLSearchParams();
-      ["q", "status", "per_page", "sort", "order"].forEach(function (k) {
+      ["q", "status", "tag", "pinned", "per_page", "sort", "order"].forEach(function (k) {
         var el = form.querySelector('[name="' + k + '"]');
         if (el && el.value) qs.set(k, el.value);
       });

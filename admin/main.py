@@ -141,6 +141,7 @@ templates = Jinja2Templates(directory=str(ROOT / "admin" / "templates"))
 rate = security.RateLimiter()
 DUMMY_HASH = security.hash_password("dummy-timing-equalizer")
 STATUS_LABELS = {"published": "已发布", "draft": "草稿", "active": "进行中"}
+BULK_MAX_SLUGS = 1000
 ADMIN_BADGE_VARIANTS = {
     "published": "admin-badge--published",
     "draft": "admin-badge--draft",
@@ -1683,37 +1684,59 @@ async def posts_import_submit(
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/posts/import?error=会话失效"), status_code=303)
-    if len(files) > settings.import_max_files:
-        return RedirectResponse(ap(f"/posts/import?error=一次最多导入 {settings.import_max_files} 个文件"), status_code=303)
     entries = []
+    errors = []
     unsupported = []
     total_read = 0
-    try:
-        for f in files:
-            name = (f.filename or "").strip()
-            if not name:
-                raise ValueError("存在缺少文件名的上传项")
-            if name.lower().endswith(".zip"):
+    for f in files:
+        name = (f.filename or "").strip()
+        if not name:
+            errors.append("存在缺少文件名的上传项")
+            continue
+        if name.lower().endswith(".zip"):
+            try:
                 data = await read_limited(f, settings.import_max_zip_bytes)
-                total_read += len(data)
-                if total_read > settings.import_max_zip_bytes:
-                    raise ValueError("导入总大小超过限制")
-                entries.extend(importer.extract_zip(data))
-            elif name.lower().endswith((".md", ".markdown")):
+            except ValueError:
+                errors.append(f"{name}: 文件超过大小限制，已跳过")
+                continue
+            total_read += len(data)
+            if total_read > settings.import_max_zip_bytes:
+                errors.append("导入总大小超过限制，后续文件已跳过")
+                break
+            try:
+                zip_entries, zip_errors = importer.extract_zip(data)
+            except ValueError as exc:
+                errors.append(f"{name}: {exc}，已跳过")
+                continue
+            remaining = settings.import_max_files - len(entries)
+            if remaining <= 0:
+                errors.append("超过单次导入数量上限，后续文件已跳过")
+                break
+            if len(zip_entries) > remaining:
+                errors.append("超过单次导入数量上限，其余文件已跳过")
+                zip_entries = zip_entries[:remaining]
+            entries.extend(zip_entries)
+            errors.extend(zip_errors)
+        elif name.lower().endswith((".md", ".markdown")):
+            try:
                 data = await read_limited(f, settings.import_max_file_bytes)
-                total_read += len(data)
-                if total_read > settings.import_max_zip_bytes:
-                    raise ValueError("导入总大小超过限制")
-                entries.append((name, data))
-            else:
-                unsupported.append(name)
-        import_result = importer.import_posts(entries, overwrite=overwrite == "1")
-    except ValueError as exc:
-        return RedirectResponse(ap(f"/posts/import?error={exc}"), status_code=303)
+            except ValueError:
+                errors.append(f"{name}: 文件超过大小限制，已跳过")
+                continue
+            total_read += len(data)
+            if total_read > settings.import_max_zip_bytes:
+                errors.append("导入总大小超过限制，后续文件已跳过")
+                break
+            if len(entries) >= settings.import_max_files:
+                errors.append("超过单次导入数量上限，其余文件已跳过")
+                break
+            entries.append((name, data))
+        else:
+            unsupported.append(name)
     if unsupported:
-        import_result["errors"] = [
-            f"{name}: 不支持的文件类型" for name in unsupported
-        ] + import_result["errors"]
+        errors = [f"{name}: 不支持的文件类型" for name in unsupported] + errors
+    import_result = importer.import_posts(entries, overwrite=overwrite == "1")
+    import_result["errors"] = errors + import_result["errors"]
     if import_result["imported"] == 0:
         return render(
             request,
@@ -1869,6 +1892,8 @@ def section_list(
     section: str,
     q: str = "",
     status: str = "",
+    tag: str = "",
+    pinned: str = "",
     page: int = 1,
     sort: str = "date",
     order: str = "desc",
@@ -1884,7 +1909,9 @@ def section_list(
     if order not in ("asc", "desc"):
         order = "desc"
     per_page = min(max(int(per_page), 10), 100) if per_page else 50
-    items = store.list_markdown(section, q=q, status=status, sort=sort, order=order)
+    items = store.list_markdown(
+        section, q=q, status=status, tag=tag, pinned=pinned, sort=sort, order=order
+    )
     if section == "posts" and status == "scheduled":
         items = [it for it in items if it.get("status") != "draft" and _is_future(str(it.get("date") or ""))]
     if section == "posts":
@@ -1899,7 +1926,15 @@ def section_list(
     base = ap(f"/{section}")
 
     def qurl(**over):
-        params = {"q": q, "status": status, "sort": sort, "order": order, "per_page": per_page}
+        params = {
+            "q": q,
+            "status": status,
+            "tag": tag,
+            "pinned": pinned,
+            "sort": sort,
+            "order": order,
+            "per_page": per_page,
+        }
         params.update(over)
         return query_url(base, **params)
 
@@ -2019,6 +2054,8 @@ def section_list(
             "label": SECTIONS[section]["label"],
             "q": q,
             "status": status,
+            "tag": tag,
+            "pinned": pinned,
             "page": page,
             "pages": pages,
             "total": total,
@@ -2039,6 +2076,11 @@ def posts_bulk(
     slugs: list[str] = Form(default=[]),
     tag: str = Form(""),
     csrf_token: str = Form("", alias="_csrf"),
+    scope: str = Form(""),
+    q: str = Form(""),
+    status: str = Form(""),
+    filter_tag: str = Form(""),
+    pinned: str = Form(""),
 ):
     require_login(request)
     if not csrf_ok(request, {"_csrf": csrf_token}):
@@ -2047,8 +2089,17 @@ def posts_bulk(
         return RedirectResponse(ap("/posts?error=批量操作不合法"), status_code=303)
     if action in ("add_tag", "remove_tag") and not tag.strip():
         return RedirectResponse(ap("/posts?error=请填写标签"), status_code=303)
+    if scope == "all":
+        # 对当前筛选结果的全部文章执行批量操作（与列表页同一套过滤逻辑）
+        slugs = [
+            it["slug"]
+            for it in store.list_markdown(
+                "posts", q=q, status=status, tag=filter_tag, pinned=pinned
+            )
+        ]
     changed = 0
-    for slug in slugs[:200]:
+    overflow = len(slugs) - BULK_MAX_SLUGS
+    for slug in slugs[:BULK_MAX_SLUGS]:
         if not store.SLUG_RE.match(slug):
             continue
         try:
@@ -2077,13 +2128,14 @@ def posts_bulk(
             continue
     if not changed:
         return RedirectResponse(ap("/posts?error=没有可执行的文章"), status_code=303)
-    _audit("posts_bulk", f"{action}:{tag or ''}:{changed}")
+    _audit("posts_bulk", f"{action}:{tag or ''}:{changed}:scope={scope or 'manual'}")
     result, elapsed = build.run_full()
     if result.returncode != 0:
         return RedirectResponse(ap("/posts?error=批量操作后构建失败"), status_code=303)
-    return RedirectResponse(
-        ap(f"/posts?ok=已批量处理 {changed} 篇并重建（{elapsed}s）"), status_code=303
-    )
+    message = f"已批量处理 {changed} 篇并重建（{elapsed}s）"
+    if overflow > 0:
+        message += f"（另有 {overflow} 篇超出单次上限未处理）"
+    return RedirectResponse(ap(f"/posts?ok={message}"), status_code=303)
 
 
 @app.get(ap("/posts/export"))
@@ -2091,11 +2143,15 @@ def posts_export(
     request: Request,
     q: str = "",
     status: str = "",
+    tag: str = "",
+    pinned: str = "",
     sort: str = "date",
     order: str = "desc",
 ):
     require_login(request)
-    items = store.list_markdown("posts", q=q, status=status, sort=sort, order=order)
+    items = store.list_markdown(
+        "posts", q=q, status=status, tag=tag, pinned=pinned, sort=sort, order=order
+    )
     items.sort(key=lambda it: not it.get("pinned", False))
 
     def cell(value) -> str:

@@ -74,7 +74,7 @@
 </div>
 {% endif %}
 <div class="admin-card">
-<p class="field-help">支持一次选择多个 .md/.markdown 文件、直接选择整个文件夹（自动遍历所有子文件夹），或上传包含 Markdown 的 .zip。已存在的 slug 默认跳过，勾选“覆盖同名”会覆盖；导入完成后统一重建一次。</p>
+<p class="field-help">支持一次选择多个 .md/.markdown 文件、直接选择整个文件夹（自动遍历所有子文件夹），或上传包含 Markdown 的 .zip。不符合导入要求的文件（类型不支持、内容为空、解析失败、非法路径、超过大小限制等）会自动跳过，并在导入结果中列出原因，不影响其他文件导入；已存在的 slug 默认跳过，勾选“覆盖同名”会覆盖；导入完成后统一重建一次。</p>
 <form method="post" action="/{{ admin_path }}/posts/import" enctype="multipart/form-data" data-busy>
   <input type="hidden" name="_csrf" value="{{ csrf }}">
   <fieldset class="import-source">

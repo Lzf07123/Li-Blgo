@@ -1,9 +1,11 @@
+import io
 import os
 import re
 import tempfile
 import types
 import unittest
 import urllib.parse
+import zipfile
 from pathlib import Path
 from unittest import mock
 
@@ -145,6 +147,48 @@ class AdminRoutesTest(unittest.TestCase):
                 (settings.content_root / "posts" / "untitled.md").exists()
             )
 
+    def test_batch_import_skips_bad_zip_keeps_good_markdown(self):
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/import",
+                data={"_csrf": csrf},
+                files=[
+                    ("files", ("bad.zip", b"not a zip", "application/zip")),
+                    ("files", ("good.md", "---\ntitle: Good\n---\n正文".encode("utf-8"), "text/markdown")),
+                ],
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("导入 1 篇", r.text)
+            self.assertIn("ZIP 文件无法解析", r.text)
+            self.assertTrue((settings.content_root / "posts" / "good.md").exists())
+
+    def test_batch_import_zip_skips_bad_member_imports_good(self):
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("../evil.md", "---\ntitle: x\n---\n")
+            zf.writestr("ok.md", "---\ntitle: OK\n---\n")
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/import",
+                data={"_csrf": csrf},
+                files={"files": ("docs.zip", buf.getvalue(), "application/zip")},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("导入 1 篇", r.text)
+            self.assertIn("非法路径", r.text)
+            self.assertTrue((settings.content_root / "posts" / "ok.md").exists())
+            self.assertFalse((settings.content_root / "posts" / "evil.md").exists())
+
     def test_batch_import_page_lists_pending_files(self):
         with TestClient(app) as client:
             self._login(client)
@@ -178,6 +222,83 @@ class AdminRoutesTest(unittest.TestCase):
             self.assertEqual(r.status_code, 200)
             self.assertIn('<form id="bulk-form"', r.text)
             self.assertIn('form="bulk-form"', r.text)
+
+    def test_list_page_has_tag_pinned_filters_and_select_all(self):
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/posts")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('name="tag" aria-label="按标签筛选"', r.text)
+            self.assertIn('name="pinned" aria-label="按置顶筛选"', r.text)
+            self.assertIn('id="bulk-select-all"', r.text)
+            self.assertIn('id="bulk-filter-total"', r.text)
+
+    def test_bulk_scope_all_respects_filters(self):
+        for slug, status, tags in [
+            ("keep-a", "draft", ["hugo"]),
+            ("keep-b", "draft", ["hugo"]),
+            ("other", "draft", ["python"]),
+        ]:
+            store.write_markdown(
+                "posts",
+                slug,
+                {"title": slug, "date": "2026-08-18", "status": status, "tags": tags},
+                "正文",
+            )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/bulk",
+                data={
+                    "_csrf": csrf,
+                    "action": "publish",
+                    "scope": "all",
+                    "status": "draft",
+                    "filter_tag": "hugo",
+                    "slugs": [],
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertEqual(store.read_markdown("posts", "keep-a")[0]["status"], "published")
+            self.assertEqual(store.read_markdown("posts", "keep-b")[0]["status"], "published")
+            self.assertEqual(store.read_markdown("posts", "other")[0]["status"], "draft")
+
+    def test_bulk_scope_all_respects_pinned_filter(self):
+        store.write_markdown(
+            "posts",
+            "pin-a",
+            {"title": "A", "date": "2026-08-18", "status": "published", "pinned": True},
+            "正文",
+        )
+        store.write_markdown(
+            "posts",
+            "pin-b",
+            {"title": "B", "date": "2026-08-18", "status": "published", "pinned": False},
+            "正文",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/posts/bulk",
+                data={
+                    "_csrf": csrf,
+                    "action": "unpin",
+                    "scope": "all",
+                    "pinned": "1",
+                    "slugs": [],
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertFalse(store.read_markdown("posts", "pin-a")[0].get("pinned"))
+            self.assertFalse(store.read_markdown("posts", "pin-b")[0].get("pinned"))
 
     def test_row_actions_confirm_use_data_attribute(self):
         store.write_markdown(

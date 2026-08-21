@@ -68,6 +68,8 @@ def list_markdown(
     section: str,
     q: str = "",
     status: str = "",
+    tag: str = "",
+    pinned: str = "",
     sort: str = "",
     order: str = "asc",
 ) -> list[dict]:
@@ -100,6 +102,17 @@ def list_markdown(
         ]
     if status and section == "posts" and status in ("published", "draft"):
         items = [it for it in items if it["status"] == status]
+    if tag and section == "posts":
+        tag_l = tag.strip().lower()
+        items = [
+            it
+            for it in items
+            if any(str(t).strip().lower() == tag_l for t in it["tags"])
+        ]
+    if section == "posts" and pinned == "1":
+        items = [it for it in items if it["pinned"]]
+    elif section == "posts" and pinned == "0":
+        items = [it for it in items if not it["pinned"]]
     if sort in ("title", "date", "status", "slug"):
         reverse = order == "desc"
         items.sort(
