@@ -5,11 +5,11 @@
  * 文案由模板通过 data-* 注入（config/strings.yaml），JS 不硬编码可见文案。
  */
 (function () {
-  var root = document.querySelector(".article-body");
+  var root = document.querySelector(".article") || document.querySelector(".article-body");
   if (!root) return;
   var copyText = root.getAttribute("data-copy") || "复制";
   var copiedText = root.getAttribute("data-copied") || "已复制";
-  var pres = root.querySelectorAll("pre");
+  var pres = root.querySelectorAll(".article-body pre");
   if (!pres.length) return;
 
   function fallbackCopy(text) {
@@ -42,7 +42,14 @@
       });
       return out.join("\n");
     }
-    return (pre.innerText || pre.textContent || "").trim();
+    var code = pre.querySelector("code");
+    if (code) return (code.innerText || code.textContent || "").trim();
+    /* 无 <code> 时克隆 pre 并剔除复制按钮，避免把按钮文字复制进去 */
+    var clone = pre.cloneNode(true);
+    Array.prototype.forEach.call(clone.querySelectorAll(".code-copy"), function (b) {
+      b.remove();
+    });
+    return (clone.innerText || clone.textContent || "").trim();
   }
 
   Array.prototype.forEach.call(pres, function (pre) {

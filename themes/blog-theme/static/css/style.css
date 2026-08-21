@@ -870,9 +870,19 @@ input:focus, select:focus, textarea:focus {
   background: var(--liblog-surface-2);
   border: 1px solid var(--liblog-border);
   border-radius: 8px;
-  padding: 2.5rem 16px 12px;
   overflow-x: auto;
   font-size: 0.875rem;
+}
+/* 顶部留出复制按钮空间（仅最外层加一次，避免与内层 pre 叠加） */
+.article-body pre {
+  padding: 2.5rem 16px 12px;
+}
+.article-body .highlight {
+  padding: 0;
+}
+.article-body .highlight pre {
+  border: 0;
+  border-radius: 0;
 }
 .article-body code { background: var(--liblog-surface-2); border-radius: 4px; padding: 2px 5px; font-size: 0.875em; }
 /* 代码块一键复制按钮 */
