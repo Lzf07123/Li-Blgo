@@ -356,7 +356,27 @@ def render(request: Request, name: str, context: dict) -> HTMLResponse:
     context.setdefault("flash", flash)
     context.setdefault("flash_type", "error" if request.query_params.get("error") else "ok")
     context.setdefault("asset_version", _asset_version())
+    context.setdefault("year", datetime.date.today().year)
+    context.setdefault("footer_icon_fallback", _footer_icon_fallback())
     return templates.TemplateResponse(request, name, context)
+
+
+_footer_fallback_cache = {"mtime": 0.0, "value": "◱"}
+
+
+def _footer_icon_fallback() -> str:
+    """strings.yaml 的 footer.icon_fallback（备案图标占位字符），mtime 缓存。"""
+    try:
+        p = settings.config_root / "strings.yaml"
+        mtime = p.stat().st_mtime
+        if _footer_fallback_cache["mtime"] != mtime:
+            strings = store.load_yaml("strings")
+            footer = strings.get("footer") or {}
+            _footer_fallback_cache["mtime"] = mtime
+            _footer_fallback_cache["value"] = footer.get("icon_fallback", "◱")
+    except Exception:
+        pass
+    return _footer_fallback_cache["value"]
 
 
 def _asset_version() -> dict:

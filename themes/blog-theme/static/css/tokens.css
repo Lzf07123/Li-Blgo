@@ -38,6 +38,11 @@
   --liblog-btn-dark-fg: #f0f2f4;
   --liblog-btn-dark-border: rgba(240, 242, 244, 0.14);
 
+  /* 页头（浅）：对齐 Li&Panel AppHeader（bg-surface/85 + border-border + backdrop-blur） */
+  --liblog-header-bg: rgba(255, 255, 255, 0.85);
+  --liblog-header-border: rgba(225, 236, 232, 0.85);
+  --liblog-header-blur: 8px;
+
   /* 页脚（浅）：Li-Design V1.5 规格（bg-surface/60 + border-border/60 + backdrop-blur） */
   --liblog-footer-bg: rgba(255, 255, 255, 0.6);
   --liblog-footer-border: rgba(225, 236, 232, 0.6);
@@ -154,6 +159,11 @@
   --liblog-btn-dark-bg: #17332e;
   --liblog-btn-dark-fg: #d7efea;
   --liblog-btn-dark-border: rgba(215, 239, 234, 0.2);
+
+  /* 页头（深）：对齐 Li&Panel AppHeader（bg-surface/85 + border-border + backdrop-blur） */
+  --liblog-header-bg: rgba(67, 73, 80, 0.85);
+  --liblog-header-border: rgba(84, 92, 100, 0.85);
+  --liblog-header-blur: 8px;
 
   /* 页脚（深）：Li-Design V1.5 规格 */
   --liblog-footer-bg: rgba(67, 73, 80, 0.6);

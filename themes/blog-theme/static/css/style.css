@@ -77,11 +77,13 @@ main:focus { outline: none; }
   flex-shrink: 0;
   height: var(--header-h);
   padding: 0;
-  border-bottom: 1px solid var(--liblog-border);
-  background: var(--liblog-bg);
+  border-bottom: 1px solid var(--liblog-header-border);
+  background: var(--liblog-header-bg);
+  -webkit-backdrop-filter: blur(var(--liblog-header-blur));
+  backdrop-filter: blur(var(--liblog-header-blur));
 }
 .nav-inner {
-  width: min(1024px, calc(100% - 32px));
+  width: min(1280px, calc(100% - 32px));
   height: 100%;
   margin: 0 auto;
   display: flex;
@@ -680,7 +682,7 @@ input:focus, select:focus, textarea:focus {
   to { opacity: 1; transform: none; }
 }
 
-.site-header, .page-shell, .site-footer { position: relative; z-index: 1; }
+.page-shell, .site-footer { position: relative; z-index: 1; }
 
 /* ---------- 全局氛围层（除扫掠光束外的子模块全量视觉） ---------- */
 .ambient {
@@ -1285,7 +1287,7 @@ mark {
     right: 0;
     z-index: 1;
     margin-left: auto;
-    background: var(--liblog-bg);
+    background: var(--liblog-header-bg);
   }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 32px; }
   .hero { padding: 32px 0 16px; }

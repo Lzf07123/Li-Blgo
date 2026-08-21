@@ -9,6 +9,8 @@
 - 令牌校验（2026-08-21，1:1）：模板 57 个 `--{{PROJECT_PREFIX}}-*` 变量集合与本站 `--liblog-*` 全量对比，**0 缺失**；57 个共有变量逐值一致；V1.5 页脚规格以 `--liblog-footer-bg` / `--liblog-footer-border` / `--liblog-footer-blur` 三枚令牌落地（模板 Tailwind 类 → 本站令牌等价，明暗两套）；`--liblog-print-*` / `--liblog-code-*` / `--liblog-btn-light/dark-*` / `--liblog-badge-readme-fg` 为本站扩展
 - 组件差异：原生下拉走 V1.4 `.select` / `.select-sm`（统计页分组筛选），列表筛选其余下拉用 `.custom-select-*`；后台提示为 flash 胶囊，确认弹窗用原生 `confirm` / `<dialog class="media-dialog">`
 - 页脚对齐（V1.5，2026-08-21）：`site-footer` > `site-footer-inner` 契约类名，`mt-auto` 贴底 + 半透明表面 + backdrop-blur，单行高 56px（`min-h-14` 兜底）、字号 12px、图标/备案占位 14×14px、`max-w-7xl` 居中（`px-4` → `lg:px-8`）、移动端换行无横向滚动；版权/备案/归档/许可由 `brand.yaml` + `strings.yaml` 驱动（等价 V1.5 的 brand.ts 单点）；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`）；站点化扩展保留 `footer-copy` / `footer-beian` / `footer-meta` 细分；**骨架页脚等高规格（e899414 补充）**：Li&Blog 无运行时骨架屏（公开站纯静态、后台服务端渲染，均无 PageSkeleton），审计为不适用；如未来引入加载骨架，页脚占位必须 `min-h-14` + `text-xs` 与真实页脚等高
+- 认证页底部对齐（2026-08-21，Li&Panel AuthShell）：登录/基础信息/创建管理员页新增 `auth-footer`——版权（`brand.copyright`，`{year}` 由后台上下文注入）与 ICP/公安备案链接（`brand.icp*` / `brand.police*`，图标缺失/加载失败走 `.filing-icon-placeholder`，字符来自 `strings.footer.icon_fallback`），样式走 `--liblog-*` 令牌
+- 顶栏对齐（2026-08-21，Li&Panel AppHeader）：`site-header` 改为 sticky 玻璃——`--liblog-header-bg`（surface/85）+ `--liblog-header-blur`（8px）+ `--liblog-header-border`，内层宽度 `max-w-7xl`（1280px），底部保留品牌流动线；高度维持博客内容站 56/52px（`--header-h`），公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
 
 ## 1. 令牌快照
@@ -39,6 +41,8 @@
 | ring | #7FD4C6 |
 | 强调色 | ice #A8CBE8 / aqua #7FD4C6 / lilac #B0A8DE / sage #B0C79E / mint #9ADFAD / sand #D9C49E（各配 soft） |
 
+顶栏玻璃令牌（2026-08-21，对齐 Li&Panel AppHeader）：浅 `--liblog-header-bg: rgba(255,255,255,.85)` / `--liblog-header-border: rgba(225,236,232,.85)` / `--liblog-header-blur: 8px`；深 `rgba(67,73,80,.85)` / `rgba(84,92,100,.85)` / `8px`。
+
 完整值见 `themes/blog-theme/static/css/tokens.css`（`--liblog-*`）。
 
 ## 2. 组件清单
@@ -55,6 +59,7 @@
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |
 | admonition | 提示块（纯 CSS） |
 | toc | 文章目录 |
+| site-header | 顶栏（2026-08-21 对齐 Li&Panel AppHeader）：sticky 玻璃（`--liblog-header-bg/border/blur`）+ 底部品牌流动线 + `max-w-7xl` 内层；高度 56/52px（`--header-h`）；导航/搜索按钮文案全部走 `strings.yaml` |
 | site-footer | 页脚（Li-Design V1.5 规格）：`mt-auto` 贴底 + 半透明表面（`--liblog-footer-bg`）+ backdrop-blur（`--liblog-footer-blur`），单行高 56px（`min-h-14` 兜底）、字号 12px、备案图标/占位 14×14px、`max-w-7xl` 居中；版权/备案/归档/许可全部由 `brand.yaml` + `strings.yaml` 驱动；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`） |
 | breadcrumb / pagination | 纯导航，无表单 |
 
@@ -63,7 +68,7 @@
 | 组件 | 说明 |
 | --- | --- |
 | setup-wizard | 首启三步向导 |
-| login | 本地 + OIDC 双入口 |
+| login | 本地 + OIDC 双入口；底部 `auth-footer`（版权 + 备案，对齐 Li&Panel AuthShell） |
 | password-hash | PBKDF2-HMAC-SHA256（600k 迭代，stdlib） |
 | session | SQLite 服务端会话 + HttpOnly Cookie + CSRF |
 | form / input | 内容编辑表单（令牌样式） |
@@ -139,7 +144,7 @@
 | 文章详情 | 0 | 纯排版；正文对比度 ≥ 4.5:1；零 React 效果 |
 | 栏目列表/关于/资源 | soft | 氛围减量；Canvas 动画移动端限 6 个形状；reduced-motion 单帧 |
 | 后台 | 4×0.5 | 表格区不透明；飘动元素不侵入表内文字 |
-| Setup/登录 | 4×0.5 | 居中卡片 + 顶部品牌 + 底部备案 |
+| Setup/登录 | 4×0.5 | 认证壳（品牌/锁钥/步骤 + 表单两栏）+ 底部版权/备案（`auth-footer`，2026-08-21 对齐 Li&Panel AuthShell） |
 
 ## 4. 内容覆盖审计表（全站可见内容 ↔ 后台栏目）
 

@@ -197,6 +197,8 @@ config/
 
 - 来源：Li-Design V1.4 模板（git 子模块 `design-system/Li-Design`，`reusable-tokens.template.css`）；令牌值已逐项核对一致，另含打印/代码高亮/CTA 站点扩展
 - 22 槽位已全部填定，见 `design-system/blog/BRAND.md`
+- 认证页底部对齐（2026-08-21）：登录/设置向导底部补齐版权 + 备案（对齐 Li&Panel AuthShell 页脚）
+- 顶栏对齐（2026-08-21）：sticky 玻璃化，对齐 Li&Panel AppHeader——`--liblog-header-*` 令牌（surface/85 + backdrop-blur 8px）+ `max-w-7xl` 内层，高度 56/52px
 - 文件映射：
 
 | 模板默认 | 本博客落点 |

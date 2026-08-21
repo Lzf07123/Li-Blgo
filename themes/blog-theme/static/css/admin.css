@@ -234,7 +234,40 @@
 .auth-form-grid legend { font-weight: 700; margin: 8px 0 2px; }
 .btn-block { width: 100%; }
 
+.auth-page { position: relative; }
+
+/* ---------- 认证页底部（对齐 Li&Panel AuthShell：版权 + 备案） ---------- */
+.auth-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 16px;
+  padding: 0 24px;
+  color: var(--liblog-muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+  text-align: center;
+}
+.auth-footer-copy { margin: 0; }
+.auth-footer-beian {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  justify-content: center;
+}
+.auth-footer a { color: var(--liblog-muted); }
+.auth-footer a:hover { color: var(--liblog-primary); }
+@media (max-height: 720px) {
+  .auth-footer { position: static; margin-top: 28px; }
+}
+
 /* ---------- 表单 ---------- */
+
 label { display: block; margin: 12px 0; font-weight: 600; }
 label input, label select, label textarea { display: block; }
 textarea.mono, input.mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.85rem; }

@@ -105,6 +105,11 @@
 
 冲突裁决：代码事实优先，并同步回写 BRAND.md / MASTER.md。新视觉决策先写本文件意图，再以令牌落地。
 
+## 6.1 变更记录
+
+- 2026-08-21 认证页对齐 Li&Panel AuthShell：登录与设置向导底部补齐版权 + 备案（`auth-footer`，图标占位字符走 `strings.footer.icon_fallback`），令牌落地
+- 2026-08-21 顶栏对齐 Li&Panel：顶栏按 Panel AppHeader 模式落地——sticky + 半透明表面 + backdrop-blur（`--liblog-header-*` 三枚令牌，明暗两套）+ `max-w-7xl` 内层；高度维持内容站 56/52px；公开站不引入主题切换按钮（跟随系统，槽位 17）。
+
 ## 7. 使用边界
 
 - 本方案已实例化，Li&Blog 不再依赖 Li-Design 模板仓库作为运行时依赖；`design-system/Li-Design/` 仅作模板参考（git 子模块，已对齐 V1.5 / `e899414`，后续升级需显式更新锁定提交）
