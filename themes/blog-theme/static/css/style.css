@@ -190,6 +190,14 @@ main:focus { outline: none; }
   .beian-text { white-space: nowrap; }
 }
 
+/* 页脚链接跟随 muted 文字色（不被全局链接主色覆盖；对齐 Panel SiteFooter） */
+.site-footer a {
+  color: var(--liblog-muted);
+}
+.site-footer a:hover {
+  color: var(--liblog-fg);
+}
+
 /* beacon 打点图：脱离文档流，避免在 footer 内产生额外行盒（保持 V1.5 单行 56px） */
 .site-footer img[src*="beacon"] {
   position: absolute;
