@@ -4,7 +4,7 @@
 {{ $has_updated := and (gt .Lastmod.Year 1) (ne (.Date.Format "2006-01-02") (.Lastmod.Format "2006-01-02")) }}
 {{ $has_reading := .ReadingTime }}
 {{ $has_tags := .Params.tags }}
-<article class="article">
+<article class="article" data-copy="{{ $strings.common.copy_code }}" data-copied="{{ $strings.common.copy_code_done }}">
   <div class="reading-progress" aria-hidden="true"></div>
   {{ partial "breadcrumb.html" . }}
   {{ with .Params.cover }}
@@ -95,4 +95,5 @@
 {{ define "scripts" }}
 {{ $av := partialCached "asset-versions.html" . "asset-versions-v1" }}
 <script defer src="{{ "js/reading-progress.js" | relURL }}?v={{ index $av.js "reading_progress" }}"></script>
+<script defer src="{{ "js/copy-code.js" | relURL }}?v={{ index $av.js "copy_code" }}"></script>
 {{ end }}

@@ -14,6 +14,7 @@
 - 样式层迁移 Tailwind CSS 4（2026-08-21，与 Li&Panel 同栈）：`themes/blog-theme/static/css/tokens.css` 改为由 `web/src/tokens.css` 编译生成——结构与 Li&Panel `frontend/src/index.css` 同构（`@theme` 语义别名 `--color-*` → `--liblog-*`，`@custom-variant dark`，`@source` 扫描 Hugo/Jinja 模板）；`npm run css` / `make web-css` 构建，产物提交（Hugo 静态复制，容器构建不联网）；`scripts/check_contrast.py` 适配多 `:root`/`.dark` 块与 `#rgb` 简写
 - 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉按 AppHeader 结构落地——sticky 玻璃（`--liblog-header-bg` surface/85 + blur 8px + `--liblog-header-border`）、内层 `max-w-7xl` + `px-4 → sm:px-6 → lg:px-8`、高度 `h-16`（桌面 64 / 移动 56）、品牌名 ShinyText 扫光（15px semibold tracking-tight，6s）、底部 `flow-rule` 1px 流光线（5s）；页脚按 SiteFooter 单行结构落地——版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 许可，`min-h-14`、`text-xs`、`gap-x-2 gap-y-1`、`px-4 → lg:px-8`、hover 转前景色；公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
+- 文章排版增强（2026-08-22）：`.article .page-title` 放大至 `clamp(1.9rem, 4vw, 2.6rem)`（原浏览器默认 2rem）；代码块新增一键复制按钮 `.code-copy`（`copy-code.js` 原生注入，剔除 Chroma 行号 `.ln`，复制成功显示「已复制」2s，触屏常显、打印隐藏），按钮文案走 `strings.common.copy_code / copy_code_done`（后台「页面文案」可改），样式走 `--liblog-*` 令牌；Hugo 构建验证 357 页，Playwright 实测 h1 41.6px、11 个代码块按钮、剪贴板与代码文本逐字节一致
 
 ## 1. 令牌快照
 
@@ -159,6 +160,7 @@
 | 备案图标 SVG（ICP/公安） | brand.yaml（`icp_icon` / `police_icon`） | 品牌（可改；缺失/加载失败时 `.filing-icon-placeholder` 占位） |
 | 备案图标占位字符 | strings.yaml（`footer.icon_fallback`） | 页面文案 |
 | 导航/区块标题/通用标签 | strings.yaml | 页面文案 |
+| 代码块复制按钮文案（复制/已复制） | strings.yaml（`common.copy_code` / `common.copy_code_done`） | 页面文案 |
 | Hero 姓名/身份/方向/目标 | profile.yaml | 关于我 |
 | 技能徽章 | profile.yaml | 关于我 |
 | 技能徽章图标 | profile.yaml（`icon` slug）+ themes/blog-theme/static/assets/badges/*.svg | 关于我资料（图标 slug） |
