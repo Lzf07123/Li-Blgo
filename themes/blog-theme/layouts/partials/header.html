@@ -2,7 +2,8 @@
 {{ $nav := hugo.Data.strings.nav }}
 {{ $current := .RelPermalink }}
 <header class="site-header">
-  <div class="nav-inner">
+  <span class="flow-rule" aria-hidden="true"></span>
+  <div class="header-inner">
     <a class="brand-logo" href="{{ .Site.Home.RelPermalink }}">
       {{ if $brand.logo }}
         {{ $logo_path := "" }}
@@ -14,8 +15,8 @@
         <img class="brand-logo-img" src="{{ $brand.logo | relURL }}" alt="{{ $brand.name }}" loading="eager" fetchpriority="high"{{ with $lw }} width="{{ . }}"{{ end }}{{ with $lh }} height="{{ . }}"{{ end }}>
       {{ else }}
         <span class="logo-fallback" aria-hidden="true">{{ substr $brand.name 0 2 }}</span>
-        <span class="brand-name-text">{{ $brand.name }}</span>
       {{ end }}
+      <span class="brand-name-text">{{ $brand.name }}</span>
     </a>
     <nav class="site-nav" aria-label="主导航">
       <a href="{{ .Site.Home.RelPermalink }}" {{ if eq $current .Site.Home.RelPermalink }}aria-current="page"{{ end }}>{{ $nav.home }}</a>
@@ -27,5 +28,4 @@
       <button type="button" class="nav-search-btn" data-open-search aria-controls="search-modal" aria-expanded="false" aria-keyshortcuts="Control+K">{{ $nav.search }}</button>
     </nav>
   </div>
-  <span class="flow-line" aria-hidden="true"></span>
 </header>

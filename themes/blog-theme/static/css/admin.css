@@ -255,13 +255,14 @@
 }
 .auth-footer-copy { margin: 0; }
 .auth-footer-beian {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  align-items: center;
   justify-content: center;
+  gap: 8px; /* 对齐 SiteFooter gap-x-2 */
 }
 .auth-footer a { color: var(--liblog-muted); }
-.auth-footer a:hover { color: var(--liblog-primary); }
+.auth-footer a:hover { color: var(--liblog-fg); }
 @media (max-height: 720px) {
   .auth-footer { position: static; margin-top: 28px; }
 }

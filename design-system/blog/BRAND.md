@@ -108,7 +108,7 @@
 ## 6.1 变更记录
 
 - 2026-08-21 认证页对齐 Li&Panel AuthShell：登录与设置向导底部补齐版权 + 备案（`auth-footer`，图标占位字符走 `strings.footer.icon_fallback`），令牌落地
-- 2026-08-21 顶栏对齐 Li&Panel：顶栏按 Panel AppHeader 模式落地——sticky + 半透明表面 + backdrop-blur（`--liblog-header-*` 三枚令牌，明暗两套）+ `max-w-7xl` 内层；高度维持内容站 56/52px；公开站不引入主题切换按钮（跟随系统，槽位 17）。
+- 2026-08-21 页眉页脚 1:1 对齐 Li&Panel（同款实现）：页眉按 AppHeader——sticky + 半透明表面 + backdrop-blur（`--liblog-header-*` 令牌）+ 品牌名 ShinyText 扫光 + `flow-rule` 1px 流光线 + `h-16`/`max-w-7xl`；页脚按 SiteFooter 单行——版权 + 声明 + 备案 + 归档 + 许可，`min-h-14`/`text-xs`；公开站不引入主题切换按钮（跟随系统，槽位 17）。
 
 ## 7. 使用边界
 

@@ -2,39 +2,41 @@
 {{ $footer := hugo.Data.strings.footer }}
 <footer class="site-footer">
   <div class="site-footer-inner">
-    <div class="footer-copy">
-      <p class="footer-copyright">{{ replace $brand.copyright "{year}" (now.Format "2006") }}</p>
-      <p class="footer-statement">{{ $footer.statement }}</p>
-    </div>
-    <div class="footer-beian">
+    <span class="footer-copyright">{{ replace $brand.copyright "{year}" (now.Format "2006") }}</span>
+    <span class="footer-statement">{{ $footer.statement }}</span>
+    {{ if or $brand.icp $brand.police }}
+    <span class="footer-beian">
       {{ with $brand.icp }}
-      <a class="beian-link" href="{{ $brand.icp_url }}" rel="nofollow">
-        <span class="beian-icon" aria-hidden="true">
-          {{ if or (hasPrefix $brand.icp_icon "/") (strings.Contains $brand.icp_icon ".") }}
-          <img class="beian-icon-img" src="{{ $brand.icp_icon | relURL }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>'">
-          {{ else if hasPrefix $brand.icp_icon "<svg" }}{{ $brand.icp_icon | safeHTML }}
-          {{ else }}<span class="filing-icon-placeholder">{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>{{ end }}
-        </span>
-        <span class="beian-text">{{ . }}</span>
-      </a>
+      <span class="footer-filing">
+        <a class="beian-link" href="{{ $brand.icp_url }}" rel="nofollow">
+          <span class="beian-icon" aria-hidden="true">
+            {{ if or (hasPrefix $brand.icp_icon "/") (strings.Contains $brand.icp_icon ".") }}
+            <img class="beian-icon-img" src="{{ $brand.icp_icon | relURL }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>'">
+            {{ else if hasPrefix $brand.icp_icon "<svg" }}{{ $brand.icp_icon | safeHTML }}
+            {{ else }}<span class="filing-icon-placeholder">{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>{{ end }}
+          </span>
+          <span class="beian-text">{{ . }}</span>
+        </a>
+      </span>
       {{ end }}
       {{ with $brand.police }}
-      <a class="beian-link" href="{{ $brand.police_url }}" rel="nofollow">
-        <span class="beian-icon" aria-hidden="true">
-          {{ if or (hasPrefix $brand.police_icon "/") (strings.Contains $brand.police_icon ".") }}
-          <img class="beian-icon-img" src="{{ $brand.police_icon | relURL }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>'">
-          {{ else if hasPrefix $brand.police_icon "<svg" }}{{ $brand.police_icon | safeHTML }}
-          {{ else }}<span class="filing-icon-placeholder">{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>{{ end }}
-        </span>
-        <span class="beian-text">{{ if not (strings.Contains . $footer.police_label) }}{{ $footer.police_label }} {{ end }}{{ . }}</span>
-      </a>
+      <span class="footer-filing">
+        {{ if $brand.icp }}<span aria-hidden="true" class="footer-sep">·</span>{{ end }}
+        <a class="beian-link" href="{{ $brand.police_url }}" rel="nofollow">
+          <span class="beian-icon" aria-hidden="true">
+            {{ if or (hasPrefix $brand.police_icon "/") (strings.Contains $brand.police_icon ".") }}
+            <img class="beian-icon-img" src="{{ $brand.police_icon | relURL }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>'">
+            {{ else if hasPrefix $brand.police_icon "<svg" }}{{ $brand.police_icon | safeHTML }}
+            {{ else }}<span class="filing-icon-placeholder">{{ with $footer.icon_fallback }}{{ . }}{{ end }}</span>{{ end }}
+          </span>
+          <span class="beian-text">{{ if not (strings.Contains . $footer.police_label) }}{{ $footer.police_label }} {{ end }}{{ . }}</span>
+        </a>
+      </span>
       {{ end }}
-    </div>
-    <p class="footer-meta">
-      <a href="{{ "archive/" | relURL }}">{{ hugo.Data.strings.nav.archive }}</a>
-      <span aria-hidden="true">·</span>
-      <a href="{{ $footer.license_url }}" target="_blank" rel="noopener">{{ $footer.license_label }} {{ $footer.license }}</a>
-    </p>
+    </span>
+    {{ end }}
+    <a class="footer-meta-link" href="{{ "archive/" | relURL }}">{{ hugo.Data.strings.nav.archive }}</a>
+    <a class="footer-meta-link" href="{{ $footer.license_url }}" target="_blank" rel="noopener">{{ $footer.license_label }} {{ $footer.license }}</a>
   </div>
   <img src="/api/beacon?p={{ .RelPermalink }}" width="1" height="1" alt="" aria-hidden="true">
 </footer>

@@ -10,7 +10,7 @@
 - 组件差异：原生下拉走 V1.4 `.select` / `.select-sm`（统计页分组筛选），列表筛选其余下拉用 `.custom-select-*`；后台提示为 flash 胶囊，确认弹窗用原生 `confirm` / `<dialog class="media-dialog">`
 - 页脚对齐（V1.5，2026-08-21）：`site-footer` > `site-footer-inner` 契约类名，`mt-auto` 贴底 + 半透明表面 + backdrop-blur，单行高 56px（`min-h-14` 兜底）、字号 12px、图标/备案占位 14×14px、`max-w-7xl` 居中（`px-4` → `lg:px-8`）、移动端换行无横向滚动；版权/备案/归档/许可由 `brand.yaml` + `strings.yaml` 驱动（等价 V1.5 的 brand.ts 单点）；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`）；站点化扩展保留 `footer-copy` / `footer-beian` / `footer-meta` 细分；**骨架页脚等高规格（e899414 补充）**：Li&Blog 无运行时骨架屏（公开站纯静态、后台服务端渲染，均无 PageSkeleton），审计为不适用；如未来引入加载骨架，页脚占位必须 `min-h-14` + `text-xs` 与真实页脚等高
 - 认证页底部对齐（2026-08-21，Li&Panel AuthShell）：登录/基础信息/创建管理员页新增 `auth-footer`——版权（`brand.copyright`，`{year}` 由后台上下文注入）与 ICP/公安备案链接（`brand.icp*` / `brand.police*`，图标缺失/加载失败走 `.filing-icon-placeholder`，字符来自 `strings.footer.icon_fallback`），样式走 `--liblog-*` 令牌
-- 顶栏对齐（2026-08-21，Li&Panel AppHeader）：`site-header` 改为 sticky 玻璃——`--liblog-header-bg`（surface/85）+ `--liblog-header-blur`（8px）+ `--liblog-header-border`，内层宽度 `max-w-7xl`（1280px），底部保留品牌流动线；高度维持博客内容站 56/52px（`--header-h`），公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
+- 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉按 AppHeader 结构落地——sticky 玻璃（`--liblog-header-bg` surface/85 + blur 8px + `--liblog-header-border`）、内层 `max-w-7xl` + `px-4 → sm:px-6 → lg:px-8`、高度 `h-16`（桌面 64 / 移动 56）、品牌名 ShinyText 扫光（15px semibold tracking-tight，6s）、底部 `flow-rule` 1px 流光线（5s）；页脚按 SiteFooter 单行结构落地——版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 许可，`min-h-14`、`text-xs`、`gap-x-2 gap-y-1`、`px-4 → lg:px-8`、hover 转前景色；公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
 
 ## 1. 令牌快照
@@ -41,7 +41,7 @@
 | ring | #7FD4C6 |
 | 强调色 | ice #A8CBE8 / aqua #7FD4C6 / lilac #B0A8DE / sage #B0C79E / mint #9ADFAD / sand #D9C49E（各配 soft） |
 
-顶栏玻璃令牌（2026-08-21，对齐 Li&Panel AppHeader）：浅 `--liblog-header-bg: rgba(255,255,255,.85)` / `--liblog-header-border: rgba(225,236,232,.85)` / `--liblog-header-blur: 8px`；深 `rgba(67,73,80,.85)` / `rgba(84,92,100,.85)` / `8px`。
+顶栏玻璃令牌（2026-08-21，Li&Panel AppHeader 同款）：浅 `--liblog-header-bg: rgba(255,255,255,.85)` / `--liblog-header-border: rgba(225,236,232,.85)` / `--liblog-header-blur: 8px`；深 `rgba(67,73,80,.85)` / `rgba(84,92,100,.85)` / `8px`。
 
 完整值见 `themes/blog-theme/static/css/tokens.css`（`--liblog-*`）。
 
@@ -59,8 +59,8 @@
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |
 | admonition | 提示块（纯 CSS） |
 | toc | 文章目录 |
-| site-header | 顶栏（2026-08-21 对齐 Li&Panel AppHeader）：sticky 玻璃（`--liblog-header-bg/border/blur`）+ 底部品牌流动线 + `max-w-7xl` 内层；高度 56/52px（`--header-h`）；导航/搜索按钮文案全部走 `strings.yaml` |
-| site-footer | 页脚（Li-Design V1.5 规格）：`mt-auto` 贴底 + 半透明表面（`--liblog-footer-bg`）+ backdrop-blur（`--liblog-footer-blur`），单行高 56px（`min-h-14` 兜底）、字号 12px、备案图标/占位 14×14px、`max-w-7xl` 居中；版权/备案/归档/许可全部由 `brand.yaml` + `strings.yaml` 驱动；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`） |
+| site-header | 顶栏（2026-08-21，Li&Panel AppHeader 同款）：sticky 玻璃（`--liblog-header-bg/border/blur`）+ 品牌名 ShinyText 扫光 + 底部 `flow-rule` 1px 流光线 + `max-w-7xl`/`px-4→lg:px-8` 内层；高度 64/56px（`--header-h`）；导航/搜索按钮文案全部走 `strings.yaml` |
+| site-footer | 页脚（2026-08-21 起 Li&Panel SiteFooter 同款单行）：版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 许可，`min-h-14` 单行、`text-xs`、`gap-x-2 gap-y-1`、`max-w-7xl` + `px-4→lg:px-8`、hover 前景色；V1.5 规格仍保留：`mt-auto` 贴底 + 半透明表面（`--liblog-footer-bg`）+ backdrop-blur（`--liblog-footer-blur`），单行高 56px（`min-h-14` 兜底）、字号 12px、备案图标/占位 14×14px、`max-w-7xl` 居中；版权/备案/归档/许可全部由 `brand.yaml` + `strings.yaml` 驱动；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`） |
 | breadcrumb / pagination | 纯导航，无表单 |
 
 ### 后台（仅管理员，交互组件只在此出现）

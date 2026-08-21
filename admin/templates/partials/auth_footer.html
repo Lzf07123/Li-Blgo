@@ -2,28 +2,33 @@
   <p class="auth-footer-copy">{{ brand.copyright | replace("{year}", year|string) }}</p>
   <div class="auth-footer-beian">
     {% if brand.icp %}
-    <a class="beian-link" href="{{ brand.icp_url }}" rel="nofollow" target="_blank">
-      <span class="beian-icon" aria-hidden="true">
-        {% if brand.icp_icon %}
-        <img class="beian-icon-img" src="{{ brand.icp_icon }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ footer_icon_fallback }}</span>'">
-        {% else %}
-        <span class="filing-icon-placeholder">{{ footer_icon_fallback }}</span>
-        {% endif %}
-      </span>
-      <span class="beian-text">{{ brand.icp }}</span>
-    </a>
+    <span class="footer-filing">
+      <a class="beian-link" href="{{ brand.icp_url }}" rel="nofollow" target="_blank">
+        <span class="beian-icon" aria-hidden="true">
+          {% if brand.icp_icon %}
+          <img class="beian-icon-img" src="{{ brand.icp_icon }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ footer_icon_fallback }}</span>'">
+          {% else %}
+          <span class="filing-icon-placeholder">{{ footer_icon_fallback }}</span>
+          {% endif %}
+        </span>
+        <span class="beian-text">{{ brand.icp }}</span>
+      </a>
+    </span>
     {% endif %}
     {% if brand.police %}
-    <a class="beian-link" href="{{ brand.police_url }}" rel="nofollow" target="_blank">
-      <span class="beian-icon" aria-hidden="true">
-        {% if brand.police_icon %}
-        <img class="beian-icon-img" src="{{ brand.police_icon }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ footer_icon_fallback }}</span>'">
-        {% else %}
-        <span class="filing-icon-placeholder">{{ footer_icon_fallback }}</span>
-        {% endif %}
-      </span>
-      <span class="beian-text">{{ brand.police }}</span>
-    </a>
+    <span class="footer-filing">
+      {% if brand.icp %}<span aria-hidden="true" class="footer-sep">·</span>{% endif %}
+      <a class="beian-link" href="{{ brand.police_url }}" rel="nofollow" target="_blank">
+        <span class="beian-icon" aria-hidden="true">
+          {% if brand.police_icon %}
+          <img class="beian-icon-img" src="{{ brand.police_icon }}" alt="" onerror="this.outerHTML='<span class=&quot;filing-icon-placeholder&quot;>{{ footer_icon_fallback }}</span>'">
+          {% else %}
+          <span class="filing-icon-placeholder">{{ footer_icon_fallback }}</span>
+          {% endif %}
+        </span>
+        <span class="beian-text">{{ brand.police }}</span>
+      </a>
+    </span>
     {% endif %}
   </div>
 </footer>

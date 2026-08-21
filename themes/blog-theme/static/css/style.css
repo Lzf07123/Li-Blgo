@@ -69,7 +69,7 @@ main:focus { outline: none; }
 .skip-link:focus { top: 12px; }
 
 /* ---------- 页头（sticky + 品牌流动线） ---------- */
-:root { --header-h: 56px; }
+:root { --header-h: 64px; } /* 对齐 Li&Panel AppHeader：h-16 */
 .site-header {
   position: sticky;
   top: 0;
@@ -82,33 +82,40 @@ main:focus { outline: none; }
   -webkit-backdrop-filter: blur(var(--liblog-header-blur));
   backdrop-filter: blur(var(--liblog-header-blur));
 }
-.nav-inner {
-  width: min(1280px, calc(100% - 32px));
+.header-inner {
+  max-width: 1280px; /* max-w-7xl */
   height: 100%;
   margin: 0 auto;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px; /* gap-3 */
   flex-wrap: nowrap;
-  padding-bottom: 0;
+  padding: 0 16px; /* px-4 */
+}
+@media (min-width: 640px) {
+  .header-inner { padding: 0 24px; } /* sm:px-6 */
+}
+@media (min-width: 1024px) {
+  .header-inner { padding: 0 32px; } /* lg:px-8 */
 }
 .brand-logo {
   flex: none;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px; /* gap-2.5 */
+  border-radius: 8px;
   font-weight: 600;
   color: var(--liblog-fg);
 }
 .brand-logo:hover { text-decoration: none; }
 .brand-logo-img {
-  max-height: 28px;
-  width: auto;
+  height: 32px; /* h-8 */
+  width: 32px; /* w-8 */
   object-fit: contain;
 }
 .logo-fallback {
-  height: 28px;
-  width: 28px;
+  height: 32px;
+  width: 32px;
   display: inline-grid;
   place-items: center;
   border-radius: 8px;
@@ -117,14 +124,46 @@ main:focus { outline: none; }
   font-size: 0.85rem;
   font-weight: 700;
 }
+/* 品牌名：对齐 Li&Panel ShinyText（15px / semibold / tracking-tight / 渐变扫光 6s） */
+.brand-name-text {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--liblog-fg);
+  background-image: linear-gradient(
+    90deg,
+    var(--liblog-fg) 0%,
+    var(--liblog-fg) 38%,
+    var(--liblog-primary) 50%,
+    var(--liblog-fg) 62%,
+    var(--liblog-fg) 100%
+  );
+  background-size: 200% auto;
+  background-position: 150% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: brand-shine-flow 6s var(--liblog-ease-out) infinite;
+}
+@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+  .brand-name-text {
+    background: none;
+    -webkit-text-fill-color: currentColor;
+  }
+}
+@keyframes brand-shine-flow {
+  0% { background-position: 150% center; }
+  100% { background-position: -50% center; }
+}
 .site-nav {
   margin-left: auto;
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 2px;
+  gap: 8px; /* gap-2，对齐 Panel actions */
   flex-wrap: nowrap;
-  font-size: 1rem;
+  font-size: 0.875rem; /* text-sm */
 }
 .site-nav a, .nav-search-btn {
   display: inline-flex;
@@ -145,30 +184,22 @@ main:focus { outline: none; }
   cursor: pointer;
 }
 .nav-search-btn:hover { background: var(--liblog-surface-2); }
-.flow-line {
+/* 顶栏流光线：对齐 Li&Panel AppHeader flow-rule（inset-x-0 bottom-0 h-px，5s） */
+.flow-rule {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: -1px;
-  height: 2px;
-  overflow: hidden;
-  pointer-events: none;
-}
-.flow-line::after {
-  content: "";
-  position: absolute;
-  top: 0;
   bottom: 0;
-  left: -50%;
-  width: 200%;
-  background: linear-gradient(90deg, transparent, var(--liblog-flow-gradient) 25%, var(--liblog-flow-gradient) 75%, transparent);
-  opacity: 0.7;
-  animation: liblog-flow-slide 7s linear infinite;
-  will-change: transform;
+  height: 1px;
+  border-radius: 0;
+  background: var(--liblog-flow-gradient);
+  background-size: 250% 100%;
+  animation: flow-line-shift 5s linear infinite;
+  pointer-events: none;
+  will-change: background-position;
 }
-@keyframes liblog-flow-slide {
-  from { transform: translateX(0); }
-  to { transform: translateX(50%); }
+@keyframes flow-line-shift {
+  to { background-position: -250% 0; }
 }
 
 /* ---------- 主体与页脚锁底 ---------- */
@@ -206,28 +237,31 @@ main:focus { outline: none; }
 @media (min-width: 1024px) {
   .site-footer-inner { padding: 20px 32px; } /* lg:px-8，V1.5 */
 }
-.footer-copy {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px 14px;
-  flex-wrap: wrap;
+.footer-copyright,
+.footer-statement {
+  white-space: nowrap;
 }
-.footer-copyright { margin: 0; }
-.footer-statement { margin: 0; }
-.footer-meta {
-  display: flex;
+/* 单行页脚：对齐 Li&Panel SiteFooter（全部条目 gap-x-2 均匀排布） */
+.footer-beian {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px; /* gap-x-2 */
+}
+.footer-filing {
+  display: inline-flex;
+  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
-  margin: 0;
 }
-.footer-meta a { color: var(--liblog-muted); }
-.footer-meta a:hover { color: var(--liblog-primary); }
-.footer-beian { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+.footer-sep { color: var(--liblog-border); }
+.footer-meta-link {
+  display: inline-flex;
+  align-items: center;
+  color: var(--liblog-muted);
+}
+.footer-meta-link:hover { color: var(--liblog-fg); }
 .footer-beian a { color: var(--liblog-muted); }
-.footer-beian a:hover { color: var(--liblog-primary); }
+.footer-beian a:hover { color: var(--liblog-fg); }
 .beian-link { display: inline-flex; align-items: center; gap: 6px; }
 .beian-icon {
   display: inline-flex;
@@ -1260,11 +1294,11 @@ mark {
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
 @media (max-width: 768px) {
-  :root { --header-h: 52px; }
-  .nav-inner { gap: 8px; }
+  :root { --header-h: 56px; }
+  .header-inner { gap: 8px; }
   .brand-logo { gap: 8px; }
-  .brand-logo-img { max-height: 26px; }
-  .logo-fallback { height: 26px; width: 26px; font-size: 0.8rem; }
+  .brand-logo-img { height: 32px; width: 32px; }
+  .logo-fallback { height: 32px; width: 32px; font-size: 0.8rem; }
   .site-nav {
     flex: 1;
     min-width: 0;
@@ -1303,10 +1337,7 @@ mark {
   .journey-date { min-width: 0; }
   .project-card, .post-card { padding: 16px 18px; }
   .card-grid { gap: 12px; }
-  .site-footer-inner { flex-direction: column; gap: 8px; }
-  .footer-copy { flex-wrap: wrap; gap: 4px 10px; }
-  .footer-beian { gap: 10px 14px; flex-wrap: wrap; }
-  .footer-meta { flex-wrap: wrap; }
+  .site-footer-inner { gap: 4px 8px; }
   .post-nav { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
@@ -1356,7 +1387,7 @@ mark {
   .back-top,
   .to-top,
   .hero::before,
-  .flow-line,
+  .flow-rule,
   .site-footer img[src*="beacon"] {
     display: none !important;
   }
