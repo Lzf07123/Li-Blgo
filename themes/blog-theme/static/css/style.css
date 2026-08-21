@@ -950,7 +950,8 @@ input:focus, select:focus, textarea:focus {
 .article-body blockquote { margin: 16px 0; padding: 4px 16px; border-left: 3px solid var(--liblog-secondary); color: var(--liblog-muted); }
 /* 文章正文 + 左侧固定目录（识别 Markdown h2/h3 标题）
  * 目录悬浮在内容区外侧的视口留白处，不占用正文空间；
- * 屏幕不足够宽时（≤1280px）自动折回正文上方。 */
+ * 右缘与内容壳保持 24px 间距，绝不遮挡正文组件；
+ * 屏幕不足够宽时（≤1504px，留白放不下 232px 目录）自动折回正文上方。 */
 .article-layout {
   margin-top: 16px;
 }
@@ -959,7 +960,9 @@ input:focus, select:focus, textarea:focus {
 }
 .toc {
   position: fixed;
-  left: max(16px, calc(50vw - 628px));
+  /* 内容壳宽 min(960px, 100% - 32px)：左缘 50vw - 480px；
+     目录宽 232px + 右缘 24px 间距 → left = 50vw - 480 - 232 - 24 = 50vw - 736px */
+  left: max(16px, calc(50vw - 736px));
   top: calc(var(--header-h) + 20px);
   z-index: 10;
   width: 232px;
@@ -1292,8 +1295,8 @@ mark {
 }
 
 /* ---------- 响应式（1280 目录折叠 / 1024 / 768 / 640 断点） ---------- */
-@media (max-width: 1280px) {
-  /* 悬浮目录在窄屏折叠为正文上方，避免遮挡正文 */
+@media (max-width: 1504px) {
+  /* 留白不足以容纳 232px 悬浮目录时，折叠为正文上方，避免遮挡正文组件 */
   .article-layout { display: block; }
   .toc {
     position: static;
