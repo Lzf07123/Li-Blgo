@@ -145,7 +145,6 @@
     document.addEventListener("click", function (e) {
       if (!wrap.contains(e.target)) {
         close();
-        trigger.focus();
       }
     });
 
