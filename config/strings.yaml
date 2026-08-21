@@ -58,6 +58,8 @@ common:
   pagination: 分页
   pagination_page: 第 %d 页
   no_tags: 还没有标签，发布文章后自动生成
+  copy_code: 复制
+  copy_code_done: 已复制
 
 footer:
   rights: 保留所有权利
