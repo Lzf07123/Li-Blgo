@@ -400,13 +400,31 @@ def _asset_version() -> dict:
     }
 
 
-def require_login(request: Request) -> None:
+def has_admin_account() -> bool:
     conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if not has_admin:
+    try:
+        return get_admin(conn) is not None
+    finally:
+        conn.close()
+
+
+def setup_token_ok(request: Request, form_token: str = "") -> bool:
+    """首次建站保护：配置 SETUP_TOKEN 后，setup 路由必须提供匹配令牌。
+
+    令牌支持 X-Setup-Token 请求头或表单字段 setup_token（常量时间比较）。
+    """
+    if not settings.setup_token:
+        return True
+    given = request.headers.get("x-setup-token", "") or form_token
+    return security.check_token(settings.setup_token, given)
+
+
+def require_login(request: Request) -> None:
+    if not has_admin_account():
         raise HTTPException(status_code=302, headers={"Location": ap("/setup")})
-    if current_session(request) is None:
+    sess = current_session(request)
+    # 仅 local/oidc 会话视为已登录；匿名会话（登录页/建站页发放）禁止访问受保护路由
+    if sess is None or sess.get("kind") not in ("local", "oidc"):
         raise HTTPException(status_code=302, headers={"Location": ap("/login")})
 
 
@@ -448,29 +466,42 @@ def login_submit(
 ):
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return render(request, "login.html", {"error": "会话失效，请重试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
+    ip_key = f"ip:{client_ip(request)}"
+    user_key = f"{client_ip(request)}:{username}"
+
+    def login_limited(detail: str) -> HTMLResponse:
+        conn = connect()
+        record_audit(conn, "login_limited", detail, client_ip(request))
+        conn.close()
+        return render(
+            request,
+            "login.html",
+            {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")},
+        )
+
+    # 限速只统计失败尝试；成功登录不消耗配额（避免管理员多设备正常登录被锁）
+    if rate.peek(ip_key, 30, 60):
+        return login_limited("global ip limit")
+    if rate.peek(user_key, 5, 60):
+        return login_limited(f"username={username}")
     if len(password) > 1024:
+        rate.mark(ip_key)
+        rate.mark(user_key)
         return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
-    if not rate.allow(f"ip:{client_ip(request)}", 30, 60):
-        conn = connect()
-        record_audit(conn, "login_limited", "global ip limit", client_ip(request))
-        conn.close()
-        return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
-    key = f"{client_ip(request)}:{username}"
-    if not rate.allow(key, 5, 60):
-        conn = connect()
-        record_audit(conn, "login_limited", f"username={username}", client_ip(request))
-        conn.close()
-        return render(request, "login.html", {"error": "尝试次数过多，请稍后再试", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     conn = connect()
     admin = get_admin(conn)
     conn.close()
     if admin is None:
         security.verify_password(password, DUMMY_HASH)
+        rate.mark(ip_key)
+        rate.mark(user_key)
         conn = connect()
         record_audit(conn, "login_fail", f"username={username}", client_ip(request))
         conn.close()
         return render(request, "login.html", {"error": "用户名或密码错误", "oidc_enabled": oidc.enabled(), "brand": store.load_yaml("brand")})
     if not security.verify_password(password, admin["password_hash"]):
+        rate.mark(ip_key)
+        rate.mark(user_key)
         conn = connect()
         record_audit(conn, "login_fail", f"username={username}", client_ip(request))
         conn.close()
@@ -549,25 +580,27 @@ async def oidc_backchannel(request: Request):
 
 @app.get(ap("/setup"))
 def setup_index(request: Request):
-    conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if has_admin:
+    if has_admin_account():
         return RedirectResponse(ap("/"), status_code=302)
     return RedirectResponse(ap("/setup/basic"), status_code=302)
 
 
 @app.get(ap("/setup/basic"), response_class=HTMLResponse)
 def setup_basic_page(request: Request):
-    conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if has_admin:
+    if has_admin_account():
         return RedirectResponse(ap("/"), status_code=302)
     brand = store.load_yaml("brand")
     profile = store.load_yaml("profile")
     ensure_anon_session(request)
-    response = render(request, "setup_basic.html", {"brand": brand, "profile": profile})
+    response = render(
+        request,
+        "setup_basic.html",
+        {
+            "brand": brand,
+            "profile": profile,
+            "setup_token_required": bool(settings.setup_token),
+        },
+    )
     if getattr(request.state, "new_session_id", None):
         attach_session_cookie(response, request.state.new_session_id)
     return response
@@ -585,7 +618,12 @@ def setup_basic_submit(
     direction: str = Form(""),
     goal: str = Form(""),
     csrf_token: str = Form("", alias="_csrf"),
+    setup_token: str = Form(""),
 ):
+    if has_admin_account():
+        return RedirectResponse(ap("/"), status_code=302)
+    if not setup_token_ok(request, setup_token):
+        return RedirectResponse(ap("/setup/basic?error=安装令牌错误"), status_code=303)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/setup/basic?error=会话失效"), status_code=303)
     brand = store.load_yaml("brand")
@@ -609,12 +647,12 @@ async def setup_restore(
     file: UploadFile = File(...),
     confirm: str = Form(""),
     csrf_token: str = Form("", alias="_csrf"),
+    setup_token: str = Form(""),
 ):
-    conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if has_admin:
+    if has_admin_account():
         return RedirectResponse(ap("/"), status_code=302)
+    if not setup_token_ok(request, setup_token):
+        return RedirectResponse(ap("/setup/basic?error=安装令牌错误"), status_code=303)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/setup/basic?error=会话失效"), status_code=303)
     if confirm != "1":
@@ -639,13 +677,17 @@ async def setup_restore(
 
 @app.get(ap("/setup/account"), response_class=HTMLResponse)
 def setup_account_page(request: Request):
-    conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if has_admin:
+    if has_admin_account():
         return RedirectResponse(ap("/"), status_code=302)
     ensure_anon_session(request)
-    response = render(request, "setup_account.html", {"brand": store.load_yaml("brand")})
+    response = render(
+        request,
+        "setup_account.html",
+        {
+            "brand": store.load_yaml("brand"),
+            "setup_token_required": bool(settings.setup_token),
+        },
+    )
     if getattr(request.state, "new_session_id", None):
         attach_session_cookie(response, request.state.new_session_id)
     return response
@@ -658,14 +700,14 @@ def setup_account_submit(
     password: str = Form(""),
     confirm: str = Form(""),
     csrf_token: str = Form("", alias="_csrf"),
+    setup_token: str = Form(""),
 ):
+    if has_admin_account():
+        return RedirectResponse(ap("/"), status_code=302)
+    if not setup_token_ok(request, setup_token):
+        return RedirectResponse(ap("/setup/account?error=安装令牌错误"), status_code=303)
     if not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/setup/account?error=会话失效"), status_code=303)
-    conn = connect()
-    has_admin = get_admin(conn) is not None
-    conn.close()
-    if has_admin:
-        return RedirectResponse(ap("/"), status_code=302)
     if len(username) < 3 or len(password) < 8 or len(password) > 1024:
         return RedirectResponse(ap("/setup/account?error=用户名至少3位，密码需8-1024位"), status_code=303)
     if password != confirm:
@@ -1550,7 +1592,7 @@ def trash_restore(request: Request, section: str, slug: str, csrf_token: str = F
 @app.post(ap("/trash/{section}/{slug}/delete"))
 def trash_delete(request: Request, section: str, slug: str, csrf_token: str = Form("", alias="_csrf")):
     require_login(request)
-    if not csrf_ok(request, {"_csrf": csrf_token}):
+    if section not in SECTIONS or SECTIONS[section]["single"] or not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap("/trash?error=会话失效"), status_code=303)
     trash_root = settings.db_path.parent / "trash" / section
     try:
@@ -2209,6 +2251,8 @@ def section_save(
     require_login(request)
     if section not in SECTIONS or not csrf_ok(request, {"_csrf": csrf_token}):
         return RedirectResponse(ap(f"/{section}?error=会话失效"), status_code=303)
+    if section == "posts" and status not in ("published", "draft"):
+        return RedirectResponse(ap(f"/{section}?error=非法状态"), status_code=303)
     old_slug = ""
     if new_slug and not SECTIONS[section]["single"]:
         if new_slug != slug and store.markdown_exists(section, new_slug):
@@ -2396,7 +2440,12 @@ def preview_single(request: Request, section: str, raw: int = 0):
 @app.get(ap("/preview/{section}/{slug}"), response_class=HTMLResponse)
 def preview_page(request: Request, section: str, slug: str, raw: int = 0):
     require_login(request)
-    target = settings.preview_root / section / slug / "index.html"
+    if section not in SECTIONS or (slug and not store.SLUG_RE.match(slug)):
+        raise HTTPException(404)
+    root = settings.preview_root.resolve()
+    target = (root / section / slug / "index.html").resolve()
+    if not target.is_relative_to(root):
+        raise HTTPException(404)
     exists = target.exists()
     if raw and exists:
         html = target.read_text(encoding="utf-8")

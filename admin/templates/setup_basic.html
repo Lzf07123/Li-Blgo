@@ -40,6 +40,7 @@
       {% if error %}<p class="flash auth-error" role="alert">{{ error }}</p>{% elif flash %}<p class="flash auth-error" role="alert">{{ flash }}</p>{% endif %}
       <form method="post" action="/{{ admin_path }}/setup/basic" class="auth-form">
         <input type="hidden" name="_csrf" value="{{ csrf }}">
+        {% if setup_token_required %}<label>安装令牌（部署时设置的 SETUP_TOKEN）<input type="password" name="setup_token" autocomplete="off" required></label>{% endif %}
         <div class="auth-form-grid">
           <fieldset>
             <legend>站点</legend>
@@ -62,6 +63,7 @@
       <p class="auth-sub">上传 Li&Blog 备份 ZIP，直接恢复内容、配置、媒体与数据库，跳过手工设置。</p>
       <form method="post" action="/{{ admin_path }}/setup/restore" enctype="multipart/form-data" class="auth-form">
         <input type="hidden" name="_csrf" value="{{ csrf }}">
+        {% if setup_token_required %}<label>安装令牌（部署时设置的 SETUP_TOKEN）<input type="password" name="setup_token" autocomplete="off" required></label>{% endif %}
         <label>备份 ZIP
           <input type="file" name="file" accept=".zip" required>
         </label>

@@ -71,12 +71,14 @@ def _optimize_image(data: bytes) -> bytes:
     """过大/过重的静态图片自动缩放到 MAX_DIMENSION 内并优化体积。"""
     try:
         img = Image.open(io.BytesIO(data))
-    except UnidentifiedImageError:
-        raise ValueError("无法识别的图片文件")
-    width, height = img.size
-    if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
-        raise ValueError("图片尺寸过大")
-    img.load()
+        width, height = img.size
+        if width <= 0 or height <= 0 or width * height > MAX_PIXELS:
+            raise ValueError("图片尺寸过大")
+        img.load()
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        if isinstance(exc, ValueError):
+            raise
+        raise ValueError("图片文件损坏或格式异常") from exc
     fmt = (img.format or "").upper()
     if getattr(img, "is_animated", False):
         return data

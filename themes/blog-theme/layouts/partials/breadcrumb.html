@@ -2,7 +2,7 @@
 <nav class="breadcrumb" aria-label="{{ $strings.common.breadcrumb }}">
   <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
   {{ with .CurrentSection }}
-  {{ if and (ne . .Site.Home) (ne .Title .Title) }}
+  {{ if and (ne . .Site.Home) (ne .Title $.Title) }}
   <span aria-hidden="true">/</span>
   <a href="{{ .RelPermalink }}">{{ .Title }}</a>
   {{ end }}

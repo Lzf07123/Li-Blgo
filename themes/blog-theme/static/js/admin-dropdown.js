@@ -143,7 +143,10 @@
     });
 
     document.addEventListener("click", function (e) {
-      if (!wrap.contains(e.target)) close();
+      if (!wrap.contains(e.target)) {
+        close();
+        trigger.focus();
+      }
     });
 
     syncValue();

@@ -1,6 +1,8 @@
 {{ $strings := hugo.Data.strings }}
 {{ $av := partialCached "asset-versions.html" . "asset-versions-v1" }}
-<div id="search-modal" class="search-modal" hidden>
+<div id="search-modal" class="search-modal" hidden
+     data-strings="{{ hugo.Data.strings.home | jsonify }}"
+     data-common="{{ hugo.Data.strings.common | jsonify }}">
   <div class="search-modal-backdrop" data-close-search></div>
   <div class="search-modal-panel" role="dialog" aria-modal="true" aria-labelledby="search-modal-title" aria-describedby="search-modal-info">
     <h2 id="search-modal-title" class="visually-hidden">{{ $strings.nav.search }}</h2>
@@ -47,11 +49,14 @@
     var info = document.getElementById("search-modal-info");
     var empty = document.getElementById("search-modal-empty");
     var emptyText = document.getElementById("search-empty-text");
-    var STRINGS = {{ hugo.Data.strings.home | jsonify }};
-    var COMMON = {{ hugo.Data.strings.common | jsonify }};
+    // 文案经 data-* 属性注入（浏览器解析时反转义），JSON.parse 得到对象；
+    // 规避 Hugo 内联 JS 压缩对对象字面量/JSON 字符串的改写
+    var STRINGS = JSON.parse(modal.dataset.strings || "{}");
+    var COMMON = JSON.parse(modal.dataset.common || "{}");
     var fuse = null;
     var items = [];
     var indexItems = [];
+    var tagUrls = {};
     var activeIndex = -1;
     var lastTrigger = null;
     var indexPromise = null;
@@ -91,6 +96,11 @@
           .then(function (r) { return r.json(); })
           .then(function (posts) {
             indexItems = posts;
+            tagUrls = {};
+            indexItems.forEach(function (it) {
+              var links = it.tagLinks || {};
+              Object.keys(links).forEach(function (t) { tagUrls[t] = links[t]; });
+            });
             fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
           })
           .catch(function () { indexPromise = null; });
@@ -133,7 +143,7 @@
           topTags.forEach(function (t) {
             var a = document.createElement("a");
             a.className = "tag";
-            a.href = "/tags/" + encodeURIComponent(t) + "/";
+            a.href = tagUrls[t] || "/tags/" + encodeURIComponent(t) + "/";
             a.textContent = t;
             chips.appendChild(a);
           });

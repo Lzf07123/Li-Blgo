@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import secrets
 import time
 from typing import Optional
 
@@ -49,7 +50,12 @@ def authorize_start(request: Request, flow: str) -> RedirectResponse:
     if not enabled():
         raise ValueError("OIDC 未配置")
     request.session["oidc_flow"] = flow
-    return oauth().lipass.authorize_redirect(request, redirect_uri(request))
+    # 生成并保存 nonce，授权请求携带、回调验签时比对（防重放）
+    nonce = secrets.token_urlsafe(16)
+    request.session["oidc_nonce"] = nonce
+    return oauth().lipass.authorize_redirect(
+        request, redirect_uri(request), nonce=nonce
+    )
 
 
 def _check_at_hash(access_token: str, at_hash: Optional[str]) -> bool:
@@ -62,9 +68,10 @@ def _check_at_hash(access_token: str, at_hash: Optional[str]) -> bool:
 async def handle_callback(request: Request):
     """返回 (status, sub, session_id, sid)；status ∈ ok/denied/bound。"""
     flow = request.session.pop("oidc_flow", "login")
+    nonce = request.session.pop("oidc_nonce", None)
     client = oauth().lipass
     token = await client.authorize_access_token(request)
-    claims = client.parse_id_token(request, token)
+    claims = await client.parse_id_token(token, nonce=nonce)
     access_token = token.get("access_token", "")
     if not access_token or not _check_at_hash(access_token, claims.get("at_hash")):
         raise ValueError("at_hash 校验失败")
@@ -134,17 +141,19 @@ async def backchannel_logout(request: Request) -> bool:
     if isinstance(aud, str):
         aud = [aud]
     events = claims.get("events") or {}
+    iat = claims.get("iat", 0)
+    exp = claims.get("exp")
     valid = (
         claims.get("iss") == metadata["issuer"]
         and settings.lipass_client_id in aud
-        and now - 120 <= claims.get("iat", 0) <= now
-        and now - 120 <= claims.get("exp", 0) <= now
         and bool(claims.get("jti"))
         and BACKCHANNEL_EVENT in events
+        and now - 120 <= iat <= now + 120
+        and (exp is None or exp >= now - 120)
     )
     if not valid:
         return False
-    if _jti_seen(claims["jti"], claims["exp"]):
+    if _jti_seen(claims["jti"], exp or now + 120):
         # 已处理过的登出通知：直接确认，避免重复下线新会话
         return True
     delete_by_oidc(claims.get("sub", ""), claims.get("sid", ""))

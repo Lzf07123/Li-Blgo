@@ -16,7 +16,7 @@
       {{ else }}
       <a class="pagination-link" href="{{ $q.URL }}" aria-label="{{ printf $strings.common.pagination_page $n }}">{{ $n }}</a>
       {{ end }}
-    {{ else if eq $n (sub $cur 2) }}
+    {{ else if or (eq $n (sub $cur 2)) (eq $n (add $cur 2)) }}
       <span class="pagination-ellipsis" aria-hidden="true">…</span>
     {{ end }}
   {{ end }}

@@ -241,7 +241,9 @@ def restore_trash(section: str, slug: str) -> str:
     if not candidates or not any(c.exists() for c in candidates):
         raise FileNotFoundError("回收站中不存在该文件")
     src = next(c for c in candidates if c.exists())
-    clean_slug = src.stem.split("-")[0] if src.stem != slug else slug
+    # 回收站文件名可能带 10 位 unix 时间戳后缀（旧命名），恢复时剥离；
+    # 不再按首个连字符截断，避免多词 slug（my-post）被截成 my
+    clean_slug = re.sub(r"-(1\d{9})$", "", src.stem)
     if not SLUG_RE.match(clean_slug):
         raise ValueError("bad slug")
     target = safe_resolve(settings.content_root, f"{section}/{clean_slug}.md")

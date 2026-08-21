@@ -11,7 +11,7 @@ from scripts.build import verify_output
 
 def _run(args, timeout=180):
     env = dict(os.environ)
-    env.setdefault("GOMEMLIMIT", "256MiB")
+    env["GOMEMLIMIT"] = "256MiB"
     env.setdefault("HUGO_NUMWORKERMULTIPLIER", "0.5")
     env.setdefault("HUGO_BIN", "hugo")
     started = time.time()

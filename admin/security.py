@@ -37,20 +37,35 @@ class RateLimiter:
     def __init__(self) -> None:
         self._events: dict[str, list[float]] = {}
 
+    def _cleanup(self, now: float, window: float) -> None:
+        if len(self._events) > 1000:
+            # 周期性清理：先剔除已过期时间戳，再移除空队列，避免长期运行后内存增长
+            self._events = {
+                k: [t for t in v if t > now - window]
+                for k, v in self._events.items()
+                if any(t > now - window for t in v)
+            }
+
+    def peek(self, key: str, limit: int, window: float) -> bool:
+        """只读判断是否已达上限（不消耗次数），供登录成功后不占用配额。"""
+        now = time.monotonic()
+        self._cleanup(now, window)
+        queue = [t for t in self._events.get(key, []) if t > now - window]
+        return len(queue) >= limit
+
+    def mark(self, key: str) -> None:
+        """记录一次失败尝试。"""
+        self.mark_at(key, time.monotonic())
+
+    def mark_at(self, key: str, now: float) -> None:
+        self._events.setdefault(key, []).append(now)
+        self._cleanup(now, 0)
+
     def allow(self, key: str, limit: int, window: float) -> bool:
         now = time.monotonic()
-        if len(self._events) > 1000:
-            # 周期性清理完全过期的 key，避免长期运行后内存无限增长
-            self._events = {k: v for k, v in self._events.items() if v}
-        queue = [t for t in self._events.get(key, []) if t > now - window]
-        if len(queue) >= limit:
-            if queue:
-                self._events[key] = queue
-            else:
-                self._events.pop(key, None)
+        if self.peek(key, limit, window):
             return False
-        queue.append(now)
-        self._events[key] = queue
+        self.mark_at(key, now)
         return True
 
 

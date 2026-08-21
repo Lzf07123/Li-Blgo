@@ -34,6 +34,8 @@ class Settings:
         self.ip_whitelist = [
             x.strip() for x in os.getenv("ADMIN_IP_WHITELIST", "").split(",") if x.strip()
         ]
+        # 首次建站保护令牌：设置后 setup 路由必须提供（建议部署时生成随机串）
+        self.setup_token = os.getenv("SETUP_TOKEN", "").strip()
 
     @staticmethod
     def _resolve_session_secret() -> str:

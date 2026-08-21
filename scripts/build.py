@@ -137,7 +137,8 @@ def validate_content_links(root):
 def run_build(root, dst, hugo_cmd="hugo", memory_limit="256MiB", extra=(), metrics=False):
     """以受限内存运行 Hugo，构建到 dst（临时目录）。"""
     env = dict(os.environ)
-    env.setdefault("GOMEMLIMIT", memory_limit)
+    # 显式覆盖：外部高值不得突破构建内存上限（手册约束 256MiB）
+    env["GOMEMLIMIT"] = memory_limit
     env.setdefault("HUGO_NUMWORKERMULTIPLIER", "0.5")
     extra = list(extra)
     site_baseurl = os.environ.get("SITE_BASEURL", "").strip()
