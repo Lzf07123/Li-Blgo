@@ -198,6 +198,7 @@ config/
 - 来源：Li-Design V1.4 模板（git 子模块 `design-system/Li-Design`，`reusable-tokens.template.css`）；令牌值已逐项核对一致，另含打印/代码高亮/CTA 站点扩展
 - 22 槽位已全部填定，见 `design-system/blog/BRAND.md`
 - 认证页底部对齐（2026-08-21）：登录/设置向导底部补齐版权 + 备案（对齐 Li&Panel AuthShell 页脚）
+- 样式层 Tailwind CSS 4（2026-08-21）：`tokens.css` 由 `web/src/tokens.css` 编译，与 Li&Panel `index.css` 同构（`@theme` 别名 + `--liblog-*` 令牌），页眉/页脚使用与 Panel 相同的 utility class
 - 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉 AppHeader（sticky 玻璃 `--liblog-header-*`、品牌名 ShinyText、`flow-rule` 1px 流光线、`h-16`/`max-w-7xl`）；页脚 SiteFooter 单行（版权 + 声明 + 备案 + 归档 + 许可，`min-h-14`/`text-xs`）
 - 文件映射：
 

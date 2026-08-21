@@ -31,10 +31,13 @@ PAIRS = [
     ("dark", "secondary", "bg", "次要链接/背景"),
 ]
 
-HEX_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+HEX_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$")
 
 
 def _relative_luminance(hex_color: str) -> float:
+    # Tailwind 压缩产物可能使用 #rgb 简写，先归一化为 6 位
+    if len(hex_color) == 4:
+        hex_color = "#" + "".join(ch * 2 for ch in hex_color[1:])
     rgb = [int(hex_color[i : i + 2], 16) / 255 for i in (1, 3, 5)]
 
     def linear(c: float) -> float:
@@ -50,19 +53,19 @@ def contrast_ratio(a: str, b: str) -> float:
 
 
 def _extract_block(css: str, selector: str) -> dict[str, str]:
-    """提取 :root / .dark 块内的 --liblog-* 实色令牌。"""
-    match = re.search(
-        re.escape(selector) + r"\s*\{(.*?)\}", css, re.DOTALL
-    )
-    if not match:
-        return {}
+    """提取全部 :root / .dark 块内的 --liblog-* 实色令牌。
+
+    tokens.css 由 Tailwind CSS 4 编译产出，同一选择器会出现多个块
+    （theme 别名块 + 本站实色令牌块），合并时后者优先。
+    """
     values = {}
-    for name, value in re.findall(
-        r"--liblog-([a-z0-9-]+)\s*:\s*([^;]+);", match.group(1)
-    ):
-        value = value.strip()
-        if HEX_RE.match(value):
-            values[name] = value
+    for match in re.finditer(re.escape(selector) + r"\s*\{(.*?)\}", css, re.DOTALL):
+        for name, value in re.findall(
+            r"--liblog-([a-z0-9-]+)\s*:\s*([^;]+);", match.group(1)
+        ):
+            value = value.strip()
+            if HEX_RE.match(value):
+                values[name] = value
     return values
 
 

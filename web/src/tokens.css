@@ -1,0 +1,309 @@
+/* =============================================================
+   Li&Blog · 品牌令牌落地（Tailwind CSS 4）· 与 Li&Panel 同栈实例化
+
+   来源：Li-Design 模板 + Li&Panel frontend/src/index.css 同构结构
+   编译：web/ 内 tailwindcss CLI（npm run css）
+   输出：themes/blog-theme/static/css/tokens.css（Hugo 静态复制）
+   规则：颜色/阴影/动效只存在本文件；组件与模板禁止硬编码。
+
+   与 Li&Panel 同栈要点：
+   - @theme 语义别名（--color-*）→ 组件只写 utility class
+   - 前缀 --liblog-*；明暗两套；D1 雾灰深色
+   - 保留博客扩展令牌：print / code / btn-light|dark / header / footer /
+     tech / aurora / shadow / ease / motion / badge-readme
+============================================================= */
+
+@import "tailwindcss";
+
+/* 基于 class 的深色模式（html.dark），与 Li&Panel 一致 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 扫描 Hugo 模板与后台 Jinja 模板中的 utility class */
+@source "../../themes/blog-theme/layouts";
+@source "../../admin/templates";
+
+@theme {
+  /* 字体：不加载远程字体，优先本机，中文回退 PingFang SC / 微软雅黑 */
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", sans-serif;
+
+  /* 语义别名：组件只引用这一层，值由 :root / .dark 提供（与 Li&Panel 一致） */
+  --color-background: var(--liblog-bg);
+  --color-surface: var(--liblog-surface);
+  --color-surface-2: var(--liblog-surface-2);
+  --color-foreground: var(--liblog-fg);
+  --color-muted: var(--liblog-muted);
+  --color-border: var(--liblog-border);
+
+  --color-primary: var(--liblog-primary);
+  --color-primary-hover: var(--liblog-primary-hover);
+  --color-primary-soft: var(--liblog-primary-soft);
+  --color-primary-foreground: var(--liblog-primary-fg);
+
+  --color-secondary: var(--liblog-secondary);
+  --color-secondary-soft: var(--liblog-secondary-soft);
+
+  --color-success: var(--liblog-success);
+  --color-success-soft: var(--liblog-success-soft);
+  --color-warning: var(--liblog-warning);
+  --color-warning-soft: var(--liblog-warning-soft);
+  --color-destructive: var(--liblog-destructive);
+  --color-destructive-soft: var(--liblog-destructive-soft);
+  --color-destructive-foreground: var(--liblog-destructive-fg);
+
+  --color-accent-ice: var(--liblog-accent-ice);
+  --color-accent-ice-soft: var(--liblog-accent-ice-soft);
+  --color-accent-aqua: var(--liblog-accent-aqua);
+  --color-accent-aqua-soft: var(--liblog-accent-aqua-soft);
+  --color-accent-lilac: var(--liblog-accent-lilac);
+  --color-accent-lilac-soft: var(--liblog-accent-lilac-soft);
+  --color-accent-sage: var(--liblog-accent-sage);
+  --color-accent-sage-soft: var(--liblog-accent-sage-soft);
+  --color-accent-mint: var(--liblog-accent-mint);
+  --color-accent-mint-soft: var(--liblog-accent-mint-soft);
+  --color-accent-sand: var(--liblog-accent-sand);
+  --color-accent-sand-soft: var(--liblog-accent-sand-soft);
+
+  --color-ring: var(--liblog-ring);
+}
+
+/* Li&Blog 品牌令牌（实例化自 Li-Design V1.5 子模块 design-system/Li-Design）
+ * 前缀：--liblog-*
+ * 参考：Li-Design reusable-tokens.template.css（V1.5）与家族落地代码事实
+ * 规则：颜色/间距/阴影/动效只存在本文件；组件与模板禁止硬编码。
+ */
+
+:root {
+  color-scheme: light;
+
+  /* 中性色（浅） */
+  --liblog-bg: #f6fbf9;
+  --liblog-surface: #ffffff;
+  --liblog-surface-2: #eef6f3;
+  --liblog-fg: #35423f;
+  --liblog-muted: #64736c;
+  --liblog-border: #e1ece8;
+
+  /* 主色（浅）：海玻璃 */
+  --liblog-primary: #25786d;
+  --liblog-primary-hover: #1f6359;
+  --liblog-primary-soft: #d9f4ee;
+  --liblog-primary-fg: #ffffff;
+  --liblog-brand-fg: #24433e;
+  --liblog-badge-readme-fg: #ffffff;
+
+  /* 按钮（仅后台）：半透明单色 */
+  --liblog-btn-primary-bg: rgba(47, 127, 116, 0.1);
+  --liblog-btn-primary-bg-hover: rgba(47, 127, 116, 0.17);
+  --liblog-btn-primary-border: rgba(47, 127, 116, 0.26);
+  --liblog-btn-sweep: rgba(255, 255, 255, 0.42);
+
+  /* 首页 CTA：浅色主按钮（明显）+ 深色次按钮 */
+  --liblog-btn-light-bg: #ffffff;
+  --liblog-btn-light-fg: #24433e;
+  --liblog-btn-light-border: rgba(36, 67, 62, 0.28);
+  --liblog-btn-light-sweep: rgba(36, 67, 62, 0.12);
+  --liblog-btn-dark-bg: #17332e;
+  --liblog-btn-dark-fg: #f0f2f4;
+  --liblog-btn-dark-border: rgba(240, 242, 244, 0.14);
+
+  /* 页头（浅）：对齐 Li&Panel AppHeader（bg-surface/85 + border-border + backdrop-blur） */
+  --liblog-header-bg: rgba(255, 255, 255, 0.85);
+  --liblog-header-border: rgba(225, 236, 232, 0.85);
+  --liblog-header-blur: 8px;
+
+  /* 页脚（浅）：Li-Design V1.5 规格（bg-surface/60 + border-border/60 + backdrop-blur） */
+  --liblog-footer-bg: rgba(255, 255, 255, 0.6);
+  --liblog-footer-border: rgba(225, 236, 232, 0.6);
+  --liblog-footer-blur: 8px;
+
+  /* 语义色（浅） */
+  --liblog-secondary: #2f678f;
+  --liblog-secondary-soft: #dff1fa;
+  --liblog-success: #2a7c52;
+  --liblog-success-soft: #e3f6e9;
+  --liblog-warning: #9a5c05;
+  --liblog-warning-soft: #fdf3d8;
+  --liblog-destructive: #c43737;
+  --liblog-destructive-soft: #fdeeee;
+  --liblog-destructive-fg: #ffffff;
+
+  /* 强调色板（浅） */
+  --liblog-accent-ice: #2f678f;
+  --liblog-accent-ice-soft: #dff1fa;
+  --liblog-accent-aqua: #25786d;
+  --liblog-accent-aqua-soft: #d9f4ee;
+  --liblog-accent-lilac: #51488f;
+  --liblog-accent-lilac-soft: #edeafb;
+  --liblog-accent-sage: #557546;
+  --liblog-accent-sage-soft: #eaf2e3;
+  --liblog-accent-mint: #2f7c52;
+  --liblog-accent-mint-soft: #e3f6e9;
+  --liblog-accent-sand: #876741;
+  --liblog-accent-sand-soft: #f7efe0;
+
+  --liblog-ring: #25786d;
+  --liblog-flow-gradient: linear-gradient(
+    90deg,
+    #7fd4c6,
+    #8fc7f0,
+    #a9a2e8,
+    #a9cc8f,
+    #7fd4c6
+  );
+
+  /* 打印（白纸黑字，不随主题变化） */
+  --liblog-print-bg: #ffffff;
+  --liblog-print-fg: #000000;
+
+  /* 代码高亮（浅色） */
+  --liblog-code-comment: #64736c;
+  --liblog-code-keyword: #2f678f;
+  --liblog-code-string: #2a7c52;
+  --liblog-code-number: #9a5c05;
+  --liblog-code-func: #51488f;
+  --liblog-code-type: #557546;
+  --liblog-code-lineno: #64736c;
+
+  /* 科技光效层（CSS-only，低浓度） */
+  --liblog-tech-grid-line: rgba(47, 127, 116, 0.09);
+  --liblog-tech-grid-accent: rgba(127, 212, 198, 0.22);
+  --liblog-tech-grid-accent-2: rgba(74, 143, 191, 0.18);
+  --liblog-tech-beam: rgba(127, 212, 198, 0.26);
+  --liblog-tech-beam-2: rgba(143, 199, 240, 0.22);
+  --liblog-tech-beam-3: rgba(176, 199, 158, 0.2);
+  --liblog-tech-dot-glow: rgba(127, 212, 198, 0.6);
+  --liblog-aurora-1: rgba(127, 212, 198, 0.32);
+  --liblog-aurora-2: rgba(143, 199, 240, 0.3);
+  --liblog-aurora-3: rgba(169, 162, 232, 0.26);
+  --liblog-aurora-4: rgba(169, 204, 143, 0.24);
+
+  /* 阴影 */
+  --liblog-shadow-sm: 0 0.6px 1.8px rgba(24, 58, 51, 0.04),
+    0 2.4px 7.2px rgba(24, 58, 51, 0.05);
+  --liblog-shadow-md: 0 0.6px 1.8px rgba(24, 58, 51, 0.04),
+    0 2.4px 7.2px rgba(24, 58, 51, 0.05), 0 8px 24px rgba(24, 58, 51, 0.08);
+  --liblog-shadow-lg: 0 0.6px 1.8px rgba(24, 58, 51, 0.04),
+    0 2.4px 7.2px rgba(24, 58, 51, 0.05), 0 8px 32px rgba(24, 58, 51, 0.1);
+
+  /* 动效 */
+  --liblog-ease-out: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --liblog-ease-in: cubic-bezier(0.55, 0.06, 0.68, 0.19);
+  --liblog-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --liblog-motion-fast: 150ms;
+  --liblog-motion-base: 250ms;
+  --liblog-motion-slow: 350ms;
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* 中性色（深）：D1 雾灰，不压黑 */
+  --liblog-bg: #3a3f45;
+  --liblog-surface: #434950;
+  --liblog-surface-2: #4b5259;
+  --liblog-fg: #f0f2f4;
+  --liblog-muted: #b8c0c7;
+  --liblog-border: #545c64;
+
+  /* 主色（深） */
+  --liblog-primary: #7fd4c6;
+  --liblog-primary-hover: #a5e4d9;
+  --liblog-primary-soft: rgba(127, 212, 198, 0.16);
+  --liblog-primary-fg: #17332e;
+  --liblog-brand-fg: #d7efea;
+  --liblog-badge-readme-fg: #ffffff;
+
+  /* 按钮（深） */
+  --liblog-btn-primary-bg: rgba(127, 212, 198, 0.13);
+  --liblog-btn-primary-bg-hover: rgba(127, 212, 198, 0.21);
+  --liblog-btn-primary-border: rgba(127, 212, 198, 0.3);
+  --liblog-btn-sweep: rgba(255, 255, 255, 0.18);
+
+  /* 首页 CTA（深色模式下浅色按钮保持浅底深字，深色按钮用品牌深底） */
+  --liblog-btn-light-bg: #f0f2f4;
+  --liblog-btn-light-fg: #17332e;
+  --liblog-btn-light-border: rgba(240, 242, 244, 0.35);
+  --liblog-btn-light-sweep: rgba(23, 51, 46, 0.14);
+  --liblog-btn-dark-bg: #17332e;
+  --liblog-btn-dark-fg: #d7efea;
+  --liblog-btn-dark-border: rgba(215, 239, 234, 0.2);
+
+  /* 页头（深）：对齐 Li&Panel AppHeader（bg-surface/85 + border-border + backdrop-blur） */
+  --liblog-header-bg: rgba(67, 73, 80, 0.85);
+  --liblog-header-border: rgba(84, 92, 100, 0.85);
+  --liblog-header-blur: 8px;
+
+  /* 页脚（深）：Li-Design V1.5 规格 */
+  --liblog-footer-bg: rgba(67, 73, 80, 0.6);
+  --liblog-footer-border: rgba(84, 92, 100, 0.6);
+
+  /* 语义色（深） */
+  --liblog-secondary: #a8d4f0;
+  --liblog-secondary-soft: rgba(168, 212, 240, 0.16);
+  --liblog-success: #86d6ac;
+  --liblog-success-soft: rgba(134, 214, 172, 0.14);
+  --liblog-warning: #ead48e;
+  --liblog-warning-soft: rgba(234, 212, 142, 0.14);
+  --liblog-destructive: #e8a49a;
+  --liblog-destructive-soft: rgba(232, 164, 154, 0.14);
+  --liblog-destructive-fg: #43211d;
+
+  /* 强调色板（深） */
+  --liblog-accent-ice: #a8cbe8;
+  --liblog-accent-ice-soft: rgba(168, 203, 232, 0.16);
+  --liblog-accent-aqua: #7fd4c6;
+  --liblog-accent-aqua-soft: rgba(127, 212, 198, 0.16);
+  --liblog-accent-lilac: #b0a8de;
+  --liblog-accent-lilac-soft: rgba(176, 168, 222, 0.18);
+  --liblog-accent-sage: #b0c79e;
+  --liblog-accent-sage-soft: rgba(176, 199, 158, 0.18);
+  --liblog-accent-mint: #9adfad;
+  --liblog-accent-mint-soft: rgba(154, 223, 173, 0.16);
+  --liblog-accent-sand: #d9c49e;
+  --liblog-accent-sand-soft: rgba(217, 196, 158, 0.16);
+
+  --liblog-ring: #7fd4c6;
+  --liblog-flow-gradient: linear-gradient(
+    90deg,
+    rgba(127, 212, 198, 0.65),
+    rgba(168, 212, 240, 0.65),
+    rgba(176, 168, 222, 0.65),
+    rgba(176, 199, 158, 0.6),
+    rgba(127, 212, 198, 0.65)
+  );
+
+  /* 科技光效层（深） */
+  --liblog-tech-grid-line: rgba(176, 199, 158, 0.13);
+  --liblog-tech-grid-accent: rgba(127, 212, 198, 0.18);
+  --liblog-tech-grid-accent-2: rgba(168, 212, 240, 0.16);
+  --liblog-tech-beam: rgba(127, 212, 198, 0.2);
+  --liblog-tech-beam-2: rgba(168, 212, 240, 0.19);
+  --liblog-tech-beam-3: rgba(176, 199, 158, 0.15);
+  --liblog-tech-dot-glow: rgba(127, 212, 198, 0.55);
+  --liblog-aurora-1: rgba(127, 212, 198, 0.4);
+  --liblog-aurora-2: rgba(168, 212, 240, 0.36);
+  --liblog-aurora-3: rgba(176, 168, 222, 0.32);
+  --liblog-aurora-4: rgba(176, 199, 158, 0.28);
+
+  /* 实色粉彩底（深色模式下保持浅底 + 深字） */
+  --liblog-primary-soft-solid: #d9f4ee;
+  --liblog-primary-soft-fg: #17332e;
+  --liblog-success-soft-solid: #e3f6e9;
+  --liblog-success-soft-fg: #14532d;
+  --liblog-warning-soft-solid: #fdf3d8;
+  --liblog-warning-soft-fg: #78350f;
+  --liblog-destructive-soft-solid: #fdeeee;
+  --liblog-destructive-soft-fg: #7f1d1d;
+
+  /* 代码高亮（深色） */
+  --liblog-code-comment: #b8c0c7;
+  --liblog-code-keyword: #a8d4f0;
+  --liblog-code-string: #86d6ac;
+  --liblog-code-number: #ead48e;
+  --liblog-code-func: #b0a8de;
+  --liblog-code-type: #b0c79e;
+  --liblog-code-lineno: #b8c0c7;
+}

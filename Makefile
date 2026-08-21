@@ -20,9 +20,12 @@ preview:
 web-build:
 	cd web && npm run build
 
+web-css:
+	cd web && npm run css
+
 web-verify:
-	cd web && npm run build && test -s ../themes/blog-theme/static/js/effects-react.js
-	@echo "effects-react.js OK: $$(wc -c < themes/blog-theme/static/js/effects-react.js) bytes"
+	cd web && npm run build && test -s ../themes/blog-theme/static/js/effects-react.js && test -s ../themes/blog-theme/static/css/tokens.css
+	@echo "effects-react.js OK: $$(wc -c < themes/blog-theme/static/js/effects-react.js) bytes; tokens.css OK: $$(wc -c < themes/blog-theme/static/css/tokens.css) bytes"
 
 audit:
 	$(PY) scripts/check_hardcoded.py

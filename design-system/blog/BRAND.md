@@ -108,6 +108,7 @@
 ## 6.1 变更记录
 
 - 2026-08-21 认证页对齐 Li&Panel AuthShell：登录与设置向导底部补齐版权 + 备案（`auth-footer`，图标占位字符走 `strings.footer.icon_fallback`），令牌落地
+- 2026-08-21 样式层迁移 Tailwind CSS 4：`tokens.css` 由 `web/src/tokens.css` 编译生成（与 Li&Panel `index.css` 同构：`@theme` + `--liblog-*`），页眉/页脚使用与 Panel 完全相同的 utility class，构建走 `npm run css`
 - 2026-08-21 页眉页脚 1:1 对齐 Li&Panel（同款实现）：页眉按 AppHeader——sticky + 半透明表面 + backdrop-blur（`--liblog-header-*` 令牌）+ 品牌名 ShinyText 扫光 + `flow-rule` 1px 流光线 + `h-16`/`max-w-7xl`；页脚按 SiteFooter 单行——版权 + 声明 + 备案 + 归档 + 许可，`min-h-14`/`text-xs`；公开站不引入主题切换按钮（跟随系统，槽位 17）。
 
 ## 7. 使用边界

@@ -69,134 +69,73 @@ main:focus { outline: none; }
 .skip-link:focus { top: 12px; }
 
 /* ---------- 页头（sticky + 品牌流动线） ---------- */
-:root { --header-h: 64px; } /* 对齐 Li&Panel AppHeader：h-16 */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  flex-shrink: 0;
-  height: var(--header-h);
-  padding: 0;
-  border-bottom: 1px solid var(--liblog-header-border);
-  background: var(--liblog-header-bg);
-  -webkit-backdrop-filter: blur(var(--liblog-header-blur));
-  backdrop-filter: blur(var(--liblog-header-blur));
-}
-.header-inner {
-  max-width: 1280px; /* max-w-7xl */
-  height: 100%;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 12px; /* gap-3 */
-  flex-wrap: nowrap;
-  padding: 0 16px; /* px-4 */
-}
-@media (min-width: 640px) {
-  .header-inner { padding: 0 24px; } /* sm:px-6 */
-}
-@media (min-width: 1024px) {
-  .header-inner { padding: 0 32px; } /* lg:px-8 */
-}
-.brand-logo {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px; /* gap-2.5 */
-  border-radius: 8px;
-  font-weight: 600;
-  color: var(--liblog-fg);
-}
-.brand-logo:hover { text-decoration: none; }
-.brand-logo-img {
-  height: 32px; /* h-8 */
-  width: 32px; /* w-8 */
-  object-fit: contain;
-}
-.logo-fallback {
-  height: 32px;
-  width: 32px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--liblog-primary-soft);
-  color: var(--liblog-primary);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
-/* 品牌名：对齐 Li&Panel ShinyText（15px / semibold / tracking-tight / 渐变扫光 6s） */
-.brand-name-text {
-  display: inline-block;
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  color: var(--liblog-fg);
-  background-image: linear-gradient(
-    90deg,
-    var(--liblog-fg) 0%,
-    var(--liblog-fg) 38%,
-    var(--liblog-primary) 50%,
-    var(--liblog-fg) 62%,
-    var(--liblog-fg) 100%
-  );
-  background-size: 200% auto;
-  background-position: 150% center;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: brand-shine-flow 6s var(--liblog-ease-out) infinite;
-}
-@supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+:root { --header-h: 64px; } /* h-16，与 Li&Panel AppHeader 一致 */
+
+/* 页头组件类（Li&Panel AppHeader 同款）：布局/配色由 Tailwind utility 承担，
+   本层仅保留组件行为与装饰；置于 @layer components，保证 utility 优先。 */
+@layer components {
+  /* 品牌名 ShinyText 扫光（与 Li&Panel ShinyText 同款，6s；字体参数走 utility） */
   .brand-name-text {
+    display: inline-block;
+    background-image: linear-gradient(
+      90deg,
+      var(--liblog-fg) 0%,
+      var(--liblog-fg) 38%,
+      var(--liblog-primary) 50%,
+      var(--liblog-fg) 62%,
+      var(--liblog-fg) 100%
+    );
+    background-size: 200% auto;
+    background-position: 150% center;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: brand-shine-flow 6s var(--liblog-ease-out) infinite;
+  }
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .brand-name-text {
+      background: none;
+      -webkit-text-fill-color: currentColor;
+    }
+  }
+  .logo-fallback {
+    display: inline-grid;
+    place-items: center;
+    height: 32px;
+    width: 32px;
+    border-radius: 8px;
+    background: var(--liblog-primary-soft);
+    color: var(--liblog-primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+  /* 顶栏流光线（Panel flow-rule 组件：渐变 + 5s 位移；位置/尺寸由 utility 控制） */
+  .flow-rule {
+    display: block;
+    height: 3px;
+    border-radius: 9999px;
+    background: var(--liblog-flow-gradient);
+    background-size: 250% 100%;
+    animation: flow-line-shift 5s linear infinite;
+    will-change: background-position;
+    pointer-events: none;
+  }
+  .nav-search-btn {
+    border: 0;
     background: none;
-    -webkit-text-fill-color: currentColor;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+  }
+  .site-nav-link[aria-current="page"] {
+    color: var(--liblog-primary);
+    font-weight: 600;
   }
 }
+
 @keyframes brand-shine-flow {
   0% { background-position: 150% center; }
   100% { background-position: -50% center; }
-}
-.site-nav {
-  margin-left: auto;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px; /* gap-2，对齐 Panel actions */
-  flex-wrap: nowrap;
-  font-size: 0.875rem; /* text-sm */
-}
-.site-nav a, .nav-search-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
-  padding: 0 10px;
-  border-radius: 8px;
-  white-space: nowrap;
-}
-.site-nav a:hover { background: var(--liblog-surface-2); text-decoration: none; }
-.site-nav a[aria-current="page"] { color: var(--liblog-primary); font-weight: 600; }
-.nav-search-btn {
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-}
-.nav-search-btn:hover { background: var(--liblog-surface-2); }
-/* 顶栏流光线：对齐 Li&Panel AppHeader flow-rule（inset-x-0 bottom-0 h-px，5s） */
-.flow-rule {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  border-radius: 0;
-  background: var(--liblog-flow-gradient);
-  background-size: 250% 100%;
-  animation: flow-line-shift 5s linear infinite;
-  pointer-events: none;
-  will-change: background-position;
 }
 @keyframes flow-line-shift {
   to { background-position: -250% 0; }
@@ -210,97 +149,46 @@ main:focus { outline: none; }
   padding: 0 0 48px;
 }
 .page-shell > *:first-child { margin-top: 24px; }
-.site-footer {
-  position: relative;
-  flex-shrink: 0;
-  margin-top: auto;
-  border-top: 1px solid var(--liblog-footer-border);
-  background: var(--liblog-footer-bg);
-  -webkit-backdrop-filter: blur(var(--liblog-footer-blur));
-  backdrop-filter: blur(var(--liblog-footer-blur));
-  color: var(--liblog-muted);
-  font-size: 0.75rem; /* text-xs = 12px，V1.5 */
-  line-height: 1.333; /* 12px 行高 16px */
-  text-align: center;
+.site-footer { flex-shrink: 0; } /* 布局/配色由 Tailwind utility 承担 */
+
+/* 页脚组件类（Li&Panel SiteFooter 同款）：布局/配色由 Tailwind utility 承担 */
+@layer components {
+  .beian-link { display: inline-flex; align-items: center; }
+  .beian-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    flex: none;
+    color: var(--liblog-muted);
+  }
+  .beian-icon svg { display: block; width: 14px; height: 14px; }
+  .beian-icon-img {
+    width: 14px;
+    height: 14px;
+    flex: none;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+  .filing-icon-placeholder {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background: var(--liblog-surface-2);
+    color: var(--liblog-muted);
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .filing-icon-placeholder[hidden] { display: none !important; }
+  .beian-link:hover .beian-icon { color: var(--liblog-primary); }
+  .beian-text { white-space: nowrap; }
 }
-.site-footer-inner {
-  width: min(1280px, calc(100% - 32px)); /* max-w-7xl + px-4 */
-  margin: 0 auto;
-  min-height: 56px; /* min-h-14 兜底，V1.5 */
-  display: flex;
-  flex-wrap: wrap; /* V1.5：允许换行，无横向滚动 */
-  align-items: center;
-  justify-content: center;
-  gap: 4px 8px; /* gap-y-1 gap-x-2，V1.5 */
-  padding: 20px 16px; /* py-5 px-4，V1.5 */
-}
-@media (min-width: 1024px) {
-  .site-footer-inner { padding: 20px 32px; } /* lg:px-8，V1.5 */
-}
-.footer-copyright,
-.footer-statement {
-  white-space: nowrap;
-}
-/* 单行页脚：对齐 Li&Panel SiteFooter（全部条目 gap-x-2 均匀排布） */
-.footer-beian {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px; /* gap-x-2 */
-}
-.footer-filing {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.footer-sep { color: var(--liblog-border); }
-.footer-meta-link {
-  display: inline-flex;
-  align-items: center;
-  color: var(--liblog-muted);
-}
-.footer-meta-link:hover { color: var(--liblog-fg); }
-.footer-beian a { color: var(--liblog-muted); }
-.footer-beian a:hover { color: var(--liblog-fg); }
-.beian-link { display: inline-flex; align-items: center; gap: 6px; }
-.beian-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px; /* V1.5：图标 14×14 */
-  height: 14px;
-  flex: none;
-  color: var(--liblog-muted);
-}
-.beian-icon svg {
-  display: block;
-  width: 14px;
-  height: 14px;
-}
-.beian-icon-img {
-  width: 14px;
-  height: 14px;
-  flex: none;
-  object-fit: contain;
-  border-radius: 4px; /* V1.5：占位圆角 */
-}
-.filing-icon-placeholder {
-  display: inline-flex;
-  width: 14px;
-  height: 14px;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  background: var(--liblog-surface-2);
-  color: var(--liblog-muted);
-  font-size: 9px;
-  font-weight: 600;
-  line-height: 1;
-}
-.filing-icon-placeholder[hidden] { display: none !important; }
-.beian-link:hover .beian-icon { color: var(--liblog-primary); }
-.beian-text { white-space: nowrap; }
 
 /* beacon 打点图：脱离文档流，避免在 footer 内产生额外行盒（保持 V1.5 单行 56px） */
 .site-footer img[src*="beacon"] {
@@ -1294,11 +1182,7 @@ mark {
   .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
 }
 @media (max-width: 768px) {
-  :root { --header-h: 56px; }
-  .header-inner { gap: 8px; }
-  .brand-logo { gap: 8px; }
-  .brand-logo-img { height: 32px; width: 32px; }
-  .logo-fallback { height: 32px; width: 32px; font-size: 0.8rem; }
+  /* 移动端导航：保留横向滚动（Panel 无导航，博客内容站扩展；不侵入 Tailwind 布局） */
   .site-nav {
     flex: 1;
     min-width: 0;
@@ -1311,7 +1195,7 @@ mark {
     -webkit-overflow-scrolling: touch;
   }
   .site-nav::-webkit-scrollbar { display: none; }
-  .site-nav a, .nav-search-btn {
+  .site-nav-link, .nav-search-btn {
     flex: none;
     min-height: 44px;
     padding: 0 10px;
@@ -1337,7 +1221,6 @@ mark {
   .journey-date { min-width: 0; }
   .project-card, .post-card { padding: 16px 18px; }
   .card-grid { gap: 12px; }
-  .site-footer-inner { gap: 4px 8px; }
   .post-nav { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
