@@ -962,62 +962,6 @@ input:focus, select:focus, textarea:focus {
   break-inside: avoid;
   margin: 0 0 24px !important;
 }
-.post-card--visual, .project-card--visual { padding-top: 16px; }
-.card-visual {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: var(--cv-ratio, 16 / 10);
-  overflow: hidden;
-  border-radius: 14px;
-  background:
-    radial-gradient(circle at 82% 16%, var(--cv-a, var(--liblog-primary-soft)) 0 18%, transparent 19%),
-    radial-gradient(circle at 12% 86%, var(--cv-b, var(--liblog-accent-ice-soft)) 0 24%, transparent 25%),
-    linear-gradient(135deg, var(--cv-a, var(--liblog-primary-soft)), var(--cv-b, var(--liblog-accent-ice-soft)));
-  box-shadow: inset 0 1px 0 var(--liblog-glass-highlight);
-  pointer-events: none;
-}
-.card-visual::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(115deg, transparent 42%, var(--liblog-glass-highlight) 43%, transparent 44%),
-    linear-gradient(180deg, transparent 64%, var(--liblog-glass-highlight) 65%, transparent 66%);
-  opacity: 0.55;
-}
-.card-visual-orb,
-.card-visual-ring {
-  position: absolute;
-  pointer-events: none;
-}
-.card-visual-orb {
-  width: 46%;
-  aspect-ratio: 1;
-  left: -12%;
-  bottom: -24%;
-  border-radius: 50%;
-  background: var(--cv-b, var(--liblog-accent-ice-soft));
-  filter: blur(1px);
-  opacity: 0.9;
-}
-.card-visual-ring {
-  width: 38%;
-  aspect-ratio: 1;
-  right: 10%;
-  top: 12%;
-  border: 1px solid var(--liblog-glass-highlight);
-  border-radius: 50%;
-  box-shadow: 0 0 0 14px var(--cv-a, var(--liblog-primary-soft));
-  opacity: 0.9;
-}
-.card-visual--0 { --cv-ratio: 16 / 9; --cv-a: var(--liblog-accent-aqua-soft); --cv-b: var(--liblog-accent-ice-soft); }
-.card-visual--1 { --cv-ratio: 4 / 3; --cv-a: var(--liblog-accent-ice-soft); --cv-b: var(--liblog-accent-lilac-soft); }
-.card-visual--2 { --cv-ratio: 21 / 9; --cv-a: var(--liblog-accent-mint-soft); --cv-b: var(--liblog-accent-sage-soft); }
-.card-visual--3 { --cv-ratio: 1 / 1; --cv-a: var(--liblog-accent-sand-soft); --cv-b: var(--liblog-accent-lilac-soft); }
-.card-visual--4 { --cv-ratio: 3 / 2; --cv-a: var(--liblog-accent-lilac-soft); --cv-b: var(--liblog-accent-aqua-soft); }
-.card-visual--5 { --cv-ratio: 16 / 10; --cv-a: var(--liblog-accent-sage-soft); --cv-b: var(--liblog-accent-mint-soft); }
-
 /* ---------- 文章 / 代码 / 提示块 / 目录 ---------- */
 .section { margin-top: 72px; }
 /* 离屏区块跳过渲染与布局（浏览器支持的场景自动生效） */
@@ -1025,17 +969,17 @@ input:focus, select:focus, textarea:focus {
   content-visibility: auto;
   contain-intrinsic-size: auto 480px;
 }
-.section-title { font-size: 1.25rem; text-align: left; margin-bottom: 20px; }
+.section-title { font-size: 1.25rem; text-align: center; margin-bottom: 20px; }
 .section-title::after {
   content: "";
   display: block;
   width: 48px;
   height: 3px;
-  margin: 10px 0 0;
+  margin: 10px auto 0;
   border-radius: 2px;
   background: var(--liblog-primary);
 }
-.section > p { text-align: left; }
+.section > p { text-align: center; }
 .section > .badge-row { justify-content: center; }
 .post-list { max-width: 720px; margin: 0 auto; }
 .page-title { text-align: center; }

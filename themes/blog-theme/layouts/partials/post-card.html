@@ -1,10 +1,8 @@
 {{ $strings := hugo.Data.strings }}
 {{ $p := . }}
 {{ $level := 2 }}
-{{ $visual := false }}
-{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ $visual = .visual | default false }}{{ end }}
-<article class="post-card{{ if $visual }} post-card--visual{{ end }}">
-  {{ if and $visual (not $p.Params.cover) }}{{ partial "card-visual.html" (dict "title" $p.Title "kind" "post") }}{{ end }}
+{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ end }}
+<article class="post-card">
   {{ with $p.Params.cover }}
   <a class="post-cover-link" href="{{ $p.RelPermalink }}" tabindex="-1" aria-hidden="true">
     {{ $cand := "" }}

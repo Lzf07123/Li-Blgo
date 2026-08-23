@@ -13,7 +13,7 @@
 - 技术栈一致铁律（Li&Design V1.5.2，2026-08-21 同步）：样式层统一 Tailwind CSS 4（与 Li&Panel 同栈，`tokens.css` 由 `web/src/tokens.css` 编译）；后续视觉效果一律同栈实现，禁止手写 CSS 近似，效果必须与参考实现一模一样
 - 样式层迁移 Tailwind CSS 4（2026-08-21，与 Li&Panel 同栈）：`themes/blog-theme/static/css/tokens.css` 改为由 `web/src/tokens.css` 编译生成——结构与 Li&Panel `frontend/src/index.css` 同构（`@theme` 语义别名 `--color-*` → `--liblog-*`，`@custom-variant dark`，`@source` 扫描 Hugo/Jinja 模板）；`npm run css` / `make web-css` 构建，产物提交（Hugo 静态复制，容器构建不联网）；`scripts/check_contrast.py` 适配多 `:root`/`.dark` 块与 `#rgb` 简写
 - 移动端二级菜单与友情链接（2026-08-24）：移动端页眉横排导航收进右上角 `<details>` 二级菜单（保留首页/关于/搜索，新增友情链接入口，`nav-menu.js` 处理点外关闭/Escape/搜索联动，44px 触达尺寸）；友情链接为 `content/friends/*.md` Markdown 栏目（后台「友情链接」可增删改查），公开页 `/friends/` 列表 + 每站外链安全提醒页（`/friends/<slug>/`，确认后才打开站外地址，`rel="noopener noreferrer nofollow"`）；页脚新增友情链接按钮，文案全部走 `strings.yaml`（`nav.menu` / `nav.friends` / `friends.*`）
-- 视觉重构（2026-08-24，按推荐重构公开站）：留白升级（区块 72px、卡片 24px 栅格/间距、页脚底 96px）；首页/项目页改用三列瀑布流 `.masonry`，卡片带确定性的抽象视觉块 `.card-visual`（六档宽高比 + 强调色板渐变，`card-visual.html` 用标题 md5 映射）；卡片微交互为悬浮上移 5px + `shadow-lg` + 内高光；新增液态玻璃令牌 `--liblog-glass-*`（blur/saturate/折射高光，浅深两套）并应用到卡片、友情链接卡与搜索弹层；搜索异步加载展示 `.search-skeleton` 微骨架；文章/项目/时间线/标签/归档/友链列表统一 `.empty-state`（内联 SVG 小图 + 引导文案 + 返回首页，全部文案走 `strings.common.*`）
+- 视觉重构（2026-08-24，按推荐重构公开站）：留白升级（区块 72px、卡片 24px 栅格/间距、页脚底 96px）；首页/项目页改用三列瀑布流 `.masonry`，未配图内容不渲染任何默认占位，仅真实 `cover` 按图片宽高比参与瀑布流；卡片微交互为悬浮上移 5px + `shadow-lg` + 内高光；新增液态玻璃令牌 `--liblog-glass-*`（blur/saturate/折射高光，浅深两套）并应用到卡片、友情链接卡与搜索弹层；搜索异步加载展示 `.search-skeleton` 微骨架；文章/项目/时间线/标签/归档/友链列表统一 `.empty-state`（内联 SVG 小图 + 引导文案 + 返回首页，全部文案走 `strings.common.*`）；区块标题保持全站居中
 - 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉按 AppHeader 结构落地——sticky 玻璃（`--liblog-header-bg` surface/85 + blur 8px + `--liblog-header-border`）、内层 `max-w-7xl` + `px-4 → sm:px-6 → lg:px-8`、高度 `h-16`（桌面 64 / 移动 56）、品牌名 ShinyText 扫光（15px semibold tracking-tight，6s）、底部 `flow-rule` 1px 流光线（5s）；页脚按 SiteFooter 单行结构落地——版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 许可，`min-h-14`、`text-xs`、`gap-x-2 gap-y-1`、`px-4 → lg:px-8`、hover 转前景色；公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
 - 文章排版增强（2026-08-22）：`.article .page-title` 放大至 `clamp(1.9rem, 4vw, 2.6rem)`（原浏览器默认 2rem）；代码块新增一键复制按钮 `.code-copy`（`copy-code.js` 原生注入，剔除 Chroma 行号 `.ln`，复制成功显示「已复制」2s，触屏常显、打印隐藏），按钮文案走 `strings.common.copy_code / copy_code_done`（后台「页面文案」可改），样式走 `--liblog-*` 令牌；Hugo 构建验证 357 页，Playwright 实测 h1 41.6px、11 个代码块按钮、剪贴板与代码文本逐字节一致；修正：复制文案改为从 `.article` 读取（与模板 `data-*` 对齐，不再退回硬编码），代码块内边距仅最外层加一次（`pre` 与 `.highlight` 不叠加，避免顶部双倍留白/双层边框）；`hugo.toml` `lineNos=false`，代码块不再显示行号（保留 Chroma 语法高亮），复制按钮逻辑兼容有无行号两种结构
@@ -59,7 +59,7 @@
 | brand-logo | Logo 占位/图片，品牌色文字兜底 |
 | badge | 本地徽章胶囊（技术栈/项目；兼容 `label` 与 `name`）；`badge-readme` 变体为个人信息技能徽章（官方品牌色整块 + 白字 + 本地图标，模拟 README shields 标准，零外链）；图标支持 SVG slug 与主流光栅路径（png/jpg/jpeg/gif/webp/avif），显示层 object-fit: contain 自动缩放 |
 | admin-badge | 后台类型化徽章（published 对勾 / draft 圆点 / active 圆点 / muted / danger），语义色 + 边框 + 图标，列表标签渲染为 `admin-tag` 小胶囊 |
-| card | 项目卡/文章卡（2026-08-24 起液态玻璃：半透明磨砂 + `backdrop-filter` + 内高光，20px 圆角；悬浮抬升 5px + 深投影；`card-visual` 视觉块按标题哈希六档错落） |
+| card | 项目卡/文章卡（2026-08-24 起液态玻璃：半透明磨砂 + `backdrop-filter` + 内高光，20px 圆角；悬浮抬升 5px + 深投影；有 `cover` 才显示图片，未配图内容保持纯文字无占位） |
 | timeline-node | 时间线节点 |
 | code-block | Chroma 高亮（Hugo 内置，令牌配色） |
 | admonition | 提示块（纯 CSS） |
@@ -110,7 +110,7 @@
 | account-settings | 账号设置：用户名/密码修改、OIDC 绑定/解绑、会话管理 |
 | audit-log | 操作日志：登录与内容操作审计（SQLite） |
 | health-check | 健康自检：目录/Hugo/GOMEMLIMIT/SQLite/beacon 检查 |
-| stats-filter | 访问统计：日期筛选、按月/年分组、CSV 导出、7 日趋势 |
+| stats-filter | 访问统计：日期筛选、按月/年分组、CSV 导出、7 日趋势；按路径查看时同一路径跨多天聚合为一行（最近访问日期 + 合计次数），独立路径全局去重 |
 | beacon-ingest | nginx empty_gif 匿名日志 → admin 启动导入 stats 表 |
 | react-effects | React + motion 效果运行时（web/ 工程，esbuild 打包为 effects-react.js，约 90KB gzip）：FloatingBackground Canvas、Aurora、TechAmbience（网格+光点）、BlurText、CountUp；仅 full/soft 页面加载，文章页零 React |
 
@@ -229,7 +229,7 @@
 
 **移动端二级菜单 + 友情链接（2026-08-24）：** 移动端导航收进 `<details>` 二级菜单，菜单项为首页/关于/搜索/友情链接；新增 `content/friends/` Markdown 栏目与后台「友情链接」CRUD（含 URL 协议白名单校验与排序字段），公开页 `/friends/` 与每站 `/friends/<slug>/` 外链安全提醒页；页脚新增友情链接按钮。`make check` 通过，156 项单测通过；Hugo v0.165.0（macOS 同版本二进制，SHA256 校验）全量构建 359 页/539 文件通过；无头 Chromium CDP 实测 390px 下横排导航隐藏、二级菜单显示且可展开/点外关闭/Escape/搜索联动关闭，1280px 下桌面导航显示、移动菜单隐藏、页脚友情链接入口存在，页面无横向溢出。
 
-**视觉重构实测（2026-08-24）：** `make check` 与 156 项单测通过；Hugo v0.165.0 全量构建 359 页/539 文件通过；无头 Chromium CDP 实测 1440px 首页三列瀑布流、9 张卡片 9 种不同高度、`backdrop-filter: blur(18px) saturate(1.5)` 液态玻璃生效，卡片真实鼠标悬浮后 `translateY(-5px) scale(1.006)` 且投影加深；本地服务器延迟 1200ms 时搜索输入先显示三行骨架屏，索引返回后隐藏骨架并显示 4 条结果；空友链页显示内联 SVG 小图 + 引导文案 + 返回首页；390px 移动端单列、无横向溢出。
+**视觉重构实测（2026-08-24）：** `make check` 与 157 项单测通过；Hugo v0.165.0 全量构建 359 页/539 文件通过；无头 Chromium CDP 实测 1440px 首页三列瀑布流、未配图卡片无占位视觉块，`backdrop-filter: blur(18px) saturate(1.5)` 液态玻璃生效，卡片真实鼠标悬浮后 `translateY(-5px) scale(1.006)` 且投影加深；本地服务器延迟 1200ms 时搜索输入先显示三行骨架屏，索引返回后隐藏骨架并显示 4 条结果；空友链页显示内联 SVG 小图 + 引导文案 + 返回首页；390px 移动端单列、无横向溢出。
 
 ## 6. 文件映射（模板 → 本博客）
 

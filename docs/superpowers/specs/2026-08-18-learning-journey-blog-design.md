@@ -203,7 +203,7 @@ config/
 - 样式层 Tailwind CSS 4（2026-08-21）：`tokens.css` 由 `web/src/tokens.css` 编译，与 Li&Panel `index.css` 同构（`@theme` 别名 + `--liblog-*` 令牌），页眉/页脚使用与 Panel 相同的 utility class
 - 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉 AppHeader（sticky 玻璃 `--liblog-header-*`、品牌名 ShinyText、`flow-rule` 1px 流光线、`h-16`/`max-w-7xl`）；页脚 SiteFooter 单行（版权 + 声明 + 备案 + 归档 + 许可，`min-h-14`/`text-xs`）
 - 移动端二级菜单与友情链接（2026-08-24）：移动端导航收敛为二级菜单（首页/关于/搜索/友情链接），友情链接以 `content/friends/*.md` 为唯一事实来源，公开站外链先经过站内安全提醒页确认再打开
-- 公开站视觉重构（2026-08-24）：留白/栅格收紧为统一节奏，卡片改液态玻璃（半透明磨砂 + `backdrop-filter` + 折射高光），首页/项目页 CSS 瀑布流配六档确定性抽象视觉块，卡片悬浮微交互，搜索异步加载微骨架屏，文章/项目/时间线/标签/归档/友链列表统一带 SVG 小图的空状态；仍无任何用户输入组件，动效尊重 `prefers-reduced-motion`
+- 公开站视觉重构（2026-08-24）：留白/栅格收紧为统一节奏，卡片改液态玻璃（半透明磨砂 + `backdrop-filter` + 折射高光），首页/项目页 CSS 瀑布流（仅真实封面参与，未配图不显示占位），卡片悬浮微交互，搜索异步加载微骨架屏，文章/项目/时间线/标签/归档/友链列表统一带 SVG 小图的空状态；仍无任何用户输入组件，动效尊重 `prefers-reduced-motion`
 - 文件映射：
 
 | 模板默认 | 本博客落点 |

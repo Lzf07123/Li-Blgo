@@ -3,7 +3,7 @@
 <h1 class="page-title">{{ .Title }}</h1>
 {{ with .Content }}<div class="page-intro">{{ . }}</div>{{ end }}
 <div class="masonry masonry-projects">
-  {{ range .Pages.ByTitle }}{{ partial "project-card.html" (dict "page" . "level" 2 "visual" true) }}{{ else }}
+  {{ range .Pages.ByTitle }}{{ partial "project-card.html" (dict "page" . "level" 2) }}{{ else }}
   {{ partial "empty-state.html" (dict "icon" "projects" "text" hugo.Data.strings.common.empty_projects "action" (dict "href" .Site.Home.RelPermalink "label" hugo.Data.strings.common.browse_home)) }}
   {{ end }}
 </div>

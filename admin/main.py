@@ -769,7 +769,10 @@ def dashboard(request: Request):
     scheduled = [p for p in posts if p.get("status") != "draft" and _is_future(str(p.get("date") or ""))]
     recent_posts = posts[:5]
     conn = connect()
-    stats = conn.execute("SELECT path, day, views FROM stats ORDER BY views DESC LIMIT 20").fetchall()
+    stats = conn.execute(
+        "SELECT path, MAX(day) AS day, SUM(views) AS views "
+        "FROM stats GROUP BY path ORDER BY views DESC LIMIT 20"
+    ).fetchall()
     trend_rows = conn.execute(
         "SELECT day, SUM(views) AS total FROM stats "
         "WHERE day >= date('now', '-6 days') GROUP BY day ORDER BY day"
@@ -789,7 +792,13 @@ def dashboard(request: Request):
         last_build = datetime.datetime.fromtimestamp(index_file.stat().st_mtime).strftime("%Y-%m-%d %H:%M:%S")
     output_info = build.output_info()
     path_titles = _path_title_map()
-    top_rows = [{"path": display_path(r["path"]), "views": r["views"]} for r in stats[:5]]
+    top_rows = [
+        {
+            "path": path_titles.get(display_path(r["path"]), display_path(r["path"])),
+            "views": r["views"],
+        }
+        for r in stats[:5]
+    ]
     top_max = max((r["views"] for r in top_rows), default=0)
     for r in top_rows:
         r["pct"] = round(r["views"] * 100 / top_max) if top_max else 0
@@ -813,7 +822,7 @@ def dashboard(request: Request):
     ]
     stats_columns = [
         {"key": "path", "label": "路径", "type": "link"},
-        {"key": "day", "label": "日期", "type": "text"},
+        {"key": "day", "label": "最近访问", "type": "text"},
         {"key": "views", "label": "次数", "type": "number"},
     ]
     stats_rows = [
@@ -900,24 +909,29 @@ def stats_page(
     require_login(request)
     conn = connect()
     params: list = []
+    filters = "WHERE 1=1"
+    if start:
+        filters += " AND day >= ?"
+        params.append(start)
+    if end:
+        filters += " AND day <= ?"
+        params.append(end)
     if group == "month":
         sql = (
-            "SELECT strftime('%Y-%m', day) AS period, SUM(views) AS total, "
-            "COUNT(DISTINCT path) AS paths FROM stats WHERE 1=1"
+            f"SELECT strftime('%Y-%m', day) AS period, SUM(views) AS total, "
+            f"COUNT(DISTINCT path) AS paths FROM stats {filters}"
         )
     elif group == "year":
         sql = (
-            "SELECT strftime('%Y', day) AS period, SUM(views) AS total, "
-            "COUNT(DISTINCT path) AS paths FROM stats WHERE 1=1"
+            f"SELECT strftime('%Y', day) AS period, SUM(views) AS total, "
+            f"COUNT(DISTINCT path) AS paths FROM stats {filters}"
         )
     else:
-        sql = "SELECT path, day, views FROM stats WHERE 1=1"
-    if start:
-        sql += " AND day >= ?"
-        params.append(start)
-    if end:
-        sql += " AND day <= ?"
-        params.append(end)
+        # 按路径聚合：同一条路径跨多天只显示一行，日期取最近一次访问。
+        sql = (
+            f"SELECT path, MAX(day) AS day, SUM(views) AS views "
+            f"FROM stats {filters} GROUP BY path"
+        )
     if group in ("month", "year"):
         sql += " GROUP BY period ORDER BY period DESC LIMIT ?"
         params.append(min(max(int(limit), 10), 1000))
@@ -925,10 +939,20 @@ def stats_page(
         sql += " ORDER BY views DESC LIMIT ?"
         params.append(min(max(int(limit), 10), 1000))
     rows = conn.execute(sql, params).fetchall()
+
+    # 独立路径必须全局去重；按周期汇总时不能把同一路径跨周期重复相加。
+    unique_params = list(params)
+    if group in ("month", "year"):
+        unique_sql = f"SELECT COUNT(DISTINCT path) AS total FROM stats {filters}"
+        # 周期 SQL 的 LIMIT 参数不适用于全局去重查询，去掉末尾参数。
+        unique_params = params[:-1] if params else []
+        unique_paths = conn.execute(unique_sql, unique_params).fetchone()["total"]
+    else:
+        unique_paths = len(rows)
     conn.close()
+
     if group in ("month", "year"):
         total_views = sum(r["total"] for r in rows)
-        unique_paths = sum(r["paths"] for r in rows)
         columns = [
             {"key": "period", "label": "周期", "type": "text"},
             {"key": "total", "label": "访问", "type": "number"},
@@ -936,10 +960,9 @@ def stats_page(
         ]
     else:
         total_views = sum(r["views"] for r in rows)
-        unique_paths = len({r["path"] for r in rows})
         columns = [
             {"key": "path", "label": "路径", "type": "link"},
-            {"key": "day", "label": "日期", "type": "text"},
+            {"key": "day", "label": "最近访问", "type": "text"},
             {"key": "views", "label": "次数", "type": "number"},
         ]
     if group in ("month", "year"):

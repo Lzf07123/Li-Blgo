@@ -68,6 +68,17 @@ class StatsRoutesTest(unittest.TestCase):
             r = client.get("/admin/stats?start=2026-08-01")
             self.assertIn(">7<", r.text.replace(" ", ""))  # 5+2 次
 
+    def test_stats_path_grouping_deduplicates_paths(self):
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/stats?group=path")
+            self.assertEqual(r.status_code, 200)
+            # /posts/a/ 存在 07-01 与 08-02 两条记录，应合并为一行并显示最近日期
+            self.assertNotIn("2026-07-01", r.text)
+            self.assertEqual(r.text.count("2026-08-02"), 1)
+            # a 合计 5 次、b 合计 5 次，总访问应为 10
+            self.assertIn(">10<", r.text.replace(" ", ""))
+
     def test_health_page(self):
         with TestClient(app) as client:
             self._login(client)
