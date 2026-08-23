@@ -502,7 +502,7 @@ main:focus { outline: none; }
   aspect-ratio: var(--cover-ratio, 16 / 9);
   height: auto;
   object-fit: cover;
-  background: var(--liblog-surface-2);
+  background: transparent;
 }
 .project-card { display: flex; flex-direction: column; }
 .project-card h3, .project-card h2, .post-card h3, .post-card h2 { margin: 0 0 6px; font-size: 1.05rem; }
@@ -602,7 +602,7 @@ input:focus, select:focus, textarea:focus {
   max-height: 420px;
   object-fit: cover;
   border-radius: 16px;
-  background: var(--liblog-surface-2);
+  background: transparent;
 }
 .timeline { position: relative; margin-top: 16px; padding-left: 20px; border-left: 2px solid var(--liblog-border); }
 .timeline-node { position: relative; padding: 0 0 20px 16px; }
