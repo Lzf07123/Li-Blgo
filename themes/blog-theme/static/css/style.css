@@ -4,7 +4,7 @@
 
 * { box-sizing: border-box; }
 /* 移动端无横向滚动：装饰层（hero 光晕/氛围光束）允许越界绘制但禁止产生页面横向滚动 */
-html { overflow-x: clip; }
+html { overflow-x: clip; scroll-behavior: smooth; }
 html { -webkit-text-size-adjust: 100%; }
 body {
   min-height: 100vh;
@@ -132,7 +132,40 @@ main:focus { outline: none; }
     font-weight: 600;
   }
 
-  /* 移动端二级菜单（首页/关于/搜索/友情链接）：桌面隐藏，仅触达尺寸复用 44px */
+  /* 移动端外露主导航：首页/关于/搜索常驻页眉，其余入口收进二级菜单 */
+  .mobile-nav-primary {
+    display: none;
+  }
+  .mobile-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--liblog-muted);
+    font: inherit;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--liblog-motion-fast) var(--liblog-ease-out),
+      color var(--liblog-motion-fast) var(--liblog-ease-out);
+  }
+  .mobile-nav-link:hover,
+  .mobile-nav-link:focus-visible {
+    background: var(--liblog-surface-2);
+    color: var(--liblog-fg);
+  }
+  .mobile-nav-link[aria-current="page"] {
+    color: var(--liblog-primary);
+    font-weight: 600;
+  }
+
+  /* 移动端二级菜单：收起文章/项目/历程/资源/友情链接，桌面隐藏 */
   .mobile-menu {
     display: none;
     position: relative;
@@ -1379,6 +1412,40 @@ body.search-modal-open { overflow: hidden; }
 .article-body a { overflow-wrap: anywhere; }
 .related-posts { margin-top: 40px; }
 .back-top { margin-top: 32px; text-align: center; }
+.back-to-top {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 55;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--liblog-glass-border-soft);
+  border-radius: 14px;
+  background:
+    var(--liblog-glass-shine),
+    var(--liblog-glass-bg-strong);
+  -webkit-backdrop-filter: blur(var(--liblog-glass-blur)) saturate(var(--liblog-glass-saturate));
+  backdrop-filter: blur(var(--liblog-glass-blur)) saturate(var(--liblog-glass-saturate));
+  color: var(--liblog-muted);
+  box-shadow: var(--liblog-shadow-md),
+    inset 0 1px 0 var(--liblog-glass-highlight);
+  text-decoration: none;
+  transition: color var(--liblog-motion-fast) var(--liblog-ease-out),
+    background-color var(--liblog-motion-fast) var(--liblog-ease-out),
+    box-shadow var(--liblog-motion-base) var(--liblog-ease-out),
+    transform var(--liblog-motion-base) var(--liblog-ease-spring);
+}
+.back-to-top svg { width: 20px; height: 20px; }
+.back-to-top:hover,
+.back-to-top:focus-visible {
+  color: var(--liblog-primary-hover);
+  background: var(--liblog-glass-bg-strong);
+  box-shadow: var(--liblog-shadow-lg),
+    inset 0 1px 0 var(--liblog-glass-highlight);
+  transform: translateY(-2px);
+}
 .project-repo { margin: 12px 0 0; }
 .hero-skills {
   padding-bottom: 12px;
@@ -1645,9 +1712,22 @@ mark {
   .masonry { column-width: 240px; column-gap: 20px; }
 }
 @media (max-width: 768px) {
-  /* 移动端导航：横排链接收进右上角二级菜单，保留 44px 触达尺寸 */
+  /* 移动端导航：首页/关于/搜索常驻，其余入口收进右上角二级菜单 */
   .site-nav { display: none; }
-  .mobile-menu { display: block; }
+  .mobile-nav-primary {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+  }
+  .mobile-menu {
+    display: block;
+    margin-left: 0;
+  }
+  .mobile-nav-link {
+    min-height: 44px;
+    padding: 0 9px;
+  }
   .page-shell { width: min(720px, calc(100% - 28px)); padding-bottom: 64px; }
   .masonry { column-count: 2; column-width: auto; column-gap: 16px; }
   .masonry > * { margin-bottom: 16px !important; }
@@ -1667,6 +1747,7 @@ mark {
   .post-nav { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
+  .back-to-top { right: 14px; bottom: 16px; }
   .masonry { column-count: 1; column-gap: 0; }
   .article-body { font-size: 0.95rem; }
   .article-body table {
@@ -1685,6 +1766,10 @@ mark {
   .post-list, .journey-panel { max-width: 100%; }
   .badge-row { gap: 6px; }
   .search-input { max-width: 100%; }
+}
+@media (max-width: 360px) {
+  /* 320px 级窄屏：隐藏品牌文字，仅保留 Logo，避免页眉横向溢出 */
+  .site-header .brand-name-text { display: none; }
 }
 @media (max-width: 480px) {
   .post-cover { max-height: 260px; }
@@ -1712,6 +1797,7 @@ mark {
   .reading-progress,
   .ambient,
   .back-top,
+  .back-to-top,
   .to-top,
   .hero::before,
   .flow-rule,

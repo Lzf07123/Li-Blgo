@@ -12,7 +12,7 @@
 - 认证页底部对齐（2026-08-21，Li&Panel AuthShell）：登录/基础信息/创建管理员页新增 `auth-footer`——版权（`brand.copyright`，`{year}` 由后台上下文注入）与 ICP/公安备案链接（`brand.icp*` / `brand.police*`，图标缺失/加载失败走 `.filing-icon-placeholder`，字符来自 `strings.footer.icon_fallback`），样式走 `--liblog-*` 令牌
 - 技术栈一致铁律（Li&Design V1.5.2，2026-08-21 同步）：样式层统一 Tailwind CSS 4（与 Li&Panel 同栈，`tokens.css` 由 `web/src/tokens.css` 编译）；后续视觉效果一律同栈实现，禁止手写 CSS 近似，效果必须与参考实现一模一样
 - 样式层迁移 Tailwind CSS 4（2026-08-21，与 Li&Panel 同栈）：`themes/blog-theme/static/css/tokens.css` 改为由 `web/src/tokens.css` 编译生成——结构与 Li&Panel `frontend/src/index.css` 同构（`@theme` 语义别名 `--color-*` → `--liblog-*`，`@custom-variant dark`，`@source` 扫描 Hugo/Jinja 模板）；`npm run css` / `make web-css` 构建，产物提交（Hugo 静态复制，容器构建不联网）；`scripts/check_contrast.py` 适配多 `:root`/`.dark` 块与 `#rgb` 简写
-- 移动端二级菜单与友情链接（2026-08-24）：移动端页眉横排导航收进右上角 `<details>` 二级菜单（保留首页/关于/搜索，新增友情链接入口，`nav-menu.js` 处理点外关闭/Escape/搜索联动，44px 触达尺寸）；友情链接为 `content/friends/*.md` Markdown 栏目（后台「友情链接」可增删改查），公开页 `/friends/` 列表 + 每站外链安全提醒页（`/friends/<slug>/`，确认后才打开站外地址，`rel="noopener noreferrer nofollow"`）；页脚新增友情链接按钮，文案全部走 `strings.yaml`（`nav.menu` / `nav.friends` / `friends.*`）
+- 移动端二级菜单与友情链接（2026-08-24）：移动端页眉首页/关于/搜索常驻外露，文章/项目/历程/资源/友情链接收进右上角 `<details>` 二级菜单（`nav-menu.js` 处理点外关闭/Escape/搜索联动，44px 触达尺寸）；桌面页眉资源后新增友情链接；友情链接为 `content/friends/*.md` Markdown 栏目（后台「友情链接」可增删改查），公开页 `/friends/` 列表 + 每站外链安全提醒页（`/friends/<slug>/`，确认后才打开站外地址，`rel="noopener noreferrer nofollow"`）；页脚新增友情链接按钮，文案全部走 `strings.yaml`（`nav.menu` / `nav.friends` / `friends.*`）
 - 视觉重构（2026-08-24，按推荐重构公开站）：留白升级（区块 72px、卡片 24px 栅格/间距、页脚底 96px）；首页/项目页改用三列瀑布流 `.masonry`，未配图内容不渲染任何默认占位，仅真实 `cover` 按图片宽高比参与瀑布流；卡片微交互为悬浮上移 5px + `shadow-lg` + 内高光；新增液态玻璃令牌 `--liblog-glass-*`（blur/saturate/折射高光，浅深两套）并应用到卡片、友情链接卡与搜索弹层；搜索异步加载展示 `.search-skeleton` 微骨架；文章/项目/时间线/标签/归档/友链列表统一 `.empty-state`（内联 SVG 小图 + 引导文案 + 返回首页，全部文案走 `strings.common.*`）；区块标题保持全站居中
 - 页眉页脚 1:1 对齐（2026-08-21，Li&Panel 同款实现）：页眉按 AppHeader 结构落地——sticky 玻璃（`--liblog-header-bg` surface/85 + blur 8px + `--liblog-header-border`）、内层 `max-w-7xl` + `px-4 → sm:px-6 → lg:px-8`、高度 `h-16`（桌面 64 / 移动 56）、品牌名 ShinyText 扫光（15px semibold tracking-tight，6s）、底部 `flow-rule` 1px 流光线（5s）；页脚按 SiteFooter 单行结构落地——版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 许可，`min-h-14`、`text-xs`、`gap-x-2 gap-y-1`、`px-4 → lg:px-8`、hover 转前景色；公开站仍跟随系统、无主题切换按钮（BRAND 槽位 17）
 - 质检修正（2026-08-21，playwright 实测 + 视觉模型复核）：beacon 打点图绝对定位不占流（页脚单行高度严格 56px+1px border）；`.filing-icon-placeholder` 补 `[hidden]` 回退（图标正常时不显示占位）；`html` 与 `.hero` 加 `overflow-x: clip`，移动端实测 `scrollWidth==375`、不可横向滚动、页脚零裁切
@@ -65,8 +65,9 @@
 | admonition | 提示块（纯 CSS） |
 | toc | 文章目录 |
 | site-header | 顶栏（2026-08-21，Li&Panel AppHeader 同款）：sticky 玻璃（`--liblog-header-bg/border/blur`）+ 品牌名 ShinyText 扫光 + 底部 `flow-rule` 1px 流光线 + `max-w-7xl`/`px-4→lg:px-8` 内层；高度 64/56px（`--header-h`）；导航/搜索按钮文案全部走 `strings.yaml` |
-| mobile-menu | 移动端二级菜单（2026-08-24）：`<details>` 原生展开 + `nav-menu.js` 点外关闭/Escape/链接关闭/搜索联动，右对齐悬浮面板，44px 触达；菜单项固定为首页/关于/搜索/友情链接，文案走 `strings.yaml` |
+| mobile-menu | 移动端二级菜单（2026-08-24）：首页/关于/搜索常驻页眉外露，文章/项目/历程/资源/友情链接收进 `details` 二级菜单（`nav-menu.js` 点外关闭/Escape/链接关闭，44px 触达）；桌面页眉在资源后增加友情链接入口，文案走 `strings.yaml` |
 | site-footer | 页脚（2026-08-21 起 Li&Panel SiteFooter 同款单行）：版权 + 站点声明 + 备案（`·` 分隔）+ 归档 + 友情链接 + 许可，`min-h-14` 单行、`text-xs`、`gap-x-2 gap-y-1`、`max-w-7xl` + `px-4→lg:px-8`、hover 前景色；V1.5 规格仍保留：`mt-auto` 贴底 + 半透明表面（`--liblog-footer-bg`）+ backdrop-blur（`--liblog-footer-blur`），单行高 56px（`min-h-14` 兜底）、字号 12px、备案图标/占位 14×14px、`max-w-7xl` 居中；版权/备案/归档/友情链接/许可全部由 `brand.yaml` + `strings.yaml` 驱动；备案图标缺失或加载失败时 `.filing-icon-placeholder` 字形方块占位（字符走 `strings.footer.icon_fallback`） |
+| back-to-top | 全局右侧常驻返回顶部按钮：固定右下角、液态玻璃质感、`href="#main"` 纯锚点 + CSS 平滑滚动（零 JS 依赖），44px 触达、打印隐藏，`aria-label` 走 `strings.common.top` |
 | breadcrumb / pagination | 纯导航，无表单 |
 
 ### 后台（仅管理员，交互组件只在此出现）
