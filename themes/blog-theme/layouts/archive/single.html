@@ -19,6 +19,6 @@
   {{ end }}
 </div>
 {{ else }}
-<p class="page-intro">{{ hugo.Data.strings.home.no_results }}</p>
+{{ partial "empty-state.html" (dict "icon" "posts" "text" hugo.Data.strings.common.empty_archive "action" (dict "href" .Site.Home.RelPermalink "label" hugo.Data.strings.common.browse_home)) }}
 {{ end }}
 {{ end }}

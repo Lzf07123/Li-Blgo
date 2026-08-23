@@ -23,6 +23,11 @@
     </div>
     <div class="search-modal-body">
       <p id="search-modal-info" class="search-info" role="status" aria-live="polite"></p>
+      <div id="search-modal-skeleton" class="search-skeleton" hidden aria-hidden="true">
+        <div class="search-skeleton-item"><span class="search-skeleton-bar"></span><span class="search-skeleton-bar"></span></div>
+        <div class="search-skeleton-item"><span class="search-skeleton-bar"></span><span class="search-skeleton-bar"></span></div>
+        <div class="search-skeleton-item"><span class="search-skeleton-bar"></span><span class="search-skeleton-bar"></span></div>
+      </div>
       <ul id="search-modal-results" class="search-results"></ul>
       <div id="search-modal-empty" class="search-empty-state" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -47,6 +52,7 @@
     var input = document.getElementById("search-modal-input");
     var list = document.getElementById("search-modal-results");
     var info = document.getElementById("search-modal-info");
+    var skeleton = document.getElementById("search-modal-skeleton");
     var empty = document.getElementById("search-modal-empty");
     var emptyText = document.getElementById("search-empty-text");
     // 文案经 data-* 属性注入（浏览器解析时反转义），JSON.parse 得到对象；
@@ -60,6 +66,7 @@
     var activeIndex = -1;
     var lastTrigger = null;
     var indexPromise = null;
+    var indexFailed = false;
 
     function setSearchExpanded(expanded) {
       document.querySelectorAll("[data-open-search]").forEach(function (btn) {
@@ -102,8 +109,13 @@
               Object.keys(links).forEach(function (t) { tagUrls[t] = links[t]; });
             });
             fuse = new Fuse(posts, { keys: ["title", "summary", "tags"], includeScore: true });
+            render(input.value.trim());
           })
-          .catch(function () { indexPromise = null; });
+          .catch(function () {
+            indexFailed = true;
+            indexPromise = null;
+            render(input.value.trim());
+          });
       }
       return indexPromise;
     }
@@ -123,7 +135,17 @@
       var oldChips = empty.querySelector(".search-tag-chips");
       if (oldChips) oldChips.remove();
       empty.hidden = true;
-      if (!q || !fuse) { info.textContent = ""; return; }
+      skeleton.hidden = true;
+      if (!q) { info.textContent = ""; return; }
+      if (!fuse) {
+        if (indexFailed) {
+          info.textContent = COMMON.search_error || "";
+        } else {
+          skeleton.hidden = false;
+          info.textContent = COMMON.search_loading || "";
+        }
+        return;
+      }
       var found = fuse.search(q).slice(0, 20);
       info.textContent = found.length + " " + STRINGS.result_count;
       if (!found.length) {
@@ -192,6 +214,9 @@
     }
 
     function open(trigger) {
+      document.querySelectorAll("[data-mobile-menu] details[open]").forEach(function (menu) {
+        menu.removeAttribute("open");
+      });
       lastTrigger = trigger || document.activeElement;
       modal.hidden = false;
       document.body.classList.add("search-modal-open");

@@ -160,6 +160,7 @@ ADMIN_NAV = [
             {"label": "时间线", "path": "/timeline", "icon": "clock"},
             {"label": "关于我", "path": "/about", "icon": "user"},
             {"label": "资源", "path": "/resources", "icon": "book"},
+            {"label": "友情链接", "path": "/friends", "icon": "link"},
         ],
     },
     {
@@ -1630,8 +1631,12 @@ def section_duplicate(
             i += 1
         fm = dict(fm)
         fm["title"] = f"{fm.get('title', slug)}（副本）"
-        fm["status"] = "draft"
-        fm["date"] = datetime.date.today().isoformat()
+        if section == "friends":
+            fm.pop("status", None)
+            fm.pop("date", None)
+        else:
+            fm["status"] = "draft"
+            fm["date"] = datetime.date.today().isoformat()
         store.write_markdown(section, new_slug, fm, body)
         _audit("content_duplicate", f"{section}/{slug}->{new_slug}")
     except (ValueError, FileNotFoundError) as exc:
@@ -1804,6 +1809,7 @@ SECTIONS = {
     "timeline": {"label": "时间线", "single": False},
     "about": {"label": "关于我", "single": True},
     "resources": {"label": "资源", "single": True},
+    "friends": {"label": "友情链接", "single": False},
 }
 
 
@@ -1836,6 +1842,13 @@ def _edit_fields(section: str, fm: dict) -> list:
             ("date", "日期", "text", fm.get("date", datetime.date.today().isoformat())),
             ("kind", "类型", "text", fm.get("kind", "里程碑")),
             ("summary", "摘要", "textarea", fm.get("summary", "")),
+        ]
+    if section == "friends":
+        return [
+            ("title", "站点名称", "text", fm.get("title", "")),
+            ("href", "链接（http/https）", "text", fm.get("href", "")),
+            ("description", "简介", "textarea", fm.get("description", "")),
+            ("weight", "排序（数字越小越靠前）", "text", fm.get("weight", 0)),
         ]
     return [("title", "标题", "text", fm.get("title", ""))]
 
@@ -1886,10 +1899,17 @@ def section_list(
         raise HTTPException(404)
     if SECTIONS[section]["single"]:
         return RedirectResponse(ap(f"/{section}/edit"), status_code=302)
-    if sort not in ("title", "date", "status", "slug"):
-        sort = "date"
-    if order not in ("asc", "desc"):
-        order = "desc"
+    if section == "friends":
+        if sort not in ("title", "href", "weight", "slug"):
+            sort = "weight"
+            order = "asc"
+        if order not in ("asc", "desc"):
+            order = "asc"
+    else:
+        if sort not in ("title", "date", "status", "slug"):
+            sort = "date"
+        if order not in ("asc", "desc"):
+            order = "desc"
     per_page = min(max(int(per_page), 10), 100) if per_page else 50
     items = store.list_markdown(
         section, q=q, status=status, tag=tag, pinned=pinned, sort=sort, order=order
@@ -1921,14 +1941,22 @@ def section_list(
         return query_url(base, **params)
 
     columns = []
-    if section == "posts":
-        columns.append({"key": "select", "label": "选择", "type": "select"})
-    columns += [
-        {"key": "title", "label": "标题", "type": "link", "sortable": True},
-        {"key": "date", "label": "日期", "type": "text", "sortable": True},
-        {"key": "status", "label": "状态", "type": "badge", "sortable": section != "timeline"},
-        {"key": "actions", "label": "操作", "type": "actions"},
-    ]
+    if section == "friends":
+        columns = [
+            {"key": "title", "label": "名称", "type": "link", "sortable": True},
+            {"key": "href", "label": "链接", "type": "text", "sortable": True},
+            {"key": "weight", "label": "排序", "type": "number", "align": "right", "sortable": True},
+            {"key": "actions", "label": "操作", "type": "actions"},
+        ]
+    else:
+        if section == "posts":
+            columns.append({"key": "select", "label": "选择", "type": "select"})
+        columns += [
+            {"key": "title", "label": "标题", "type": "link", "sortable": True},
+            {"key": "date", "label": "日期", "type": "text", "sortable": True},
+            {"key": "status", "label": "状态", "type": "badge", "sortable": section != "timeline"},
+            {"key": "actions", "label": "操作", "type": "actions"},
+        ]
     rows = []
     group_year = None
     for item in page_items:
@@ -1996,6 +2024,8 @@ def section_list(
                 "status": item["status"],
                 "status_label": status_label,
                 "status_class": status_class,
+                "href": item.get("href", ""),
+                "weight": item.get("weight", 0),
                 "actions": actions,
             }
         )
@@ -2005,12 +2035,20 @@ def section_list(
             {"title": p["title"], "slug": p["slug"]} for p in store.list_markdown("posts")
         ]
     sort_links = {}
-    for key in ("title", "date", "status"):
+    sort_keys = ("title", "href", "weight") if section == "friends" else ("title", "date", "status")
+    for key in sort_keys:
         if key == "status" and section == "timeline":
             continue
         next_order = "asc" if (sort == key and order == "desc") else "desc"
         sort_links[key] = qurl(sort=key, order=next_order, page="")
-    empty = "没有匹配的内容，换个关键词或清除筛选试试。" if (q or status) else "还没有内容，点右上角“新建”开始。"
+    if section == "friends":
+        empty = (
+            "没有匹配的友情链接，换个关键词试试。"
+            if q
+            else "还没有友情链接，点右上角“新建”添加第一个站点。"
+        )
+    else:
+        empty = "没有匹配的内容，换个关键词或清除筛选试试。" if (q or status) else "还没有内容，点右上角“新建”开始。"
     table = {
         "caption": f"{SECTIONS[section]['label']}列表",
         "columns": columns,
@@ -2281,6 +2319,9 @@ def section_save(
     badge_label: str = Form(""),
     badge_color: str = Form(""),
     badge_href: str = Form(""),
+    friend_url: str = Form("", alias="href"),
+    description: str = Form(""),
+    weight: str = Form(""),
     pinned: str = Form(""),
     body: str = Form(""),
 ):
@@ -2334,6 +2375,25 @@ def section_save(
                             "href": badge_href,
                         },
                         "show_on_home": fm.get("show_on_home", True),
+                    }
+                )
+            elif section == "friends":
+                if not title.strip():
+                    raise ValueError("站点名称不能为空")
+                parsed_weight = 0
+                if weight.strip():
+                    try:
+                        parsed_weight = int(weight.strip())
+                    except ValueError:
+                        raise ValueError("排序必须是整数")
+                    if parsed_weight < 0 or parsed_weight > 9999:
+                        raise ValueError("排序超出范围（0-9999）")
+                fm.update(
+                    {
+                        "title": title.strip(),
+                        "href": store.normalize_friend_url(friend_url),
+                        "description": description.strip(),
+                        "weight": parsed_weight,
                     }
                 )
             else:

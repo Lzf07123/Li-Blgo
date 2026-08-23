@@ -56,24 +56,24 @@
 
 <section class="section">
   <h2 class="section-title">{{ $strings.home.projects_title }}</h2>
-  <div class="card-grid">
+  <div class="masonry masonry-projects">
     {{ range first (int $home.projects.max_cards) $projects }}
-      {{ partial "project-card.html" (dict "page" . "level" 3) }}
+      {{ partial "project-card.html" (dict "page" . "level" 3 "visual" true) }}
     {{ end }}
   </div>
 </section>
 
 <section class="section">
   <h2 class="section-title">{{ $strings.home.latest_title }}</h2>
-  <div class="post-list">
+  <div class="masonry masonry-posts">
     {{ $count := int $home.posts.latest_count }}
     {{ $pinnedShown := first $count $pinnedPosts.ByDate.Reverse }}
     {{ range $pinnedShown }}
-      {{ partial "post-card.html" (dict "page" . "level" 3) }}
+      {{ partial "post-card.html" (dict "page" . "level" 3 "visual" true) }}
     {{ end }}
     {{ $normalShown := first (sub $count (len $pinnedShown)) $normalPosts.ByDate.Reverse }}
     {{ range $normalShown }}
-      {{ partial "post-card.html" (dict "page" . "level" 3) }}
+      {{ partial "post-card.html" (dict "page" . "level" 3 "visual" true) }}
     {{ end }}
   </div>
   <p><a class="more-link" href="{{ "posts/" | relURL }}">{{ $strings.home.view_all }}</a></p>

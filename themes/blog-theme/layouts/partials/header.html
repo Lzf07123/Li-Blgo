@@ -27,5 +27,27 @@
       <a class="site-nav-link inline-flex items-center justify-center min-h-10 whitespace-nowrap rounded-lg px-2.5 text-sm text-muted transition-colors duration-200 hover:bg-surface-2 hover:text-foreground" href="{{ "resources/" | relURL }}" {{ if hasPrefix $current "/resources/" }}aria-current="page"{{ end }}>{{ $nav.resources }}</a>
       <button type="button" class="nav-search-btn inline-flex items-center justify-center min-h-10 whitespace-nowrap rounded-lg px-2.5 text-sm text-muted transition-colors duration-200 hover:bg-surface-2 hover:text-foreground" data-open-search aria-controls="search-modal" aria-expanded="false" aria-keyshortcuts="Control+K">{{ $nav.search }}</button>
     </nav>
+    <div class="mobile-menu" data-mobile-menu>
+      <details class="site-menu">
+        <summary class="site-menu-trigger" aria-label="{{ $nav.menu }}" aria-expanded="false">
+          <span class="site-menu-icon site-menu-icon-open" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16"></path><path d="M4 12h16"></path><path d="M4 18h16"></path></svg>
+          </span>
+          <span class="site-menu-icon site-menu-icon-close" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+          </span>
+          <span class="visually-hidden">{{ $nav.menu }}</span>
+        </summary>
+        <nav class="site-menu-panel" aria-label="{{ $nav.menu }}">
+          <a class="site-menu-item" href="{{ .Site.Home.RelPermalink }}" {{ if eq $current .Site.Home.RelPermalink }}aria-current="page"{{ end }}>{{ $nav.home }}</a>
+          <a class="site-menu-item" href="{{ "about/" | relURL }}" {{ if hasPrefix $current "/about/" }}aria-current="page"{{ end }}>{{ $nav.about }}</a>
+          <button type="button" class="site-menu-item" data-open-search aria-controls="search-modal" aria-expanded="false">{{ $nav.search }}</button>
+          <span class="site-menu-sep" aria-hidden="true"></span>
+          <a class="site-menu-item" href="{{ "friends/" | relURL }}" {{ if hasPrefix $current "/friends/" }}aria-current="page"{{ end }}>{{ $nav.friends }}</a>
+        </nav>
+      </details>
+    </div>
   </div>
 </header>
+{{ $av := partialCached "asset-versions.html" . "asset-versions-v1" }}
+<script defer src="{{ "js/nav-menu.js" | relURL }}?v={{ index $av.js "nav_menu" }}"></script>

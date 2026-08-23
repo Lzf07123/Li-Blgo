@@ -1,12 +1,16 @@
 {{ $strings := hugo.Data.strings }}
+{{ $crumb_title := .Title }}
+{{ $section_title := "" }}
+{{ with .CurrentSection }}{{ $section_title = .Title }}{{ end }}
+{{ if eq .Section "friends" }}{{ $crumb_title = $strings.friends.title }}{{ $section_title = $strings.friends.title }}{{ end }}
 <nav class="breadcrumb" aria-label="{{ $strings.common.breadcrumb }}">
   <a href="{{ .Site.Home.RelPermalink }}">{{ $strings.nav.home }}</a>
   {{ with .CurrentSection }}
-  {{ if and (ne . .Site.Home) (ne .Title $.Title) }}
+  {{ if and (ne . .Site.Home) (ne $section_title $crumb_title) }}
   <span aria-hidden="true">/</span>
-  <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+  <a href="{{ .RelPermalink }}">{{ $section_title }}</a>
   {{ end }}
   {{ end }}
   <span aria-hidden="true">/</span>
-  <span aria-current="page">{{ .Title }}</span>
+  <span aria-current="page">{{ $crumb_title }}</span>
 </nav>

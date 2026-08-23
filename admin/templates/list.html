@@ -9,7 +9,7 @@
 <div class="list-head">
   <h1>{{ label }}（{{ total }}）</h1>
   <div class="list-actions">
-    {% if section in ["posts", "projects", "timeline"] %}
+    {% if section in ["posts", "projects", "timeline", "friends"] %}
     <a class="btn" href="/{{ admin_path }}/{{ section }}/new">新建</a>
     {% endif %}
     {% if section == "posts" %}
@@ -20,8 +20,8 @@
   </div>
 </div>
 <form class="list-filters" method="get" action="/{{ admin_path }}/{{ section }}">
-  <label class="visually-hidden" for="q">搜索标题、标识或标签</label>
-  <input id="q" type="search" name="q" value="{{ q }}" placeholder="搜索标题 / 标识 / 标签">
+  <label class="visually-hidden" for="q">{{ '搜索名称、标识或链接' if section == 'friends' else '搜索标题、标识或标签' }}</label>
+  <input id="q" type="search" name="q" value="{{ q }}" placeholder="{{ '搜索名称 / 标识 / 链接' if section == 'friends' else '搜索标题 / 标识 / 标签' }}">
   {% if section == "posts" %}
   <select name="status" aria-label="按状态筛选" data-custom-dropdown>
     <option value="">全部状态</option>
@@ -48,7 +48,9 @@
   <input type="hidden" name="sort" value="{{ sort }}">
   <input type="hidden" name="order" value="{{ order }}">
   <button type="submit" class="btn btn-secondary btn-sm">筛选</button>
-{% if q or status or tag or pinned or sort != "date" or order != "desc" or per_page != 50 %}
+{% set default_sort = "weight" if section == "friends" else "date" %}
+{% set default_order = "asc" if section == "friends" else "desc" %}
+{% if q or status or tag or pinned or sort != default_sort or order != default_order or per_page != 50 %}
   <a class="btn-link" href="/{{ admin_path }}/{{ section }}" data-clear-filters>清除</a>
   {% endif %}
 </form>

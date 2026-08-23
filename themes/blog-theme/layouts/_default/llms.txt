@@ -15,6 +15,7 @@
 - 历程：{{ "timeline/" | relURL }}
 - 关于：{{ "about/" | relURL }}
 - 资源：{{ "resources/" | relURL }}
+- 友情链接：{{ "friends/" | relURL }}
 
 ## 最新文章
 

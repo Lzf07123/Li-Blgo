@@ -9,6 +9,8 @@ nav:
   resources: 资源
   search: 搜索
   archive: 归档
+  menu: 菜单
+  friends: 友情链接
 
 home:
   hero_title: 你好，我是
@@ -60,6 +62,27 @@ common:
   no_tags: 还没有标签，发布文章后自动生成
   copy_code: 复制
   copy_code_done: 已复制
+  empty_posts: 还没有文章，稍后再来看看
+  empty_projects: 项目正在打磨中，敬请期待
+  empty_timeline: 还没有里程碑，新的旅程即将开始
+  empty_archive: 还没有归档文章
+  empty_links: 暂时还没有友情链接，稍后再来看看
+  browse_home: 返回首页
+  search_loading: 正在加载搜索索引…
+  search_error: 搜索索引加载失败，请稍后重试
+
+friends:
+  title: 友情链接
+  intro: 收录常去的站点与朋友们的博客，内容由对方站点维护。
+  empty: 暂时还没有友情链接，稍后再来看看吧。
+  visit: 查看站点
+  back: 返回友情链接
+  safety_title: 即将离开本站
+  safety_lead: 你正在访问一个站外链接，请注意甄别信息并保护个人信息。
+  safety_target: 目标站点
+  safety_continue: 继续访问
+  safety_cancel: 取消返回
+  safety_tip: 本站无法控制外部站点的内容、安全性与隐私政策，请勿在陌生站点输入账号密码等敏感信息。
 
 footer:
   rights: 保留所有权利

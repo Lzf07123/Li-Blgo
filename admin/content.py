@@ -4,6 +4,7 @@ import re
 import shutil
 import time
 from pathlib import Path
+from urllib.parse import urlparse
 
 import yaml
 
@@ -51,6 +52,26 @@ def safe_resolve(root: Path, rel: str) -> Path:
         raise ValueError("path escape")
     return p
 
+def normalize_friend_url(value: str) -> str:
+    """友情链接校验：只接受 http/https 绝对地址，拒绝空白/控制字符/凭据。"""
+    if not isinstance(value, str):
+        raise ValueError("链接不能为空")
+    url = value.strip()
+    if not url:
+        raise ValueError("链接不能为空")
+    if len(url) > 2048:
+        raise ValueError("链接过长")
+    if any(ord(ch) < 32 or ch.isspace() for ch in url):
+        raise ValueError("链接不能包含空白或控制字符")
+    if any(ch in url for ch in "\"'<>"):
+        raise ValueError("链接包含非法字符")
+    parsed = urlparse(url)
+    if parsed.scheme.lower() not in ("http", "https") or not parsed.netloc:
+        raise ValueError("仅支持 http/https 链接")
+    if parsed.username is not None or parsed.password is not None:
+        raise ValueError("链接不能包含用户名或密码")
+    return url
+
 
 def _read_frontmatter(path: Path) -> dict:
     text = path.read_text(encoding="utf-8")
@@ -89,6 +110,9 @@ def list_markdown(
                 "status": fm.get("status", "published"),
                 "tags": fm.get("tags") or [],
                 "pinned": bool(fm.get("pinned", False)),
+                "href": fm.get("href", ""),
+                "description": fm.get("description", ""),
+                "weight": fm.get("weight", 0),
             }
         )
     if q:
@@ -98,6 +122,8 @@ def list_markdown(
             for it in items
             if ql in it["title"].lower()
             or ql in it["slug"].lower()
+            or ql in str(it.get("href") or "").lower()
+            or ql in str(it.get("description") or "").lower()
             or any(ql in str(t).lower() for t in it["tags"])
         ]
     if status and section == "posts" and status in ("published", "draft"):
@@ -113,14 +139,19 @@ def list_markdown(
         items = [it for it in items if it["pinned"]]
     elif section == "posts" and pinned == "0":
         items = [it for it in items if not it["pinned"]]
-    if sort in ("title", "date", "status", "slug"):
+    if sort in ("title", "date", "status", "slug", "href", "weight"):
         reverse = order == "desc"
-        items.sort(
-            key=lambda it: (it.get(sort) or "").lower()
-            if isinstance(it.get(sort), str)
-            else str(it.get(sort) or ""),
-            reverse=reverse,
-        )
+
+        def sort_key(item):
+            value = item.get(sort)
+            if sort == "weight":
+                try:
+                    return int(value or 0)
+                except (TypeError, ValueError):
+                    return 0
+            return (str(value or "")).lower()
+
+        items.sort(key=sort_key, reverse=reverse)
     return items
 
 

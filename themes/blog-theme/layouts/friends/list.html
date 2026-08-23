@@ -1,0 +1,22 @@
+{{ define "main" }}
+{{ $strings := hugo.Data.strings }}
+{{ partial "breadcrumb.html" . }}
+<h1 class="page-title">{{ $strings.friends.title }}</h1>
+{{ with $strings.friends.intro }}<p class="page-intro">{{ . }}</p>{{ end }}
+{{ $friends := sort .Pages "Params.weight" "asc" }}
+{{ if $friends }}
+<div class="friends-grid">
+  {{ range $friends }}
+  <article class="friend-card">
+    <div class="friend-card-main">
+      <h2 class="friend-card-title">{{ .Title }}</h2>
+      {{ with .Params.description }}<p class="friend-card-desc">{{ . }}</p>{{ end }}
+    </div>
+    <a class="friend-card-visit" href="{{ .RelPermalink }}">{{ $strings.friends.visit }}</a>
+  </article>
+  {{ end }}
+</div>
+{{ else }}
+{{ partial "empty-state.html" (dict "icon" "links" "text" $strings.friends.empty "action" (dict "href" (.Site.Home.RelPermalink) "label" $strings.common.browse_home)) }}
+{{ end }}
+{{ end }}

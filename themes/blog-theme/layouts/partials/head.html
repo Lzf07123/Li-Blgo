@@ -3,9 +3,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 {{ $brand := hugo.Data.brand }}
+{{ $page_title := .Title }}
+{{ if eq .Section "friends" }}{{ $page_title = hugo.Data.strings.friends.title }}{{ end }}
 {{ $page_no := "" }}
 {{ if or (eq .Kind "section") (eq .Kind "taxonomy") (eq .Kind "term") }}{{ with .Paginator }}{{ if gt .PageNumber 1 }}{{ $page_no = printf "（第 %d 页）" .PageNumber }}{{ end }}{{ end }}{{ end }}
-<title>{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ .Title }}{{ $page_no }} · {{ $brand.name }}{{ end }}</title>
+<title>{{ if .IsHome }}{{ $brand.name }}{{ else }}{{ $page_title }}{{ $page_no }} · {{ $brand.name }}{{ end }}</title>
 {{ $desc := $brand.tagline }}
 {{ if and (not .IsHome) .Description }}{{ $desc = .Description }}
 {{ else if and (not .IsHome) .Summary }}{{ $desc = .Summary | plainify | replaceRE "[\\s]+" " " | truncate 160 "…" }}

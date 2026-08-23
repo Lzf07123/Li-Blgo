@@ -189,6 +189,49 @@ class TestContent(unittest.TestCase):
         self.assertTrue(by_slug["pinned-post"]["pinned"])
         self.assertFalse(by_slug["normal-post"]["pinned"])
 
+    def test_normalize_friend_url_accepts_http_https(self):
+        self.assertEqual(
+            content.normalize_friend_url("  https://example.com/blog?q=1  "),
+            "https://example.com/blog?q=1",
+        )
+        self.assertEqual(
+            content.normalize_friend_url("http://example.com/"),
+            "http://example.com/",
+        )
+
+    def test_normalize_friend_url_rejects_unsafe(self):
+        for bad in ("", "javascript:alert(1)", "ftp://example.com", "https://", "https://u:p@example.com", "https://example.com/a b", "https://example.com/\"><script>"):
+            with self.assertRaises(ValueError):
+                content.normalize_friend_url(bad)
+
+    def test_list_markdown_includes_friend_fields(self):
+        content.write_markdown(
+            "friends",
+            "example",
+            {
+                "title": "示例站",
+                "href": "https://example.com/",
+                "description": "一个示例站点",
+                "weight": 2,
+            },
+            "",
+        )
+        content.write_markdown(
+            "friends",
+            "another",
+            {
+                "title": "另一个",
+                "href": "https://another.example/",
+                "description": "另一个站点",
+                "weight": 1,
+            },
+            "",
+        )
+        items = content.list_markdown("friends", sort="weight", order="asc")
+        self.assertEqual([i["slug"] for i in items], ["another", "example"])
+        self.assertTrue(content.list_markdown("friends", q="another.example"))
+        self.assertTrue(content.list_markdown("friends", q="示例站点"))
+
     def test_sanitize_inline_svg_removes_script_and_events(self):
         safe = '<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>'
         self.assertEqual(content.sanitize_inline_svg(safe), safe)

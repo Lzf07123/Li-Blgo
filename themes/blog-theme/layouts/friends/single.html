@@ -1,0 +1,24 @@
+{{ define "main" }}
+{{ $strings := hugo.Data.strings }}
+{{ $target := urls.Parse .Params.href }}
+{{ $target_ok := and $target.Scheme $target.Host (in (slice "http" "https") (lower $target.Scheme)) }}
+{{ partial "breadcrumb.html" . }}
+<h1 class="page-title">{{ $strings.friends.safety_title }}</h1>
+<div class="link-safety">
+  <p class="link-safety-lead">{{ $strings.friends.safety_lead }}</p>
+  <dl class="link-safety-target">
+    <dt>{{ $strings.friends.safety_target }}</dt>
+    <dd>
+      <span class="link-safety-name">{{ .Title }}</span>
+      {{ if $target_ok }}<span class="link-safety-host">{{ $target.Host }}</span>{{ end }}
+    </dd>
+  </dl>
+  <p class="link-safety-tip">{{ $strings.friends.safety_tip }}</p>
+  <div class="link-safety-actions">
+    {{ if $target_ok }}
+    <a class="link-safety-continue" href="{{ .Params.href }}" target="_blank" rel="noopener noreferrer nofollow">{{ $strings.friends.safety_continue }}</a>
+    {{ end }}
+    <a class="link-safety-cancel" href="{{ "friends/" | relURL }}">{{ $strings.friends.safety_cancel }}</a>
+  </div>
+</div>
+{{ end }}

@@ -2,8 +2,10 @@
 {{ $tech_colors := hugo.Data.tech }}
 {{ $p := . }}
 {{ $level := 2 }}
-{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ end }}
-<article class="project-card">
+{{ $visual := false }}
+{{ if reflect.IsMap . }}{{ $p = .page }}{{ $level = int (.level | default 2) }}{{ $visual = .visual | default false }}{{ end }}
+<article class="project-card{{ if $visual }} project-card--visual{{ end }}">
+  {{ if $visual }}{{ partial "card-visual.html" (dict "title" $p.Title "kind" "project") }}{{ end }}
   {{ if eq $level 3 }}<h3><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h3>
   {{ else }}<h2><a href="{{ $p.RelPermalink }}">{{ $p.Title }}</a></h2>{{ end }}
   <p class="project-summary">{{ $p.Params.summary }}</p>

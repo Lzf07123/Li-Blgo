@@ -119,6 +119,20 @@
   --liblog-footer-border: rgba(225, 236, 232, 0.6);
   --liblog-footer-blur: 8px;
 
+  /* 液态玻璃（浅）：半透明磨砂 + 折射高光 + 微动背景 */
+  --liblog-glass-bg: rgba(255, 255, 255, 0.58);
+  --liblog-glass-bg-strong: rgba(255, 255, 255, 0.78);
+  --liblog-glass-border: rgba(255, 255, 255, 0.74);
+  --liblog-glass-border-soft: rgba(225, 236, 232, 0.66);
+  --liblog-glass-highlight: rgba(255, 255, 255, 0.82);
+  --liblog-glass-shine: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.72),
+    rgba(255, 255, 255, 0) 46%
+  );
+  --liblog-glass-blur: 18px;
+  --liblog-glass-saturate: 150%;
+
   /* 语义色（浅） */
   --liblog-secondary: #2f678f;
   --liblog-secondary-soft: #dff1fa;
@@ -239,6 +253,18 @@
   /* 页脚（深）：Li-Design V1.5 规格 */
   --liblog-footer-bg: rgba(67, 73, 80, 0.6);
   --liblog-footer-border: rgba(84, 92, 100, 0.6);
+
+  /* 液态玻璃（深） */
+  --liblog-glass-bg: rgba(67, 73, 80, 0.56);
+  --liblog-glass-bg-strong: rgba(67, 73, 80, 0.76);
+  --liblog-glass-border: rgba(240, 242, 244, 0.18);
+  --liblog-glass-border-soft: rgba(84, 92, 100, 0.68);
+  --liblog-glass-highlight: rgba(240, 242, 244, 0.14);
+  --liblog-glass-shine: linear-gradient(
+    135deg,
+    rgba(240, 242, 244, 0.16),
+    rgba(240, 242, 244, 0) 46%
+  );
 
   /* 语义色（深） */
   --liblog-secondary: #a8d4f0;

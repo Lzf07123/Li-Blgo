@@ -4,7 +4,7 @@
 <nav class="admin-breadcrumb" aria-label="面包屑">
   <a href="/{{ admin_path }}/">仪表盘</a>
   <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
-  {% if section in ["posts", "projects", "timeline"] %}
+  {% if section in ["posts", "projects", "timeline", "friends"] %}
   <a href="/{{ admin_path }}/{{ section }}">{{ label }}</a>
   <span class="admin-breadcrumb-sep" aria-hidden="true">/</span>
   <span aria-current="page">{{ slug or "新建" }}</span>
@@ -24,7 +24,7 @@
     <form id="edit-form" method="post" action="/{{ admin_path }}/{{ section }}/save">
       <input type="hidden" name="_csrf" value="{{ csrf }}">
       <input type="hidden" name="slug" value="{{ slug }}">
-      {% if not slug and section in ["posts", "projects", "timeline"] %}
+      {% if not slug and section in ["posts", "projects", "timeline", "friends"] %}
       <label>标识（slug，新建时必填，小写字母数字与连字符）
         <input type="text" name="new_slug" required pattern="[a-z0-9][a-z0-9-]{0,63}">
       </label>
@@ -57,6 +57,7 @@
         {% for t in all_tags %}<option value="{{ t }}"></option>{% endfor %}
       </datalist>
       {% endif %}
+      <div{% if section == "friends" %} hidden{% endif %}>
       <label>正文 Markdown
         <div class="editor-toolbar">
           <button type="button" class="btn btn-sm btn-secondary md-btn" data-md="bold" title="加粗">B</button>
@@ -76,6 +77,7 @@
         <small class="field-help">支持把图片直接拖进正文，会自动上传并插入。</small>
         <textarea id="body" name="body" rows="24" class="mono">{{ body or "" }}</textarea>
       </label>
+      </div>
       <div class="form-actions editor-actions">
         <button type="submit" name="action" value="save_stay" class="btn" aria-keyshortcuts="Control+S">保存（留在本页）</button>
         <button type="submit" name="action" value="save" class="btn btn-secondary">保存并返回列表</button>

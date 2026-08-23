@@ -18,6 +18,8 @@
   {{ end }}
 </div>
 </section>
+{{ else }}
+{{ partial "empty-state.html" (dict "icon" "timeline" "text" hugo.Data.strings.common.empty_timeline "action" (dict "href" .Site.Home.RelPermalink "label" hugo.Data.strings.common.browse_home)) }}
 {{ end }}
 
 {{ end }}

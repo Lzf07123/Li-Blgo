@@ -774,5 +774,92 @@ class AdminRoutesTest(unittest.TestCase):
         self.assertIn("url('/admin/preview-out/img/b.png')", out)
 
 
+    def test_friends_admin_list_and_edit_fields(self):
+        store.write_markdown(
+            "friends",
+            "example",
+            {
+                "title": "示例站",
+                "href": "https://example.com/",
+                "description": "一个示例站点",
+                "weight": 2,
+            },
+            "",
+        )
+        with TestClient(app) as client:
+            self._login(client)
+            r = client.get("/admin/friends")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn("友情链接", r.text)
+            self.assertIn("https://example.com/", r.text)
+            self.assertIn("/admin/friends/new", r.text)
+            r = client.get("/admin/friends/example/edit")
+            self.assertEqual(r.status_code, 200)
+            self.assertIn('name="href"', r.text)
+            self.assertIn('name="weight"', r.text)
+
+    def test_friends_save_validates_url(self):
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/friends/save",
+                data={
+                    "_csrf": csrf,
+                    "slug": "",
+                    "new_slug": "bad-link",
+                    "action": "save",
+                    "title": "坏链接",
+                    "href": "javascript:alert(1)",
+                    "description": "",
+                    "weight": "1",
+                    "body": "",
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertFalse((settings.content_root / "friends" / "bad-link.md").exists())
+            r = client.post(
+                "/admin/friends/save",
+                data={
+                    "_csrf": csrf,
+                    "slug": "",
+                    "new_slug": "good-link",
+                    "action": "save",
+                    "title": "好链接",
+                    "href": "https://example.com/",
+                    "description": "简介",
+                    "weight": "1",
+                    "body": "",
+                },
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            fm, _ = store.read_markdown("friends", "good-link")
+            self.assertEqual(fm["href"], "https://example.com/")
+            self.assertEqual(fm["weight"], 1)
+
+    def test_friends_delete_removes_file(self):
+        store.write_markdown(
+            "friends",
+            "gone",
+            {"title": "待删除", "href": "https://example.com/", "weight": 1},
+            "",
+        )
+        original = build.run_full
+        build.run_full = lambda: (types.SimpleNamespace(returncode=0, stderr=""), 0.01)
+        self.addCleanup(setattr, build, "run_full", original)
+        with TestClient(app) as client:
+            csrf = self._login(client)
+            r = client.post(
+                "/admin/friends/gone/delete",
+                data={"_csrf": csrf},
+                follow_redirects=False,
+            )
+            self.assertEqual(r.status_code, 303)
+            self.assertFalse((settings.content_root / "friends" / "gone.md").exists())
+
 if __name__ == "__main__":
     unittest.main()
